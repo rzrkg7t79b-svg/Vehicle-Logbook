@@ -45,6 +45,7 @@ Preferred communication style: Simple, everyday language.
 - **Todos**: Daily tasks with title, completion status, completedBy user
 - **QualityChecks**: License plate, passed status, comment, createdBy, date
 - **DriverTasks**: Auto-created from failed quality checks, linked to qualityCheckId
+- **FlowTasks**: Driver tasks with license plate, EV status, task type, optional needAt deadline, completion tracking
 - **ModuleStatus**: Tracks daily completion status per module (timedriver, todo, quality)
 
 ### Authentication & Authorization
@@ -83,13 +84,17 @@ Preferred communication style: Simple, everyday language.
 
 9. **FlowSIXT Features**:
    - Counter/Admin can create tasks with license plate, EV toggle, and task type
-   - Task types: refuelling, cleaning, AdBlue, delivery, collection, water, fast cleaning, Bodyshop collection, Bodyshop delivery, LiveCheckin, only CheckIN & Parking
-   - Counter/Admin can reorder tasks by drag-and-drop (priority system)
-   - Drivers can mark tasks as done
-   - Counter/Admin can mark completed tasks as "undone" which sets needsRetry flag
+   - Task types: refuelling, cleaning, AdBlue, delivery, collection, water, fast cleaning, Bodyshop collection, Bodyshop delivery, LiveCheckin, only CheckIN & Parking (multi-select buttons)
+   - Optional "Need at (time)" deadline with countdown display showing "Need in Xh Ymin" or "overdue/immediately"
+   - Tasks grouped by vehicle with completion progress (X/Y done)
+   - Counter/Admin can reorder vehicle priority by drag-and-drop
+   - Drivers can mark individual sub-tasks as done
+   - Counter/Admin can mark completed sub-tasks as "undone" which sets needsRetry flag
    - Tasks with needsRetry show "Try again!" warning
 
-10. **ToDoSIXT Role Assignment**: Admin can assign todos to Counter and/or Driver roles. Non-admin users only see todos assigned to their role.
+10. **License Plate Input**: Reusable LicensePlateInput component with auto-focus between fields (city → letters → numbers) for faster data entry. Used in FlowSIXT, BodyshopSIXT, and QualitySIXT.
+
+11. **ToDoSIXT Role Assignment**: Admin can assign todos to Counter and/or Driver roles. Non-admin users only see todos assigned to their role.
 
 ## External Dependencies
 
