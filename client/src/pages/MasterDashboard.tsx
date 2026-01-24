@@ -7,7 +7,15 @@ import { Progress } from "@/components/ui/progress";
 import { Card } from "@/components/ui/card";
 import { getSecondsUntilGermanTime, formatCountdown, isOverdue, getGermanDateString } from "@/lib/germanTime";
 import { useUser } from "@/contexts/UserContext";
-import type { Todo, DriverTask, FlowTask, ModuleStatus } from "@shared/schema";
+import type { Todo, DriverTask, FlowTask } from "@shared/schema";
+
+type DashboardStatus = {
+  timedriver: { isDone: boolean; details?: string };
+  todo: { isDone: boolean; completed: number; total: number };
+  quality: { isDone: boolean; passedChecks: number; incompleteTasks: number };
+  bodyshop: { isDone: boolean; vehiclesWithoutComment: number; total: number };
+  overallProgress: number;
+};
 
 const MODULES = [
   { id: "timedriver", name: "TimeDriverSIXT", icon: Clock, path: "/timedriver", targetHour: 8, targetMinute: 0 },
@@ -35,12 +43,13 @@ export default function MasterDashboard() {
     queryKey: ["/api/flow-tasks"],
   });
 
-  const { data: moduleStatuses = [] } = useQuery<ModuleStatus[]>({
-    queryKey: ["/api/module-status", todayDate],
+  const { data: dashboardStatus } = useQuery<DashboardStatus>({
+    queryKey: ["/api/dashboard/status", todayDate],
     queryFn: async () => {
-      const res = await fetch(`/api/module-status?date=${todayDate}`);
+      const res = await fetch(`/api/dashboard/status?date=${todayDate}`);
       return res.json();
     },
+    refetchInterval: 30000,
   });
 
   useEffect(() => {
@@ -52,15 +61,39 @@ export default function MasterDashboard() {
   }, []);
 
   const getModuleStatus = (moduleId: string): boolean => {
-    const status = moduleStatuses.find(s => s.moduleName === moduleId);
-    return status?.isDone || false;
+    if (!dashboardStatus) return false;
+    switch (moduleId) {
+      case "timedriver": return dashboardStatus.timedriver.isDone;
+      case "todo": return dashboardStatus.todo.isDone;
+      case "quality": return dashboardStatus.quality.isDone;
+      case "bodyshop": return dashboardStatus.bodyshop.isDone;
+      case "flow": return false;
+      default: return false;
+    }
   };
 
-  const completedModules = MODULES.filter(m => getModuleStatus(m.id)).length;
-  const totalProgress = Math.round((completedModules / MODULES.length) * 100);
+  const getModuleDetails = (moduleId: string): string | null => {
+    if (!dashboardStatus) return null;
+    switch (moduleId) {
+      case "timedriver": 
+        return dashboardStatus.timedriver.isDone ? "Calculation saved" : "Due before 8:00";
+      case "todo": 
+        return `${dashboardStatus.todo.completed}/${dashboardStatus.todo.total} tasks`;
+      case "quality": 
+        return `${dashboardStatus.quality.passedChecks}/5 checks, ${dashboardStatus.quality.incompleteTasks} pending`;
+      case "bodyshop": 
+        if (dashboardStatus.bodyshop.total === 0) return "No vehicles";
+        return dashboardStatus.bodyshop.isDone 
+          ? "All commented" 
+          : `${dashboardStatus.bodyshop.vehiclesWithoutComment} need comment`;
+      default: return null;
+    }
+  };
 
-  const completedTodos = todos.filter(t => t.completed).length;
-  const totalTodos = todos.length;
+  const totalProgress = dashboardStatus?.overallProgress ?? 0;
+
+  const completedTodos = dashboardStatus?.todo.completed ?? 0;
+  const totalTodos = dashboardStatus?.todo.total ?? 0;
   const todoProgress = totalTodos > 0 ? Math.round((completedTodos / totalTodos) * 100) : 0;
 
   const pendingDriverTasks = driverTasks.filter(t => !t.completed);
@@ -78,14 +111,23 @@ export default function MasterDashboard() {
       </div>
 
       <div className="p-4 space-y-4">
-        <Card className="p-4">
+        <Card className={`p-4 ${totalProgress === 100 ? 'border-green-500/50 bg-green-500/10' : ''}`}>
           <div className="flex items-center justify-between mb-3">
             <span className="text-sm font-medium text-muted-foreground">Daily Progress</span>
-            <span className="text-sm font-bold text-primary">{totalProgress}%</span>
+            <span className={`text-sm font-bold ${totalProgress === 100 ? 'text-green-500' : 'text-primary'}`}>
+              {totalProgress}%
+            </span>
           </div>
-          <Progress value={totalProgress} className="h-3" />
+          <div className="relative h-3 bg-white/10 rounded-full overflow-hidden">
+            <div 
+              className={`h-full rounded-full transition-all duration-500 ${
+                totalProgress === 100 ? 'bg-green-500' : 'bg-primary'
+              }`}
+              style={{ width: `${totalProgress}%` }}
+            />
+          </div>
           <p className="text-xs text-muted-foreground mt-2">
-            {completedModules} of {MODULES.length} modules completed
+            {totalProgress === 100 ? 'All modules completed' : 'Complete all modules before 16:30'}
           </p>
         </Card>
 
@@ -129,6 +171,7 @@ export default function MasterDashboard() {
           
           {MODULES.map((module, index) => {
             const isDone = getModuleStatus(module.id);
+            const details = getModuleDetails(module.id);
             const Icon = module.icon;
             
             return (
@@ -154,14 +197,13 @@ export default function MasterDashboard() {
                         </div>
                         <div>
                           <p className="font-medium text-white">{module.name}</p>
-                          {module.id === "todo" && totalTodos > 0 && (
-                            <p className="text-xs text-muted-foreground">{todoProgress}% complete</p>
+                          {details && (
+                            <p className={`text-xs ${isDone ? 'text-green-400' : 'text-muted-foreground'}`}>
+                              {details}
+                            </p>
                           )}
                           {module.id === "flow" && pendingFlowTasks.length > 0 && (
                             <p className="text-xs text-orange-400">{pendingFlowTasks.length} pending tasks</p>
-                          )}
-                          {module.id === "quality" && pendingDriverTasks.length > 0 && isDriver && (
-                            <p className="text-xs text-orange-400">{pendingDriverTasks.length} pending tasks</p>
                           )}
                         </div>
                       </div>

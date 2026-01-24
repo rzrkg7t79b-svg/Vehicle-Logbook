@@ -1,14 +1,25 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "wouter";
-import { ArrowLeft, Users, Calculator, Clock, Edit2, Check, RefreshCw } from "lucide-react";
+import { ArrowLeft, Users, Calculator, Clock, Edit2, Check, RefreshCw, Loader2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useUser } from "@/contexts/UserContext";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
+import { getGermanDateString } from "@/lib/germanTime";
 
 const DEFAULT_BUDGET_PER_RENTAL = "16.39";
+
+type DriverResult = { 
+  id: number; 
+  initials: string; 
+  maxHours: number; 
+  hourlyRate: number; 
+  assignedHours: number; 
+  assignedMinutes: number; 
+  percent: number;
+};
 
 export default function TimeDriver() {
   const { user } = useUser();
@@ -16,15 +27,36 @@ export default function TimeDriver() {
   const isCounter = user?.roles?.includes("Counter");
   const canView = isAdmin || isCounter;
   
+  const todayDate = getGermanDateString();
+  
   const [rentalsToday, setRentalsToday] = useState("");
   const [selectedDrivers, setSelectedDrivers] = useState<number[]>([]);
   const [isCalculated, setIsCalculated] = useState(false);
   const [calculationResult, setCalculationResult] = useState<{
     totalBudget: number;
-    drivers: { id: number; initials: string; maxHours: number; hourlyRate: number; assignedHours: number; assignedMinutes: number; percent: number }[];
+    drivers: DriverResult[];
   } | null>(null);
   const [isEditingBudget, setIsEditingBudget] = useState(false);
   const [tempBudget, setTempBudget] = useState("");
+  
+  const adminHeaders: Record<string, string> = user?.pin ? { "x-admin-pin": user.pin } : {};
+  
+  const { data: savedCalculation, isLoading: isLoadingSaved } = useQuery<{
+    id: number;
+    date: string;
+    rentals: number;
+    budgetPerRental: number;
+    totalBudget: number;
+    driversData: string;
+    calculatedBy: string | null;
+    calculatedAt: string | null;
+  } | null>({
+    queryKey: ["/api/timedriver-calculations", todayDate],
+    queryFn: async () => {
+      const res = await fetch(`/api/timedriver-calculations/${todayDate}`);
+      return res.json();
+    },
+  });
 
   const { data: budgetSetting } = useQuery<{ value: string | null }>({
     queryKey: ["/api/settings/budgetPerRental"],
@@ -35,13 +67,24 @@ export default function TimeDriver() {
   });
 
   const budgetPerRental = budgetSetting?.value || DEFAULT_BUDGET_PER_RENTAL;
-
-  const adminHeaders: Record<string, string> = user?.pin ? { "x-admin-pin": user.pin } : {};
   
   const { data: driverUsers = [] } = useQuery<{ id: number; initials: string; maxDailyHours: number | null; hourlyRate: number | null }[]>({
     queryKey: ["/api/drivers"],
     enabled: !!user,
   });
+
+  useEffect(() => {
+    if (savedCalculation && driverUsers.length > 0) {
+      const savedDrivers: DriverResult[] = JSON.parse(savedCalculation.driversData);
+      setRentalsToday(savedCalculation.rentals.toString());
+      setSelectedDrivers(savedDrivers.map(d => d.id));
+      setCalculationResult({
+        totalBudget: savedCalculation.totalBudget,
+        drivers: savedDrivers,
+      });
+      setIsCalculated(true);
+    }
+  }, [savedCalculation, driverUsers.length]);
 
   const saveBudgetMutation = useMutation({
     mutationFn: async (value: string) => {
@@ -50,6 +93,31 @@ export default function TimeDriver() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/settings/budgetPerRental"] });
       setIsEditingBudget(false);
+    },
+  });
+  
+  const saveCalculationMutation = useMutation({
+    mutationFn: async (data: {
+      date: string;
+      rentals: number;
+      budgetPerRental: number;
+      totalBudget: number;
+      driversData: string;
+      calculatedBy?: string;
+    }) => {
+      return await apiRequest("POST", "/api/timedriver-calculations", data, adminHeaders);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/timedriver-calculations", todayDate] });
+    },
+  });
+  
+  const deleteCalculationMutation = useMutation({
+    mutationFn: async () => {
+      await apiRequest("DELETE", `/api/timedriver-calculations/${todayDate}`, undefined, adminHeaders);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/timedriver-calculations", todayDate] });
     },
   });
 
@@ -111,9 +179,19 @@ export default function TimeDriver() {
 
     setCalculationResult({ totalBudget, drivers });
     setIsCalculated(true);
+    
+    saveCalculationMutation.mutate({
+      date: todayDate,
+      rentals,
+      budgetPerRental: budget,
+      totalBudget,
+      driversData: JSON.stringify(drivers),
+      calculatedBy: user?.initials,
+    });
   };
 
   const handleNewCalculation = () => {
+    deleteCalculationMutation.mutate();
     setRentalsToday("");
     setSelectedDrivers([]);
     setCalculationResult(null);
@@ -160,6 +238,12 @@ export default function TimeDriver() {
       </div>
 
       <div className="p-4 space-y-4">
+        {isLoadingSaved ? (
+          <Card className="p-8 flex items-center justify-center">
+            <Loader2 className="w-6 h-6 animate-spin text-blue-400" />
+          </Card>
+        ) : (
+        <>
         <Card className="p-4">
           <h3 className="font-medium text-white mb-3 flex items-center gap-2">
             <Calculator className="w-4 h-4 text-blue-400" />
@@ -322,6 +406,8 @@ export default function TimeDriver() {
               ))}
             </div>
           </Card>
+        )}
+        </>
         )}
       </div>
     </div>
