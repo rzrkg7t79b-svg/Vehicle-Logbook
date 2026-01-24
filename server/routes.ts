@@ -415,18 +415,13 @@ export async function registerRoutes(
       const input = api.timedriverCalculations.save.input.parse(req.body);
       const calc = await storage.saveTimedriverCalculation(input);
       
-      // Check if calculation was made before 8am to mark module as done
-      const now = new Date();
-      const berlinTime = new Date(now.toLocaleString("en-US", { timeZone: "Europe/Berlin" }));
-      const hour = berlinTime.getHours();
-      
-      if (hour < 8) {
-        const userPin = req.headers['x-admin-pin'] as string;
-        const user = userPin ? await storage.getUserByPin(userPin) : null;
-        await storage.setModuleStatus("timedriver", input.date, true, user?.initials);
-      }
+      // Mark module as done when calculation is saved
+      const userPin = req.headers['x-admin-pin'] as string;
+      const user = userPin ? await storage.getUserByPin(userPin) : null;
+      await storage.setModuleStatus("timedriver", input.date, true, user?.initials);
       
       broadcastUpdate("timedriver-calculation");
+      broadcastUpdate("module-status");
       res.status(201).json(calc);
     } catch (err) {
       if (err instanceof z.ZodError) {
@@ -451,11 +446,11 @@ export async function registerRoutes(
   app.get(api.dashboard.status.path, async (req, res) => {
     const date = req.query.date as string || new Date().toISOString().split('T')[0];
     
-    // TimeDriver status
+    // TimeDriver status - done if calculation exists OR module status is set
     const timedriverCalc = await storage.getTimedriverCalculation(date);
     const timedriverStatus = await storage.getModuleStatus(date);
     const timedriverModuleStatus = timedriverStatus.find(s => s.moduleName === "timedriver");
-    const timedriverIsDone = timedriverModuleStatus?.isDone || false;
+    const timedriverIsDone = timedriverModuleStatus?.isDone || timedriverCalc !== undefined;
     
     // Todo status
     const allTodos = await storage.getTodos();
