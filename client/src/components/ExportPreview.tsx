@@ -110,7 +110,13 @@ export function ExportPreview({ open, onOpenChange }: ExportPreviewProps) {
     
     try {
       const element = exportRef.current;
-      const contentWidth = 1200;
+      
+      const originalTransform = element.style.transform;
+      element.style.transform = "none";
+      
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      const contentWidth = element.offsetWidth;
       const contentHeight = element.scrollHeight;
       
       const sourceCanvas = await html2canvas(element, {
@@ -121,6 +127,8 @@ export function ExportPreview({ open, onOpenChange }: ExportPreviewProps) {
         windowWidth: contentWidth,
         windowHeight: contentHeight,
       });
+      
+      element.style.transform = originalTransform;
       
       const srcWidth = sourceCanvas.width;
       const srcHeight = sourceCanvas.height;
