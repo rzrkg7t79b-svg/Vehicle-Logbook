@@ -113,8 +113,24 @@ export function ExportPreview({ open, onOpenChange }: ExportPreviewProps) {
       const contentWidth = 1200;
       const contentHeight = element.scrollHeight;
       
+      const contentAspect = contentWidth / contentHeight;
+      const hdAspect = 1920 / 1080;
+      
+      let finalWidth: number;
+      let finalHeight: number;
+      
+      if (contentAspect > hdAspect) {
+        finalWidth = 1920;
+        finalHeight = Math.round(1920 / contentAspect);
+      } else {
+        finalHeight = 1080;
+        finalWidth = Math.round(1080 * contentAspect);
+      }
+      
+      const scale = finalWidth / contentWidth;
+      
       const canvas = await html2canvas(element, {
-        scale: 2,
+        scale: scale,
         backgroundColor: "#1a1a1a",
         width: contentWidth,
         height: contentHeight,
@@ -122,21 +138,9 @@ export function ExportPreview({ open, onOpenChange }: ExportPreviewProps) {
         windowHeight: contentHeight,
       });
       
-      const maxWidth = 1920;
-      const maxHeight = 1080;
-      const ratio = Math.min(maxWidth / canvas.width, maxHeight / canvas.height, 1);
-      
-      const finalCanvas = document.createElement("canvas");
-      finalCanvas.width = Math.round(canvas.width * ratio);
-      finalCanvas.height = Math.round(canvas.height * ratio);
-      const ctx = finalCanvas.getContext("2d");
-      if (ctx) {
-        ctx.drawImage(canvas, 0, 0, finalCanvas.width, finalCanvas.height);
-      }
-      
       const link = document.createElement("a");
       link.download = `MasterSIXT-Export-${todayDate}.png`;
-      link.href = finalCanvas.toDataURL("image/png");
+      link.href = canvas.toDataURL("image/png");
       link.click();
     } catch (error) {
       console.error("Export failed:", error);
