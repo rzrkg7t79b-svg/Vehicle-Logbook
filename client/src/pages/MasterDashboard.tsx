@@ -11,6 +11,7 @@ import type { Todo, DriverTask, FlowTask } from "@shared/schema";
 
 type DashboardStatus = {
   timedriver: { isDone: boolean; details?: string };
+  flow: { isDone: boolean; pending: number; total: number };
   todo: { isDone: boolean; completed: number; total: number };
   quality: { isDone: boolean; passedChecks: number; incompleteTasks: number };
   bodyshop: { isDone: boolean; vehiclesWithoutComment: number; total: number };
@@ -64,10 +65,10 @@ export default function MasterDashboard() {
     if (!dashboardStatus) return false;
     switch (moduleId) {
       case "timedriver": return dashboardStatus.timedriver.isDone;
+      case "flow": return dashboardStatus.flow.isDone;
       case "todo": return dashboardStatus.todo.isDone;
       case "quality": return dashboardStatus.quality.isDone;
       case "bodyshop": return dashboardStatus.bodyshop.isDone;
-      case "flow": return false;
       default: return false;
     }
   };
@@ -77,6 +78,11 @@ export default function MasterDashboard() {
     switch (moduleId) {
       case "timedriver": 
         return dashboardStatus.timedriver.isDone ? "Calculation saved" : "Due before 8:00";
+      case "flow":
+        if (dashboardStatus.flow.total === 0) return "No tasks";
+        return dashboardStatus.flow.isDone 
+          ? "All done" 
+          : `${dashboardStatus.flow.pending} pending`;
       case "todo": 
         return `${dashboardStatus.todo.completed}/${dashboardStatus.todo.total} tasks`;
       case "quality": 
@@ -201,9 +207,6 @@ export default function MasterDashboard() {
                             <p className={`text-xs ${isDone ? 'text-green-400' : 'text-muted-foreground'}`}>
                               {details}
                             </p>
-                          )}
-                          {module.id === "flow" && pendingFlowTasks.length > 0 && (
-                            <p className="text-xs text-orange-400">{pendingFlowTasks.length} pending tasks</p>
                           )}
                         </div>
                       </div>

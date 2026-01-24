@@ -469,17 +469,24 @@ export async function registerRoutes(
     const activeVehicles = allVehicles.filter(v => !v.isPast);
     const bodyshopIsDone = activeVehicles.length === 0 || vehiclesWithoutComment.length === 0;
     
-    // Calculate overall progress (4 modules, each worth 25%)
+    // Flow status - done when all flow tasks are completed (or no tasks)
+    const allFlowTasks = await storage.getFlowTasks();
+    const pendingFlowTasks = allFlowTasks.filter(t => !t.completed);
+    const flowIsDone = allFlowTasks.length === 0 || pendingFlowTasks.length === 0;
+    
+    // Calculate overall progress (5 modules, each worth 20%)
     let completedModules = 0;
     if (timedriverIsDone) completedModules++;
+    if (flowIsDone) completedModules++;
     if (todoIsDone) completedModules++;
     if (qualityIsDone) completedModules++;
     if (bodyshopIsDone) completedModules++;
     
-    const overallProgress = Math.round((completedModules / 4) * 100);
+    const overallProgress = Math.round((completedModules / 5) * 100);
     
     res.json({
       timedriver: { isDone: timedriverIsDone, details: timedriverCalc ? "Calculated" : undefined },
+      flow: { isDone: flowIsDone, pending: pendingFlowTasks.length, total: allFlowTasks.length },
       todo: { isDone: todoIsDone, completed, total: allTodos.length },
       quality: { isDone: qualityIsDone, passedChecks, incompleteTasks: incompleteTasks.length },
       bodyshop: { isDone: bodyshopIsDone, vehiclesWithoutComment: vehiclesWithoutComment.length, total: activeVehicles.length },
