@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { ArrowLeft, Trash2, Send, Clock, User, AlertCircle, Loader2, PackageCheck } from "lucide-react";
 import { format, isToday } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
+import { useUser } from "@/contexts/UserContext";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -24,6 +25,7 @@ export default function VehicleDetail() {
   const [, params] = useRoute("/vehicle/:id");
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  const { user } = useUser();
   const id = Number(params?.id);
   
   const { data: vehicle, isLoading, isError } = useVehicle(id);
@@ -55,7 +57,11 @@ export default function VehicleDetail() {
     if (!commentText.trim()) return;
 
     try {
-      await createComment.mutateAsync({ vehicleId: id, content: commentText });
+      await createComment.mutateAsync({ 
+        vehicleId: id, 
+        content: commentText,
+        userInitials: user?.initials 
+      });
       setCommentText("");
     } catch (error) {
       toast({ title: "Failed to add comment", variant: "destructive" });
@@ -210,10 +216,16 @@ export default function VehicleDetail() {
                 <div key={comment.id} className="bg-card/50 border border-white/5 rounded-xl p-4">
                   <div className="flex justify-between items-start mb-2">
                     <div className="flex items-center gap-2">
-                      <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center">
-                        <User className="w-3 h-3 text-muted-foreground" />
+                      <div className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center">
+                        {comment.userInitials ? (
+                          <span className="text-[10px] font-bold text-primary">{comment.userInitials}</span>
+                        ) : (
+                          <User className="w-3 h-3 text-muted-foreground" />
+                        )}
                       </div>
-                      <span className="text-xs font-bold text-muted-foreground">User Log</span>
+                      <span className="text-xs font-bold text-muted-foreground">
+                        {comment.userInitials || "System"}
+                      </span>
                     </div>
                     <span className="text-[10px] text-muted-foreground font-mono">
                       {format(new Date(comment.createdAt!), "MMM dd, hh:mm a")}

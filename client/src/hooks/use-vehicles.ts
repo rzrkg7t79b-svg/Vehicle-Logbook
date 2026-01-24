@@ -107,12 +107,12 @@ export function useDeleteVehicle() {
 export function useCreateComment() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ vehicleId, content }: { vehicleId: number, content: string }) => {
+    mutationFn: async ({ vehicleId, content, userInitials }: { vehicleId: number, content: string, userInitials?: string }) => {
       const url = buildUrl(api.vehicles.createComment.path, { id: vehicleId });
       const res = await fetch(url, {
         method: api.vehicles.createComment.method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ content }),
+        body: JSON.stringify({ content, userInitials }),
         credentials: "include",
       });
       if (!res.ok) throw new Error("Failed to add comment");
