@@ -2,11 +2,13 @@ import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { motion } from "framer-motion";
-import { Clock, Car, ClipboardCheck, CheckSquare, AlertTriangle, CheckCircle, Workflow } from "lucide-react";
+import { Clock, Car, ClipboardCheck, CheckSquare, AlertTriangle, CheckCircle, Workflow, Share2 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { getSecondsUntilGermanTime, formatCountdown, isOverdue, getGermanDateString } from "@/lib/germanTime";
 import { useUser } from "@/contexts/UserContext";
+import { ExportPreview } from "@/components/ExportPreview";
 import type { Todo, DriverTask, FlowTask } from "@shared/schema";
 
 type DashboardStatus = {
@@ -31,6 +33,7 @@ export default function MasterDashboard() {
   const { user } = useUser();
   const [masterCountdown, setMasterCountdown] = useState(getSecondsUntilGermanTime(16, 30));
   const [masterOverdue, setMasterOverdue] = useState(isOverdue(16, 30));
+  const [showExportPreview, setShowExportPreview] = useState(false);
   const todayDate = getGermanDateString();
 
   const { data: todos = [] } = useQuery<Todo[]>({
@@ -168,6 +171,16 @@ export default function MasterDashboard() {
           </div>
         </Card>
 
+        <Button
+          onClick={() => setShowExportPreview(true)}
+          variant="outline"
+          className="w-full"
+          data-testid="button-export-teams"
+        >
+          <Share2 className="w-4 h-4 mr-2" />
+          Export for Teams
+        </Button>
+
         {isDriver && pendingDriverTasks.length > 0 && (
           <Card className="p-4 border-orange-500/50 bg-orange-500/10">
             <div className="flex items-center gap-3">
@@ -233,6 +246,8 @@ export default function MasterDashboard() {
           })}
         </div>
       </div>
+
+      <ExportPreview open={showExportPreview} onOpenChange={setShowExportPreview} />
     </div>
   );
 }
