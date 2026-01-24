@@ -537,7 +537,8 @@ export async function registerRoutes(
     // Count todos that arrived today from past postponement
     const postponedFromPast = todaysTodos.filter(t => t.postponedToDate === date && !t.completed);
     const totalPostponed = postponedToFuture.length + postponedFromPast.length;
-    const todoIsDone = todaysTodos.length > 0 && completed === todaysTodos.length;
+    // Todo is only done if all today's tasks are completed AND no postponed tasks exist
+    const todoIsDone = todaysTodos.length > 0 && completed === todaysTodos.length && totalPostponed === 0;
     
     // Quality status - 5 passed checks + all driver tasks done
     const qualityChecks = await storage.getQualityChecksForDate(date);
