@@ -1,8 +1,16 @@
-# Bodyshop Vehicle Tracker
+# MasterSIXT Workshop Management
 
 ## Overview
 
-A mobile-first vehicle tracking application for a body shop (SIXT branding). The system allows staff to log vehicles with German license plates, track 7-day countdown timers for vehicle processing, add comments, and manage users with PIN-based authentication. The application is designed for internal use with role-based access control.
+A comprehensive mobile-first iOS web app for SIXT workshop management with four integrated modules:
+
+- **MasterSIXT** (Main Dashboard): Global progress bar, daily 16:30 deadline countdown, module status overview
+- **TimeDriverSIXT**: Morning driver checks with 08:00 countdown
+- **BodyshopSIXT**: Vehicle tracking with German license plates and 7-day timers
+- **ToDoSIXT**: Daily task management with admin CRUD and user completion
+- **QualitySIXT**: Quality checks with automatic driver task creation for failed checks
+
+The system includes PIN-based authentication, role-based access (Branch Manager, Counter, Driver), German timezone support (Europe/Berlin), and module completion tracking.
 
 ## User Preferences
 
@@ -34,6 +42,10 @@ Preferred communication style: Simple, everyday language.
 - **Users**: Staff members with initials, 4-digit PIN, roles array, and admin flag
 - **Vehicles**: License plates, names, notes, EV status, collection status, countdown timers
 - **Comments**: Linked to vehicles with user initials and timestamps
+- **Todos**: Daily tasks with title, completion status, completedBy user
+- **QualityChecks**: License plate, passed status, comment, createdBy, date
+- **DriverTasks**: Auto-created from failed quality checks, linked to qualityCheckId
+- **ModuleStatus**: Tracks daily completion status per module (timedriver, todo, quality)
 
 ### Authentication & Authorization
 - **Method**: PIN-based authentication (4-digit codes) via `/api/auth/login`
@@ -56,6 +68,17 @@ Preferred communication style: Simple, everyday language.
 4. **German License Plate Component**: Custom `GermanPlate` component renders EU-style plates with blue stripe and stars.
 
 5. **Build Strategy**: Production builds use esbuild for server bundling (with dependency allowlist for cold start optimization) and Vite for client bundling.
+
+6. **German Timezone**: All countdown calculations use Europe/Berlin timezone via utilities in `client/src/lib/germanTime.ts`.
+
+7. **Module Routes**: 
+   - `/` - MasterSIXT dashboard (main home)
+   - `/bodyshop` - BodyshopSIXT vehicle tracking
+   - `/timedriver` - TimeDriverSIXT morning checks
+   - `/todo` - ToDoSIXT task management
+   - `/quality` - QualitySIXT quality checks
+
+8. **Auto-Task Creation**: Failed quality checks automatically create driver tasks visible to users with Driver role.
 
 ## External Dependencies
 
