@@ -88,7 +88,13 @@ export async function registerRoutes(
         }
 
         const comment = await storage.createComment({ ...input, vehicleId });
+        
+        // Track daily comment for bodyshop module completion
+        const todayBerlin = new Date().toLocaleDateString('en-CA', { timeZone: 'Europe/Berlin' });
+        await storage.setVehicleDailyComment(vehicleId, todayBerlin, comment.id);
+        
         broadcastUpdate("vehicles");
+        broadcastUpdate("module-status");
         res.status(201).json(comment);
     } catch (err) {
         if (err instanceof z.ZodError) {
