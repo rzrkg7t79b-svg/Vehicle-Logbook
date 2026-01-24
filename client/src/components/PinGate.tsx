@@ -3,6 +3,7 @@ import { Lock, Timer, AlertTriangle, LogOut } from "lucide-react";
 import { UserContext } from "@/contexts/UserContext";
 import type { User } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
+import { useLocation } from "wouter";
 
 interface PinGateProps {
   children: React.ReactNode;
@@ -21,6 +22,7 @@ interface LockoutState {
 }
 
 export function PinGate({ children }: PinGateProps) {
+  const [, setLocation] = useLocation();
   const [pin, setPin] = useState("");
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isUnlocked, setIsUnlocked] = useState(false);
@@ -191,6 +193,7 @@ export function PinGate({ children }: PinGateProps) {
           setCurrentUser(user);
           setIsUnlocked(true);
           clearLockoutState();
+          setLocation("/");
         } catch {
           setError(true);
           const newFailedAttempts = failedAttempts + 1;
