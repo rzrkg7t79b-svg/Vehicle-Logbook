@@ -25,8 +25,8 @@ type QualityCheck = {
   licensePlate: string;
   passed: boolean;
   comment: string | null;
-  createdBy: string;
-  date: string;
+  checkedBy: string;
+  createdAt: string;
 };
 
 type DriverData = {
@@ -555,7 +555,7 @@ export function ExportPreview({ open, onOpenChange }: ExportPreviewProps) {
                         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                           {check.passed ? <CheckCircle style={{ width: "14px", height: "14px", color: "#22c55e", flexShrink: 0 }} /> : <AlertCircle style={{ width: "14px", height: "14px", color: "#ef4444", flexShrink: 0 }} />}
                           <span style={{ color: check.passed ? "#22c55e" : "#ef4444", fontSize: "13px", fontWeight: "500" }}>{check.licensePlate}</span>
-                          <span style={{ color: "#888", fontSize: "12px", marginLeft: "auto" }}>by {check.createdBy}</span>
+                          <span style={{ color: "#888", fontSize: "12px", marginLeft: "auto" }}>by {check.checkedBy}</span>
                         </div>
                         {!check.passed && check.comment && (
                           <div style={{ marginTop: "4px", marginLeft: "22px", fontSize: "12px", color: "#f87171" }}>
