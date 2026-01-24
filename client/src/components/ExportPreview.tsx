@@ -549,14 +549,19 @@ export function ExportPreview({ open, onOpenChange }: ExportPreviewProps) {
                   ) : (
                     qualityChecks.map(check => (
                       <div key={check.id} style={{ 
-                        display: "flex", 
-                        alignItems: "center", 
-                        gap: "8px", 
-                        padding: "4px 0",
+                        padding: "6px 0",
+                        borderBottom: "1px solid #333",
                       }}>
-                        {check.passed ? <CheckCircle style={{ width: "14px", height: "14px", color: "#22c55e", flexShrink: 0 }} /> : <AlertCircle style={{ width: "14px", height: "14px", color: "#ef4444", flexShrink: 0 }} />}
-                        <span style={{ color: check.passed ? "#22c55e" : "#ef4444", fontSize: "13px" }}>{check.licensePlate}</span>
-                        <span style={{ color: "#888", fontSize: "12px" }}>by {check.createdBy}</span>
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                          {check.passed ? <CheckCircle style={{ width: "14px", height: "14px", color: "#22c55e", flexShrink: 0 }} /> : <AlertCircle style={{ width: "14px", height: "14px", color: "#ef4444", flexShrink: 0 }} />}
+                          <span style={{ color: check.passed ? "#22c55e" : "#ef4444", fontSize: "13px", fontWeight: "500" }}>{check.licensePlate}</span>
+                          <span style={{ color: "#888", fontSize: "12px", marginLeft: "auto" }}>by {check.createdBy}</span>
+                        </div>
+                        {!check.passed && check.comment && (
+                          <div style={{ marginTop: "4px", marginLeft: "22px", fontSize: "12px", color: "#f87171" }}>
+                            Reason: {check.comment}
+                          </div>
+                        )}
                       </div>
                     ))
                   )}
