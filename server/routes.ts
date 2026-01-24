@@ -275,6 +275,7 @@ export async function registerRoutes(
       const input = api.todos.create.input.parse(req.body);
       const todo = await storage.createTodo(input);
       broadcastUpdate("todos");
+      broadcastUpdate("module-status");
       res.status(201).json(todo);
     } catch (err) {
       if (err instanceof z.ZodError) {
@@ -302,6 +303,7 @@ export async function registerRoutes(
       }
       const updated = await storage.updateTodo(id, updateData);
       broadcastUpdate("todos");
+      broadcastUpdate("module-status");
       res.json(updated);
     } catch (err) {
       if (err instanceof z.ZodError) {
@@ -320,6 +322,7 @@ export async function registerRoutes(
     }
     await storage.deleteTodo(id);
     broadcastUpdate("todos");
+    broadcastUpdate("module-status");
     res.status(204).send();
   });
 
@@ -345,6 +348,7 @@ export async function registerRoutes(
         broadcastUpdate("driver-tasks");
       }
       broadcastUpdate("quality-checks");
+      broadcastUpdate("module-status");
       res.status(201).json(check);
     } catch (err) {
       if (err instanceof z.ZodError) {
@@ -374,6 +378,7 @@ export async function registerRoutes(
       }
       const updated = await storage.updateDriverTask(id, updateData);
       broadcastUpdate("driver-tasks");
+      broadcastUpdate("module-status");
       res.json(updated);
     } catch (err) {
       if (err instanceof z.ZodError) {
@@ -527,6 +532,7 @@ export async function registerRoutes(
       const input = api.flowTasks.create.input.parse(req.body);
       const task = await storage.createFlowTask(input);
       broadcastUpdate("flow-tasks");
+      broadcastUpdate("module-status");
       res.status(201).json(task);
     } catch (err) {
       if (err instanceof z.ZodError) {
@@ -576,6 +582,7 @@ export async function registerRoutes(
       }
       const updated = await storage.updateFlowTask(id, updateData);
       broadcastUpdate("flow-tasks");
+      broadcastUpdate("module-status");
       res.json(updated);
     } catch (err) {
       if (err instanceof z.ZodError) {
@@ -594,6 +601,7 @@ export async function registerRoutes(
     }
     await storage.deleteFlowTask(id);
     broadcastUpdate("flow-tasks");
+    broadcastUpdate("module-status");
     res.status(204).send();
   });
 

@@ -17,7 +17,7 @@ const resourceToQueryKeys: Record<UpdateType, string[]> = {
   "vehicles": ["/api/vehicles", "/api/vehicles/"],
   "quality-checks": ["/api/quality-checks"],
   "driver-tasks": ["/api/driver-tasks"],
-  "module-status": ["/api/module-status"],
+  "module-status": ["/api/module-status", "/api/dashboard/status"],
   "users": ["/api/users"],
   "timedriver-checks": ["/api/timedriver-checks"],
 };
