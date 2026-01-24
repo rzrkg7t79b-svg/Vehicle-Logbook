@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { Lock } from "lucide-react";
+import { Lock, Timer } from "lucide-react";
 
 interface PinGateProps {
   children: React.ReactNode;
@@ -7,28 +7,25 @@ interface PinGateProps {
 
 const CORRECT_PIN = "4035";
 const STORAGE_KEY = "bodyshop_auth";
-const TIMEOUT_MS = 5 * 60 * 1000;
+const TIMEOUT_SECONDS = 5 * 60;
 
 export function PinGate({ children }: PinGateProps) {
   const [pin, setPin] = useState("");
   const [isUnlocked, setIsUnlocked] = useState(false);
   const [error, setError] = useState(false);
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [secondsLeft, setSecondsLeft] = useState(TIMEOUT_SECONDS);
+  const countdownRef = useRef<NodeJS.Timeout | null>(null);
 
   const logout = useCallback(() => {
     sessionStorage.removeItem(STORAGE_KEY);
     setIsUnlocked(false);
     setPin("");
+    setSecondsLeft(TIMEOUT_SECONDS);
   }, []);
 
   const resetTimer = useCallback(() => {
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-    }
-    if (isUnlocked) {
-      timeoutRef.current = setTimeout(logout, TIMEOUT_MS);
-    }
-  }, [isUnlocked, logout]);
+    setSecondsLeft(TIMEOUT_SECONDS);
+  }, []);
 
   useEffect(() => {
     const stored = sessionStorage.getItem(STORAGE_KEY);
@@ -46,17 +43,31 @@ export function PinGate({ children }: PinGateProps) {
       document.addEventListener(event, resetTimer);
     });
 
-    resetTimer();
+    countdownRef.current = setInterval(() => {
+      setSecondsLeft(prev => {
+        if (prev <= 1) {
+          logout();
+          return TIMEOUT_SECONDS;
+        }
+        return prev - 1;
+      });
+    }, 1000);
 
     return () => {
       events.forEach(event => {
         document.removeEventListener(event, resetTimer);
       });
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
+      if (countdownRef.current) {
+        clearInterval(countdownRef.current);
       }
     };
-  }, [isUnlocked, resetTimer]);
+  }, [isUnlocked, resetTimer, logout]);
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
 
   const handleDigit = (digit: string) => {
     if (pin.length < 4) {
@@ -85,7 +96,17 @@ export function PinGate({ children }: PinGateProps) {
   };
 
   if (isUnlocked) {
-    return <>{children}</>;
+    return (
+      <div className="relative">
+        <div className="fixed top-3 right-3 z-50 flex items-center gap-1.5 px-2.5 py-1.5 bg-card/90 backdrop-blur border border-white/10 rounded-lg shadow-lg">
+          <Timer className="w-3.5 h-3.5 text-muted-foreground" />
+          <span className={`text-xs font-mono font-bold ${secondsLeft <= 60 ? 'text-red-500' : 'text-muted-foreground'}`}>
+            {formatTime(secondsLeft)}
+          </span>
+        </div>
+        {children}
+      </div>
+    );
   }
 
   return (
