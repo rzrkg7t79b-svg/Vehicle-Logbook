@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Navigation } from "@/components/Navigation";
 import { PinGate } from "@/components/PinGate";
 import { useUser } from "@/contexts/UserContext";
+import { useRealtimeUpdates } from "@/hooks/useRealtimeUpdates";
 import MasterDashboard from "@/pages/MasterDashboard";
 import DriverSIXT from "@/pages/DriverSIXT";
 import Dashboard from "@/pages/Dashboard";
@@ -30,6 +31,8 @@ function HomeRedirect() {
 function Router() {
   const [location] = useLocation();
   const showNavigation = location === "/" || location === "/bodyshop" || location.startsWith("/vehicle/");
+  
+  useRealtimeUpdates();
 
   return (
     <div className="w-full max-w-md mx-auto relative bg-background min-h-screen shadow-2xl overflow-hidden border-x border-white/5">

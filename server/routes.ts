@@ -4,6 +4,7 @@ import type { Server } from "http";
 import { storage } from "./storage";
 import { api } from "@shared/routes";
 import { z } from "zod";
+import { broadcastUpdate } from "./websocket";
 
 export async function registerRoutes(
   httpServer: Server,
@@ -29,6 +30,7 @@ export async function registerRoutes(
     try {
       const input = api.vehicles.create.input.parse(req.body);
       const vehicle = await storage.createVehicle(input);
+      broadcastUpdate("vehicles");
       res.status(201).json(vehicle);
     } catch (err) {
       if (err instanceof z.ZodError) {
@@ -50,6 +52,7 @@ export async function registerRoutes(
     try {
       const input = api.vehicles.update.input.parse(req.body);
       const updated = await storage.updateVehicle(id, input);
+      broadcastUpdate("vehicles");
       res.json(updated);
     } catch (err) {
       if (err instanceof z.ZodError) {
@@ -69,6 +72,7 @@ export async function registerRoutes(
         return res.status(404).json({ message: 'Vehicle not found' });
     }
     await storage.deleteVehicle(id);
+    broadcastUpdate("vehicles");
     res.status(204).send();
   });
 
@@ -84,6 +88,7 @@ export async function registerRoutes(
         }
 
         const comment = await storage.createComment({ ...input, vehicleId });
+        broadcastUpdate("vehicles");
         res.status(201).json(comment);
     } catch (err) {
         if (err instanceof z.ZodError) {
@@ -161,6 +166,7 @@ export async function registerRoutes(
       }
 
       const user = await storage.createUser(input);
+      broadcastUpdate("users");
       res.status(201).json(user);
     } catch (err) {
       if (err instanceof z.ZodError) {
@@ -198,6 +204,7 @@ export async function registerRoutes(
       }
 
       const updated = await storage.updateUser(id, input);
+      broadcastUpdate("users");
       res.json(updated);
     } catch (err) {
       if (err instanceof z.ZodError) {
@@ -224,6 +231,7 @@ export async function registerRoutes(
     }
 
     await storage.deleteUser(id);
+    broadcastUpdate("users");
     res.status(204).send();
   });
 
@@ -252,6 +260,7 @@ export async function registerRoutes(
     try {
       const input = api.todos.create.input.parse(req.body);
       const todo = await storage.createTodo(input);
+      broadcastUpdate("todos");
       res.status(201).json(todo);
     } catch (err) {
       if (err instanceof z.ZodError) {
@@ -278,6 +287,7 @@ export async function registerRoutes(
         updateData.completedAt = new Date();
       }
       const updated = await storage.updateTodo(id, updateData);
+      broadcastUpdate("todos");
       res.json(updated);
     } catch (err) {
       if (err instanceof z.ZodError) {
@@ -295,6 +305,7 @@ export async function registerRoutes(
       return res.status(404).json({ message: "Todo not found" });
     }
     await storage.deleteTodo(id);
+    broadcastUpdate("todos");
     res.status(204).send();
   });
 
@@ -317,8 +328,9 @@ export async function registerRoutes(
           description: input.comment || `Quality check failed for ${input.licensePlate}`,
           completed: false,
         });
+        broadcastUpdate("driver-tasks");
       }
-      
+      broadcastUpdate("quality-checks");
       res.status(201).json(check);
     } catch (err) {
       if (err instanceof z.ZodError) {
@@ -347,6 +359,7 @@ export async function registerRoutes(
         updateData.completedAt = new Date();
       }
       const updated = await storage.updateDriverTask(id, updateData);
+      broadcastUpdate("driver-tasks");
       res.json(updated);
     } catch (err) {
       if (err instanceof z.ZodError) {
@@ -372,6 +385,7 @@ export async function registerRoutes(
         input.isDone,
         input.doneBy
       );
+      broadcastUpdate("module-status");
       res.json(status);
     } catch (err) {
       if (err instanceof z.ZodError) {
@@ -407,6 +421,7 @@ export async function registerRoutes(
     try {
       const input = api.flowTasks.create.input.parse(req.body);
       const task = await storage.createFlowTask(input);
+      broadcastUpdate("flow-tasks");
       res.status(201).json(task);
     } catch (err) {
       if (err instanceof z.ZodError) {
@@ -455,6 +470,7 @@ export async function registerRoutes(
         updateData.completedBy = null;
       }
       const updated = await storage.updateFlowTask(id, updateData);
+      broadcastUpdate("flow-tasks");
       res.json(updated);
     } catch (err) {
       if (err instanceof z.ZodError) {
@@ -472,6 +488,7 @@ export async function registerRoutes(
       return res.status(404).json({ message: "Flow task not found" });
     }
     await storage.deleteFlowTask(id);
+    broadcastUpdate("flow-tasks");
     res.status(204).send();
   });
 
@@ -480,6 +497,7 @@ export async function registerRoutes(
     try {
       const input = api.flowTasks.reorder.input.parse(req.body);
       await storage.reorderFlowTasks(input.taskIds);
+      broadcastUpdate("flow-tasks");
       res.json({ success: true });
     } catch (err) {
       if (err instanceof z.ZodError) {

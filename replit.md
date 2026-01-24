@@ -98,6 +98,8 @@ Preferred communication style: Simple, everyday language.
 
 12. **DriverSIXT View**: Dedicated view for driver-only users (Driver role without Counter/Admin). Shows combined FlowSIXT and ToDoSIXT tasks on one screen with personal progress bar. Drivers are automatically redirected to /driver instead of MasterSIXT dashboard.
 
+13. **Real-Time Updates**: WebSocket server broadcasts changes to all connected clients. When any user makes changes (creates/updates/deletes tasks, vehicles, etc.), all other users see the updates instantly without refreshing. Implemented using `ws` package on the server and a custom React hook (`useRealtimeUpdates`) on the client.
+
 ## External Dependencies
 
 ### Database
