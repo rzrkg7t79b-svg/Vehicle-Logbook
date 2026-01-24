@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useRoute, useLocation } from "wouter";
 import { useVehicle, useCreateComment, useDeleteVehicle } from "@/hooks/use-vehicles";
 import { CountdownTimer } from "@/components/CountdownTimer";
+import { GermanPlate } from "@/components/GermanPlate";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ArrowLeft, Trash2, Send, Clock, User, AlertCircle, Loader2 } from "lucide-react";
@@ -92,6 +93,11 @@ export default function VehicleDetail() {
       </header>
 
       <main className="p-4 space-y-6">
+        {/* License Plate Display */}
+        <section className="flex justify-center py-2">
+          <GermanPlate plate={vehicle.licensePlate} size="lg" />
+        </section>
+
         {/* Countdown Hero */}
         <section className="flex justify-center py-4">
           <CountdownTimer startDate={vehicle.countdownStart} size="lg" />

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useVehicles } from "@/hooks/use-vehicles";
 import { CountdownTimer } from "@/components/CountdownTimer";
+import { GermanPlate } from "@/components/GermanPlate";
 import { Link } from "wouter";
 import { Input } from "@/components/ui/input";
 import { Search, Filter, Car, BatteryCharging } from "lucide-react";
@@ -97,21 +98,22 @@ export default function Dashboard() {
               >
                 <Link href={`/vehicle/${vehicle.id}`}>
                   <div className="group glass-card rounded-xl p-4 active:scale-[0.98] transition-all hover:border-primary/30 relative overflow-hidden">
-                    <div className="flex justify-between items-start">
-                      <div className="flex-1 min-w-0 pr-4">
-                        <div className="flex items-center gap-2 mb-1">
-                          <h3 className="text-xl font-mono font-bold text-white tracking-wider truncate">
-                            {vehicle.licensePlate}
-                          </h3>
-                          {vehicle.isEv && (
-                            <BatteryCharging className="w-4 h-4 text-green-400" />
-                          )}
-                        </div>
+                    <div className="flex flex-col gap-3">
+                      <div className="flex justify-between items-start">
+                        <GermanPlate plate={vehicle.licensePlate} size="sm" />
+                        {vehicle.isEv && (
+                          <div className="flex items-center gap-1 text-green-400">
+                            <BatteryCharging className="w-4 h-4" />
+                            <span className="text-xs font-bold">EV</span>
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex justify-between items-center">
                         <p className="text-sm text-muted-foreground font-medium truncate">
                           {vehicle.name || "Unknown Model"}
                         </p>
+                        <CountdownTimer startDate={vehicle.countdownStart} />
                       </div>
-                      <CountdownTimer startDate={vehicle.countdownStart} />
                     </div>
                   </div>
                 </Link>
