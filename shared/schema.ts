@@ -29,6 +29,8 @@ export const vehicles = pgTable("vehicles", {
   notes: text("notes"), // Initial notes
   isEv: boolean("is_ev").default(false).notNull(),
   readyForCollection: boolean("ready_for_collection").default(false).notNull(),
+  collectionTodoId: integer("collection_todo_id"),
+  isPast: boolean("is_past").default(false).notNull(),
   countdownStart: timestamp("countdown_start").notNull().defaultNow(),
   createdAt: timestamp("created_at").defaultNow(),
 });
@@ -59,6 +61,8 @@ export const todos = pgTable("todos", {
   completed: boolean("completed").default(false).notNull(),
   completedBy: text("completed_by"),
   completedAt: timestamp("completed_at"),
+  vehicleId: integer("vehicle_id"),
+  isSystemGenerated: boolean("is_system_generated").default(false).notNull(),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -100,11 +104,30 @@ export const driverTasks = pgTable("driver_tasks", {
 
 export const moduleStatus = pgTable("module_status", {
   id: serial("id").primaryKey(),
-  moduleName: text("module_name").notNull().unique(),
+  moduleName: text("module_name").notNull(),
   isDone: boolean("is_done").default(false).notNull(),
   doneAt: timestamp("done_at"),
   doneBy: text("done_by"),
   date: text("date").notNull(),
+});
+
+export const timedriverCalculations = pgTable("timedriver_calculations", {
+  id: serial("id").primaryKey(),
+  date: text("date").notNull().unique(),
+  rentals: integer("rentals").notNull(),
+  budgetPerRental: real("budget_per_rental").notNull(),
+  totalBudget: real("total_budget").notNull(),
+  driversData: text("drivers_data").notNull(),
+  calculatedBy: text("calculated_by"),
+  calculatedAt: timestamp("calculated_at").defaultNow(),
+});
+
+export const vehicleComments = pgTable("vehicle_daily_comments", {
+  id: serial("id").primaryKey(),
+  vehicleId: integer("vehicle_id").references(() => vehicles.id, { onDelete: 'cascade' }).notNull(),
+  date: text("date").notNull(),
+  hasComment: boolean("has_comment").default(false).notNull(),
+  commentId: integer("comment_id"),
 });
 
 export const insertUserSchema = createInsertSchema(users)
@@ -182,6 +205,12 @@ export const insertDriverTaskSchema = createInsertSchema(driverTasks)
 export const insertModuleStatusSchema = createInsertSchema(moduleStatus)
   .omit({ id: true, doneAt: true });
 
+export const insertTimedriverCalculationSchema = createInsertSchema(timedriverCalculations)
+  .omit({ id: true, calculatedAt: true });
+
+export const insertVehicleDailyCommentSchema = createInsertSchema(vehicleComments)
+  .omit({ id: true });
+
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type Vehicle = typeof vehicles.$inferSelect;
@@ -198,6 +227,10 @@ export type DriverTask = typeof driverTasks.$inferSelect;
 export type InsertDriverTask = z.infer<typeof insertDriverTaskSchema>;
 export type ModuleStatus = typeof moduleStatus.$inferSelect;
 export type InsertModuleStatus = z.infer<typeof insertModuleStatusSchema>;
+export type TimedriverCalculation = typeof timedriverCalculations.$inferSelect;
+export type InsertTimedriverCalculation = z.infer<typeof insertTimedriverCalculationSchema>;
+export type VehicleDailyComment = typeof vehicleComments.$inferSelect;
+export type InsertVehicleDailyComment = z.infer<typeof insertVehicleDailyCommentSchema>;
 
 export type AppSettings = typeof appSettings.$inferSelect;
 export type InsertAppSettings = z.infer<typeof insertAppSettingsSchema>;

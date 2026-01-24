@@ -10,6 +10,8 @@ import {
   flowTasks,
   moduleStatus,
   appSettings,
+  timedriverCalculations,
+  vehicleComments,
   type InsertVehicle,
   type InsertComment,
   type InsertUser,
@@ -18,6 +20,7 @@ import {
   type InsertDriverTask,
   type InsertFlowTask,
   type InsertModuleStatus,
+  type InsertTimedriverCalculation,
   type Vehicle,
   type Comment,
   type User,
@@ -27,8 +30,10 @@ import {
   type FlowTask,
   type ModuleStatus,
   type AppSettings,
+  type TimedriverCalculation,
+  type VehicleDailyComment,
 } from "@shared/schema";
-import { eq, desc, asc, lte, and, sql, ne } from "drizzle-orm";
+import { eq, desc, asc, lte, and, sql, ne, inArray, gte } from "drizzle-orm";
 
 export interface IStorage {
   getVehicles(filter?: 'all' | 'expired', search?: string): Promise<Vehicle[]>;
@@ -76,6 +81,20 @@ export interface IStorage {
 
   getSetting(key: string): Promise<string | null>;
   setSetting(key: string, value: string): Promise<AppSettings>;
+
+  getTimedriverCalculation(date: string): Promise<TimedriverCalculation | undefined>;
+  saveTimedriverCalculation(calc: InsertTimedriverCalculation): Promise<TimedriverCalculation>;
+  deleteTimedriverCalculationForDate(date: string): Promise<void>;
+
+  getVehicleDailyComment(vehicleId: number, date: string): Promise<VehicleDailyComment | undefined>;
+  setVehicleDailyComment(vehicleId: number, date: string, commentId: number): Promise<VehicleDailyComment>;
+  getVehiclesWithoutDailyComment(date: string): Promise<Vehicle[]>;
+  
+  getQualityChecksForDate(date: string): Promise<QualityCheck[]>;
+  getIncompleteDriverTasks(): Promise<DriverTask[]>;
+  getTodosForCounter(): Promise<Todo[]>;
+
+  performMidnightReset(): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -331,6 +350,99 @@ export class DatabaseStorage implements IStorage {
       value,
     }).returning();
     return newSetting;
+  }
+
+  async getTimedriverCalculation(date: string): Promise<TimedriverCalculation | undefined> {
+    const [calc] = await db.select().from(timedriverCalculations).where(eq(timedriverCalculations.date, date));
+    return calc;
+  }
+
+  async saveTimedriverCalculation(calc: InsertTimedriverCalculation): Promise<TimedriverCalculation> {
+    const existing = await this.getTimedriverCalculation(calc.date);
+    if (existing) {
+      const [updated] = await db.update(timedriverCalculations)
+        .set(calc)
+        .where(eq(timedriverCalculations.date, calc.date))
+        .returning();
+      return updated;
+    }
+    const [newCalc] = await db.insert(timedriverCalculations).values(calc).returning();
+    return newCalc;
+  }
+
+  async deleteTimedriverCalculationForDate(date: string): Promise<void> {
+    await db.delete(timedriverCalculations).where(eq(timedriverCalculations.date, date));
+  }
+
+  async getVehicleDailyComment(vehicleId: number, date: string): Promise<VehicleDailyComment | undefined> {
+    const [record] = await db.select().from(vehicleComments)
+      .where(and(eq(vehicleComments.vehicleId, vehicleId), eq(vehicleComments.date, date)));
+    return record;
+  }
+
+  async setVehicleDailyComment(vehicleId: number, date: string, commentId: number): Promise<VehicleDailyComment> {
+    const existing = await this.getVehicleDailyComment(vehicleId, date);
+    if (existing) {
+      const [updated] = await db.update(vehicleComments)
+        .set({ hasComment: true, commentId })
+        .where(eq(vehicleComments.id, existing.id))
+        .returning();
+      return updated;
+    }
+    const [newRecord] = await db.insert(vehicleComments).values({
+      vehicleId,
+      date,
+      hasComment: true,
+      commentId,
+    }).returning();
+    return newRecord;
+  }
+
+  async getVehiclesWithoutDailyComment(date: string): Promise<Vehicle[]> {
+    const allVehicles = await this.getVehicles();
+    const activeVehicles = allVehicles.filter(v => !v.isPast);
+    
+    const result: Vehicle[] = [];
+    for (const vehicle of activeVehicles) {
+      const comment = await this.getVehicleDailyComment(vehicle.id, date);
+      if (!comment || !comment.hasComment) {
+        result.push(vehicle);
+      }
+    }
+    return result;
+  }
+
+  async getQualityChecksForDate(date: string): Promise<QualityCheck[]> {
+    const allChecks = await db.select().from(qualityChecks).orderBy(desc(qualityChecks.createdAt));
+    return allChecks.filter(check => {
+      if (!check.createdAt) return false;
+      const checkDate = check.createdAt.toISOString().split('T')[0];
+      return checkDate === date;
+    });
+  }
+
+  async getIncompleteDriverTasks(): Promise<DriverTask[]> {
+    return await db.select().from(driverTasks).where(eq(driverTasks.completed, false));
+  }
+
+  async getTodosForCounter(): Promise<Todo[]> {
+    const allTodos = await this.getTodos();
+    return allTodos.filter(todo => todo.assignedTo.includes('Counter'));
+  }
+
+  async performMidnightReset(): Promise<void> {
+    await db.update(todos).set({
+      completed: false,
+      completedBy: null,
+      completedAt: null,
+    });
+
+    await db.delete(moduleStatus);
+
+    await db.delete(qualityChecks);
+    await db.delete(driverTasks);
+
+    await db.delete(timedriverCalculations);
   }
 }
 

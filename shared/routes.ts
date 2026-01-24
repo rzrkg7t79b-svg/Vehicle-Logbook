@@ -1,6 +1,6 @@
 
 import { z } from 'zod';
-import { insertVehicleSchema, insertCommentSchema, insertUserSchema, insertTodoSchema, insertQualityCheckSchema, insertFlowTaskSchema, flowTaskTypes, vehicles, comments, users, todos, qualityChecks, driverTasks, flowTasks, moduleStatus, appSettings } from './schema';
+import { insertVehicleSchema, insertCommentSchema, insertUserSchema, insertTodoSchema, insertQualityCheckSchema, insertFlowTaskSchema, flowTaskTypes, vehicles, comments, users, todos, qualityChecks, driverTasks, flowTasks, moduleStatus, appSettings, timedriverCalculations } from './schema';
 
 export const errorSchemas = {
   validation: z.object({
@@ -351,6 +351,55 @@ export const api = {
       responses: {
         200: z.custom<typeof appSettings.$inferSelect>(),
         403: errorSchemas.forbidden,
+      },
+    },
+  },
+  timedriverCalculations: {
+    get: {
+      method: 'GET' as const,
+      path: '/api/timedriver-calculations/:date',
+      responses: {
+        200: z.custom<typeof timedriverCalculations.$inferSelect>().nullable(),
+      },
+    },
+    save: {
+      method: 'POST' as const,
+      path: '/api/timedriver-calculations',
+      input: z.object({
+        date: z.string(),
+        rentals: z.number(),
+        budgetPerRental: z.number(),
+        totalBudget: z.number(),
+        driversData: z.string(),
+        calculatedBy: z.string().optional(),
+      }),
+      responses: {
+        201: z.custom<typeof timedriverCalculations.$inferSelect>(),
+      },
+    },
+    delete: {
+      method: 'DELETE' as const,
+      path: '/api/timedriver-calculations/:date',
+      responses: {
+        204: z.void(),
+      },
+    },
+  },
+  dashboard: {
+    status: {
+      method: 'GET' as const,
+      path: '/api/dashboard/status',
+      input: z.object({
+        date: z.string(),
+      }),
+      responses: {
+        200: z.object({
+          timedriver: z.object({ isDone: z.boolean(), details: z.string().optional() }),
+          todo: z.object({ isDone: z.boolean(), completed: z.number(), total: z.number() }),
+          quality: z.object({ isDone: z.boolean(), passedChecks: z.number(), incompleteTasks: z.number() }),
+          bodyshop: z.object({ isDone: z.boolean(), vehiclesWithoutComment: z.number(), total: z.number() }),
+          overallProgress: z.number(),
+        }),
       },
     },
   },

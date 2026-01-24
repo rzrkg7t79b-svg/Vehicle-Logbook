@@ -403,6 +403,95 @@ export async function registerRoutes(
     }
   });
 
+  // TimeDriver calculation routes
+  app.get(api.timedriverCalculations.get.path, async (req, res) => {
+    const date = String(req.params.date);
+    const calc = await storage.getTimedriverCalculation(date);
+    res.json(calc || null);
+  });
+
+  app.post(api.timedriverCalculations.save.path, async (req, res) => {
+    try {
+      const input = api.timedriverCalculations.save.input.parse(req.body);
+      const calc = await storage.saveTimedriverCalculation(input);
+      
+      // Check if calculation was made before 8am to mark module as done
+      const now = new Date();
+      const berlinTime = new Date(now.toLocaleString("en-US", { timeZone: "Europe/Berlin" }));
+      const hour = berlinTime.getHours();
+      
+      if (hour < 8) {
+        const userPin = req.headers['x-admin-pin'] as string;
+        const user = userPin ? await storage.getUserByPin(userPin) : null;
+        await storage.setModuleStatus("timedriver", input.date, true, user?.initials);
+      }
+      
+      broadcastUpdate("timedriver-calculation");
+      res.status(201).json(calc);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ message: err.errors[0].message });
+      }
+      throw err;
+    }
+  });
+
+  app.delete(api.timedriverCalculations.delete.path, async (req, res) => {
+    const date = String(req.params.date);
+    await storage.deleteTimedriverCalculationForDate(date);
+    
+    // Also reset the module status for timedriver
+    await storage.setModuleStatus("timedriver", date, false);
+    
+    broadcastUpdate("timedriver-calculation");
+    res.status(204).send();
+  });
+
+  // Dashboard status route
+  app.get(api.dashboard.status.path, async (req, res) => {
+    const date = req.query.date as string || new Date().toISOString().split('T')[0];
+    
+    // TimeDriver status
+    const timedriverCalc = await storage.getTimedriverCalculation(date);
+    const timedriverStatus = await storage.getModuleStatus(date);
+    const timedriverModuleStatus = timedriverStatus.find(s => s.moduleName === "timedriver");
+    const timedriverIsDone = timedriverModuleStatus?.isDone || false;
+    
+    // Todo status
+    const allTodos = await storage.getTodos();
+    const completed = allTodos.filter(t => t.completed).length;
+    const todoIsDone = allTodos.length > 0 && completed === allTodos.length;
+    
+    // Quality status - 5 passed checks + all driver tasks done
+    const qualityChecks = await storage.getQualityChecksForDate(date);
+    const passedChecks = qualityChecks.filter(c => c.passed).length;
+    const incompleteTasks = await storage.getIncompleteDriverTasks();
+    const qualityIsDone = passedChecks >= 5 && incompleteTasks.length === 0;
+    
+    // Bodyshop status - all vehicles have daily comment
+    const vehiclesWithoutComment = await storage.getVehiclesWithoutDailyComment(date);
+    const allVehicles = await storage.getVehicles();
+    const activeVehicles = allVehicles.filter(v => !v.isPast);
+    const bodyshopIsDone = activeVehicles.length > 0 && vehiclesWithoutComment.length === 0;
+    
+    // Calculate overall progress (4 modules, each worth 25%)
+    let completedModules = 0;
+    if (timedriverIsDone) completedModules++;
+    if (todoIsDone) completedModules++;
+    if (qualityIsDone) completedModules++;
+    if (bodyshopIsDone) completedModules++;
+    
+    const overallProgress = Math.round((completedModules / 4) * 100);
+    
+    res.json({
+      timedriver: { isDone: timedriverIsDone, details: timedriverCalc ? "Calculated" : undefined },
+      todo: { isDone: todoIsDone, completed, total: allTodos.length },
+      quality: { isDone: qualityIsDone, passedChecks, incompleteTasks: incompleteTasks.length },
+      bodyshop: { isDone: bodyshopIsDone, vehiclesWithoutComment: vehiclesWithoutComment.length, total: activeVehicles.length },
+      overallProgress,
+    });
+  });
+
   // Helper to check if user is admin or counter
   async function requireAdminOrCounter(req: any, res: any): Promise<boolean> {
     const adminPin = req.headers['x-admin-pin'] as string;

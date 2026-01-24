@@ -30,7 +30,9 @@ export type UpdateType =
   | "driver-tasks"
   | "module-status"
   | "users"
-  | "timedriver-checks";
+  | "timedriver-checks"
+  | "timedriver-calculation"
+  | "dashboard";
 
 export function broadcastUpdate(type: UpdateType) {
   if (!wss) return;
