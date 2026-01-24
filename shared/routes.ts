@@ -101,6 +101,7 @@ export const api = {
           id: z.number(),
           initials: z.string(),
           maxDailyHours: z.number().nullable(),
+          hourlyRate: z.number().nullable(),
         })),
       },
     },
@@ -141,6 +142,7 @@ export const api = {
         pin: z.string().length(4).regex(/^\d{4}$/).optional(),
         roles: z.array(z.enum(["Counter", "Driver"])).optional(),
         maxDailyHours: z.number().min(1).max(24).optional().nullable(),
+        hourlyRate: z.number().min(0).optional().nullable(),
       }),
       responses: {
         200: z.custom<typeof users.$inferSelect>(),

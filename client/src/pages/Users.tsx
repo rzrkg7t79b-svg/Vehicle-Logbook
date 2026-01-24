@@ -17,6 +17,7 @@ export default function Users() {
   const [newPin, setNewPin] = useState("");
   const [newRoles, setNewRoles] = useState<string[]>([]);
   const [newMaxDailyHours, setNewMaxDailyHours] = useState<string>("");
+  const [newHourlyRate, setNewHourlyRate] = useState<string>("");
   const [pinError, setPinError] = useState("");
 
   const adminPin = currentUser?.pin;
@@ -36,7 +37,7 @@ export default function Users() {
   });
 
   const createMutation = useMutation({
-    mutationFn: async (data: { initials: string; pin: string; roles: string[]; maxDailyHours: number | null }) => {
+    mutationFn: async (data: { initials: string; pin: string; roles: string[]; maxDailyHours: number | null; hourlyRate: number | null }) => {
       const res = await apiRequest("POST", "/api/users", data, adminHeaders);
       return res.json();
     },
@@ -79,6 +80,7 @@ export default function Users() {
     setNewPin("");
     setNewRoles([]);
     setNewMaxDailyHours("");
+    setNewHourlyRate("");
     setPinError("");
   };
 
@@ -89,8 +91,13 @@ export default function Users() {
     }
     const hasDriverRole = newRoles.includes("Driver");
     const hours = newMaxDailyHours ? Number(newMaxDailyHours) : null;
+    const rate = newHourlyRate ? Number(newHourlyRate) : null;
     if (hasDriverRole && !hours) {
       setPinError("Max daily hours required for Driver role");
+      return;
+    }
+    if (hasDriverRole && !rate) {
+      setPinError("Hourly rate required for Driver role");
       return;
     }
     createMutation.mutate({
@@ -98,14 +105,20 @@ export default function Users() {
       pin: newPin,
       roles: newRoles,
       maxDailyHours: hours,
+      hourlyRate: rate,
     });
   };
 
   const handleUpdate = (id: number) => {
     const hasDriverRole = newRoles.includes("Driver");
     const hours = newMaxDailyHours ? Number(newMaxDailyHours) : null;
+    const rate = newHourlyRate ? Number(newHourlyRate) : null;
     if (hasDriverRole && !hours) {
       setPinError("Max daily hours required for Driver role");
+      return;
+    }
+    if (hasDriverRole && !rate) {
+      setPinError("Hourly rate required for Driver role");
       return;
     }
     const updateData: Partial<User> = {};
@@ -113,6 +126,7 @@ export default function Users() {
     if (newPin && newPin.length === 4) updateData.pin = newPin;
     if (newRoles.length > 0 || editingId) updateData.roles = newRoles;
     updateData.maxDailyHours = hours;
+    updateData.hourlyRate = rate;
     
     updateMutation.mutate({ id, data: updateData });
   };
@@ -123,6 +137,7 @@ export default function Users() {
     setNewPin("");
     setNewRoles(user.roles || []);
     setNewMaxDailyHours(user.maxDailyHours ? String(user.maxDailyHours) : "");
+    setNewHourlyRate(user.hourlyRate ? String(user.hourlyRate) : "");
     setPinError("");
   };
 
@@ -249,14 +264,34 @@ export default function Users() {
                   </label>
                   <Input
                     value={newMaxDailyHours}
-                    onChange={(e) => setNewMaxDailyHours(e.target.value.replace(/\D/g, "").slice(0, 2))}
-                    placeholder="e.g. 8"
+                    onChange={(e) => {
+                      const val = e.target.value.replace(/[^\d.]/g, "");
+                      if (val.split('.').length <= 2) {
+                        setNewMaxDailyHours(val.slice(0, 5));
+                      }
+                    }}
+                    placeholder="e.g. 5.5"
                     className="bg-background"
-                    maxLength={2}
-                    type="number"
-                    min={1}
-                    max={24}
+                    maxLength={5}
                     data-testid="input-max-daily-hours"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground mb-1 block">
+                    Hourly Rate (EUR) {newRoles.includes("Driver") ? "(required)" : "(optional)"}
+                  </label>
+                  <Input
+                    value={newHourlyRate}
+                    onChange={(e) => {
+                      const val = e.target.value.replace(/[^\d.,]/g, "").replace(",", ".");
+                      if (val.split('.').length <= 2) {
+                        setNewHourlyRate(val.slice(0, 6));
+                      }
+                    }}
+                    placeholder="e.g. 27.08"
+                    className="bg-background"
+                    maxLength={6}
+                    data-testid="input-hourly-rate"
                   />
                 </div>
                 {pinError && <p className="text-xs text-red-500">{pinError}</p>}
@@ -343,14 +378,34 @@ export default function Users() {
                       </label>
                       <Input
                         value={newMaxDailyHours}
-                        onChange={(e) => setNewMaxDailyHours(e.target.value.replace(/\D/g, "").slice(0, 2))}
-                        placeholder="e.g. 8"
+                        onChange={(e) => {
+                          const val = e.target.value.replace(/[^\d.]/g, "");
+                          if (val.split('.').length <= 2) {
+                            setNewMaxDailyHours(val.slice(0, 5));
+                          }
+                        }}
+                        placeholder="e.g. 5.5"
                         className="bg-background"
-                        maxLength={2}
-                        type="number"
-                        min={1}
-                        max={24}
+                        maxLength={5}
                         data-testid="input-edit-max-daily-hours"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs text-muted-foreground mb-1 block">
+                        Hourly Rate (EUR) {newRoles.includes("Driver") ? "(required)" : "(optional)"}
+                      </label>
+                      <Input
+                        value={newHourlyRate}
+                        onChange={(e) => {
+                          const val = e.target.value.replace(/[^\d.,]/g, "").replace(",", ".");
+                          if (val.split('.').length <= 2) {
+                            setNewHourlyRate(val.slice(0, 6));
+                          }
+                        }}
+                        placeholder="e.g. 27.08"
+                        className="bg-background"
+                        maxLength={6}
+                        data-testid="input-edit-hourly-rate"
                       />
                     </div>
                     {pinError && <p className="text-xs text-red-500">{pinError}</p>}
@@ -393,7 +448,12 @@ export default function Users() {
                           ))}
                           {user.maxDailyHours && (
                             <span className="text-[10px] px-1.5 py-0.5 bg-blue-500/20 text-blue-400 rounded">
-                              {user.maxDailyHours}h/day
+                              {Math.floor(user.maxDailyHours)}h{user.maxDailyHours % 1 > 0 ? ` ${Math.round((user.maxDailyHours % 1) * 60)}min` : ""}/day
+                            </span>
+                          )}
+                          {user.hourlyRate && (
+                            <span className="text-[10px] px-1.5 py-0.5 bg-green-500/20 text-green-400 rounded">
+                              {user.hourlyRate} EUR/h
                             </span>
                           )}
                         </div>

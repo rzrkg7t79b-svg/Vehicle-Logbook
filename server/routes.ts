@@ -149,7 +149,7 @@ export async function registerRoutes(
     const users = await storage.getUsers();
     const drivers = users
       .filter(u => u.roles?.includes("Driver") && u.maxDailyHours)
-      .map(u => ({ id: u.id, initials: u.initials, maxDailyHours: u.maxDailyHours }));
+      .map(u => ({ id: u.id, initials: u.initials, maxDailyHours: u.maxDailyHours, hourlyRate: u.hourlyRate }));
     res.json(drivers);
   });
 

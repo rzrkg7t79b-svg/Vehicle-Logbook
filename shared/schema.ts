@@ -1,5 +1,5 @@
 
-import { pgTable, text, serial, boolean, timestamp, integer } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, boolean, timestamp, integer, real } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { relations } from "drizzle-orm";
@@ -10,7 +10,8 @@ export const users = pgTable("users", {
   pin: text("pin").notNull().unique(),
   roles: text("roles").array().notNull().default([]),
   isAdmin: boolean("is_admin").default(false).notNull(),
-  maxDailyHours: integer("max_daily_hours"),
+  maxDailyHours: real("max_daily_hours"),
+  hourlyRate: real("hourly_rate"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -114,6 +115,7 @@ export const insertUserSchema = createInsertSchema(users)
     roles: z.array(z.enum(["Counter", "Driver"])).default([]),
     isAdmin: z.boolean().default(false),
     maxDailyHours: z.number().min(1).max(24).optional().nullable(),
+    hourlyRate: z.number().min(0).optional().nullable(),
   });
 
 export const insertAppSettingsSchema = createInsertSchema(appSettings)

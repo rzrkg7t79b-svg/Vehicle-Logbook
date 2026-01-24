@@ -39,7 +39,7 @@ Preferred communication style: Simple, everyday language.
 - **Migrations**: Drizzle Kit with `db:push` command
 
 ### Core Data Models
-- **Users**: Staff members with initials, 4-digit PIN, roles array, admin flag, and maxDailyHours
+- **Users**: Staff members with initials, 4-digit PIN, roles array, admin flag, maxDailyHours (supports half hours like 5.5), and hourlyRate (EUR/hour)
 - **AppSettings**: Key-value store for configurable settings (e.g., budgetPerRental)
 - **Vehicles**: License plates, names, notes, EV status, collection status, countdown timers
 - **Comments**: Linked to vehicles with user initials and timestamps
@@ -86,10 +86,12 @@ Preferred communication style: Simple, everyday language.
 
 9. **TimeDriverSIXT Features**:
    - Labor planning budget tool for calculating working time distribution
-   - Input: Rentals today (number), Labor minutes per rental (admin-editable, default 16.39 min)
+   - Input: Rentals today (number), Budget per rental in EUR (admin-editable, default 16.39 EUR)
    - Driver selection: Multi-select buttons showing initials and max daily hours
-   - Fair distribution algorithm: Distributes labor based on each driver's max hours proportion
-   - Results: Shows hours:minutes per driver, percent bar (100% = max daily hours)
+   - Each driver has individual hourly rate (EUR/hour) stored in their user account
+   - Calculation: Total Budget = rentals × EUR per rental, then Working Hours = driverBudget ÷ hourlyRate
+   - Results: Shows hours:minutes per driver (capped at their maxDailyHours), percent bar (100% = max daily hours)
+   - After calculation: Inputs locked, "Done" indicator shown, "New Calculation" button to start fresh
    - Settings API: GET /api/settings/:key (public), PUT /api/settings/:key (admin-only)
 
 10. **FlowSIXT Features**:

@@ -21,7 +21,7 @@ export default function TimeDriver() {
   const [isCalculated, setIsCalculated] = useState(false);
   const [calculationResult, setCalculationResult] = useState<{
     totalBudget: number;
-    drivers: { id: number; initials: string; maxHours: number; assignedHours: number; assignedMinutes: number; percent: number }[];
+    drivers: { id: number; initials: string; maxHours: number; hourlyRate: number; assignedHours: number; assignedMinutes: number; percent: number }[];
   } | null>(null);
   const [isEditingBudget, setIsEditingBudget] = useState(false);
   const [tempBudget, setTempBudget] = useState("");
@@ -38,7 +38,7 @@ export default function TimeDriver() {
 
   const adminHeaders: Record<string, string> = user?.pin ? { "x-admin-pin": user.pin } : {};
   
-  const { data: driverUsers = [] } = useQuery<{ id: number; initials: string; maxDailyHours: number | null }[]>({
+  const { data: driverUsers = [] } = useQuery<{ id: number; initials: string; maxDailyHours: number | null; hourlyRate: number | null }[]>({
     queryKey: ["/api/drivers"],
     enabled: !!user,
   });
@@ -86,20 +86,23 @@ export default function TimeDriver() {
 
     const drivers = selectedDriverData.map(driver => {
       const maxHours = driver.maxDailyHours || 0;
+      const hourlyRate = driver.hourlyRate || 27.08;
+      
       const proportion = maxHours / totalMaxHours;
-      const fairTotalMinutes = Math.round(proportion * totalBudget);
+      const driverBudget = proportion * totalBudget;
       
-      const maxMinutes = maxHours * 60;
-      const cappedMinutes = Math.min(fairTotalMinutes, maxMinutes);
+      const calculatedHours = driverBudget / hourlyRate;
+      const cappedHours = Math.min(calculatedHours, maxHours);
       
-      const assignedHours = Math.floor(cappedMinutes / 60);
-      const assignedMinutes = cappedMinutes % 60;
-      const percent = Math.round((cappedMinutes / maxMinutes) * 100);
+      const assignedHours = Math.floor(cappedHours);
+      const assignedMinutes = Math.round((cappedHours - assignedHours) * 60);
+      const percent = Math.round((cappedHours / maxHours) * 100);
 
       return {
         id: driver.id,
         initials: driver.initials,
         maxHours,
+        hourlyRate,
         assignedHours,
         assignedMinutes,
         percent,
@@ -245,7 +248,9 @@ export default function TimeDriver() {
                   data-testid={`button-driver-${driver.id}`}
                 >
                   <div className="font-bold text-lg">{driver.initials}</div>
-                  <div className="text-[10px] opacity-70">{driver.maxDailyHours}h/day</div>
+                  <div className="text-[10px] opacity-70">
+                    {Math.floor(driver.maxDailyHours || 0)}h{(driver.maxDailyHours || 0) % 1 > 0 ? ` ${Math.round(((driver.maxDailyHours || 0) % 1) * 60)}min` : ""}/day
+                  </div>
                 </button>
               ))}
             </div>
@@ -290,7 +295,9 @@ export default function TimeDriver() {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <span className="font-bold text-white">{driver.initials}</span>
-                      <span className="text-xs text-muted-foreground">(max {driver.maxHours}h/day)</span>
+                      <span className="text-xs text-muted-foreground">
+                        (max {Math.floor(driver.maxHours)}h{driver.maxHours % 1 > 0 ? ` ${Math.round((driver.maxHours % 1) * 60)}min` : ""}/day)
+                      </span>
                     </div>
                     <div className="text-right">
                       <span className="font-mono font-bold text-green-400">
