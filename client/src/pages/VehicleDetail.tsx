@@ -136,7 +136,7 @@ export default function VehicleDetail() {
              </div>
              <div>
                <h3 className="text-xs uppercase font-bold text-muted-foreground tracking-widest mb-1">Status</h3>
-               <p className="text-sm font-medium">{vehicle.isEv ? "Electric (EV)" : "Standard ICE"}</p>
+               <p className={`text-sm font-medium ${vehicle.isEv ? 'text-primary' : ''}`}>{vehicle.isEv ? "Electric (EV)" : "Standard ICE"}</p>
              </div>
           </div>
 

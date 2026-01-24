@@ -119,7 +119,7 @@ export default function Dashboard() {
                       <div className="flex justify-between items-start">
                         <GermanPlate plate={vehicle.licensePlate} size="sm" />
                         {vehicle.isEv && !vehicle.readyForCollection && (
-                          <div className="flex items-center gap-1 text-green-400">
+                          <div className="flex items-center gap-1 text-primary">
                             <BatteryCharging className="w-4 h-4" />
                             <span className="text-xs font-bold">EV</span>
                           </div>

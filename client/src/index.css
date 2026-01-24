@@ -9,34 +9,34 @@
   --font-body: 'Outfit', sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
 
-  /* Dark Theme Base - Professional Workshop Vibe */
-  --background: 220 15% 10%;    /* Very dark slate */
-  --foreground: 0 0% 95%;       /* Off-white text */
+  /* Anthracite Dark Theme */
+  --background: 0 0% 12%;         /* Anthracite - #1F1F1F */
+  --foreground: 0 0% 95%;         /* Off-white text */
 
-  --card: 220 15% 13%;          /* Slightly lighter slate */
+  --card: 0 0% 16%;               /* Slightly lighter anthracite */
   --card-foreground: 0 0% 95%;
 
-  --popover: 220 15% 13%;
+  --popover: 0 0% 16%;
   --popover-foreground: 0 0% 95%;
 
   /* Vibrant Orange Accent */
-  --primary: 24 95% 53%;        /* #F97316 - Orange */
+  --primary: 24 95% 53%;          /* #F97316 - Orange */
   --primary-foreground: 0 0% 100%;
 
-  --secondary: 220 10% 20%;     /* Dark Grey for secondary actions */
+  --secondary: 0 0% 22%;          /* Dark anthracite grey */
   --secondary-foreground: 0 0% 90%;
 
-  --muted: 220 10% 20%;
-  --muted-foreground: 220 10% 60%;
+  --muted: 0 0% 22%;
+  --muted-foreground: 0 0% 55%;
 
-  --accent: 220 10% 20%;
+  --accent: 0 0% 22%;
   --accent-foreground: 0 0% 90%;
 
-  --destructive: 0 84% 60%;
+  --destructive: 0 84% 60%;       /* Red - for timers only */
   --destructive-foreground: 0 0% 100%;
 
-  --border: 220 10% 20%;
-  --input: 220 10% 20%;
+  --border: 0 0% 22%;
+  --input: 0 0% 22%;
   --ring: 24 95% 53%;
 
   --radius: 1rem;
