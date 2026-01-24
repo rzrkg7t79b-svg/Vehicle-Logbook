@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { Lock, Timer, AlertTriangle } from "lucide-react";
+import { Lock, Timer, AlertTriangle, LogOut } from "lucide-react";
 import { UserContext } from "@/contexts/UserContext";
 import type { User } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
@@ -238,14 +238,25 @@ export function PinGate({ children }: PinGateProps) {
   if (isUnlocked && currentUser) {
     return (
       <UserContext.Provider value={{ user: currentUser, logout }}>
-        <div className="relative">
-          <div className="fixed top-3 right-3 z-50 flex items-center gap-2.5 px-2.5 py-1.5 bg-card/90 backdrop-blur border border-white/10 rounded-lg shadow-lg">
-            <span className="text-xs font-bold text-primary">{currentUser.initials}</span>
-            <div className="w-px h-3 bg-white/10" />
-            <Timer className="w-3.5 h-3.5 text-muted-foreground" />
-            <span className={`text-xs font-mono font-bold ${secondsLeft <= 60 ? 'text-red-500' : 'text-muted-foreground'}`}>
-              {formatTime(secondsLeft)}
-            </span>
+        <div className="relative pt-14">
+          <div className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 py-2.5 bg-card/95 backdrop-blur border-b border-white/10">
+            <span className="text-sm font-bold text-primary">{currentUser.initials}</span>
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-1.5">
+                <Timer className="w-3.5 h-3.5 text-muted-foreground" />
+                <span className={`text-xs font-mono font-bold ${secondsLeft <= 60 ? 'text-red-500' : 'text-muted-foreground'}`}>
+                  {formatTime(secondsLeft)}
+                </span>
+              </div>
+              <button
+                onClick={logout}
+                className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-muted-foreground hover:text-white bg-white/5 hover:bg-white/10 rounded-md transition-colors"
+                data-testid="button-logout"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+                Logout
+              </button>
+            </div>
           </div>
           {children}
         </div>
