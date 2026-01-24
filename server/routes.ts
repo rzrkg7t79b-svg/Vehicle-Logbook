@@ -60,6 +60,7 @@ export async function registerRoutes(
           assignedTo: ["Counter"],
           vehicleId: id,
           isSystemGenerated: true,
+          completed: false,
         });
         // Update input to include the collection todo ID
         (input as any).collectionTodoId = collectionTodo.id;
@@ -326,6 +327,13 @@ export async function registerRoutes(
         updateData.completedAt = new Date();
       }
       const updated = await storage.updateTodo(id, updateData);
+      
+      // If this is a system-generated collection todo being completed, mark vehicle as past
+      if (input.completed && existing.isSystemGenerated && existing.vehicleId) {
+        await storage.updateVehicle(existing.vehicleId, { isPast: true });
+        broadcastUpdate("vehicles");
+      }
+      
       broadcastUpdate("todos");
       broadcastUpdate("module-status");
       res.json(updated);
@@ -348,6 +356,39 @@ export async function registerRoutes(
     broadcastUpdate("todos");
     broadcastUpdate("module-status");
     res.status(204).send();
+  });
+
+  // Postpone todo (only for system-generated collection todos, max once)
+  app.post(api.todos.postpone.path, async (req, res) => {
+    const id = Number(req.params.id);
+    const existing = await storage.getTodo(id);
+    if (!existing) {
+      return res.status(404).json({ message: "Todo not found" });
+    }
+    
+    // Only system-generated collection todos can be postponed
+    if (!existing.isSystemGenerated) {
+      return res.status(400).json({ message: "Only collection tasks can be postponed" });
+    }
+    
+    // Can only postpone once
+    if (existing.postponeCount >= 1) {
+      return res.status(400).json({ message: "This task can only be postponed once" });
+    }
+    
+    // Calculate tomorrow's date in Berlin timezone
+    const tomorrowBerlin = new Date();
+    tomorrowBerlin.setDate(tomorrowBerlin.getDate() + 1);
+    const tomorrowDate = tomorrowBerlin.toLocaleDateString('en-CA', { timeZone: 'Europe/Berlin' });
+    
+    const updated = await storage.updateTodo(id, {
+      postponedToDate: tomorrowDate,
+      postponeCount: existing.postponeCount + 1,
+    });
+    
+    broadcastUpdate("todos");
+    broadcastUpdate("module-status");
+    res.json(updated);
   });
 
   // Quality check routes
@@ -487,10 +528,16 @@ export async function registerRoutes(
     const timedriverModuleStatus = timedriverStatus.find(s => s.moduleName === "timedriver");
     const timedriverIsDone = timedriverModuleStatus?.isDone || timedriverCalc !== undefined;
     
-    // Todo status
+    // Todo status - filter out postponed todos that are for future dates
     const allTodos = await storage.getTodos();
-    const completed = allTodos.filter(t => t.completed).length;
-    const todoIsDone = allTodos.length > 0 && completed === allTodos.length;
+    const todaysTodos = allTodos.filter(t => !t.postponedToDate || t.postponedToDate <= date);
+    const completed = todaysTodos.filter(t => t.completed).length;
+    // Count todos postponed TO future dates (these are still pending from today's perspective)
+    const postponedToFuture = allTodos.filter(t => t.postponedToDate && t.postponedToDate > date && !t.completed);
+    // Count todos that arrived today from past postponement
+    const postponedFromPast = todaysTodos.filter(t => t.postponedToDate === date && !t.completed);
+    const totalPostponed = postponedToFuture.length + postponedFromPast.length;
+    const todoIsDone = todaysTodos.length > 0 && completed === todaysTodos.length;
     
     // Quality status - 5 passed checks + all driver tasks done
     const qualityChecks = await storage.getQualityChecksForDate(date);
@@ -522,10 +569,11 @@ export async function registerRoutes(
     res.json({
       timedriver: { isDone: timedriverIsDone, details: timedriverCalc ? "Calculated" : undefined },
       flow: { isDone: flowIsDone, pending: pendingFlowTasks.length, total: allFlowTasks.length },
-      todo: { isDone: todoIsDone, completed, total: allTodos.length },
+      todo: { isDone: todoIsDone, completed, total: todaysTodos.length, postponed: totalPostponed },
       quality: { isDone: qualityIsDone, passedChecks, incompleteTasks: incompleteTasks.length },
       bodyshop: { isDone: bodyshopIsDone, vehiclesWithoutComment: vehiclesWithoutComment.length, total: activeVehicles.length },
       overallProgress,
+      hasPostponedTasks: totalPostponed > 0,
     });
   });
 

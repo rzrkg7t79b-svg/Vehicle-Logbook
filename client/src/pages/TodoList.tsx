@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { ArrowLeft, Plus, Trash2, Check, Square, CheckSquare, Users } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Check, Square, CheckSquare, Users, CalendarClock } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -81,6 +81,16 @@ export default function TodoList() {
     },
   });
 
+  const postponeMutation = useMutation({
+    mutationFn: async (id: number) => {
+      await apiRequest("POST", `/api/todos/${id}/postpone`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/todos"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/module-status"] });
+    },
+  });
+
   const markModuleDoneMutation = useMutation({
     mutationFn: async () => {
       await apiRequest("POST", "/api/module-status", {
@@ -95,14 +105,25 @@ export default function TodoList() {
     },
   });
 
-  const filteredTodos = user?.isAdmin 
+  // Filter todos based on role and postpone status
+  const baseTodos = user?.isAdmin 
     ? todos 
     : todos.filter(t => {
         if (!t.assignedTo || t.assignedTo.length === 0) return true;
         return t.assignedTo.some((role: string) => userRoles.includes(role));
       });
 
+  // Filter out postponed todos (show only if postponedToDate is today or past, or not set)
+  const filteredTodos = baseTodos.filter(t => {
+    if (!t.postponedToDate) return true;
+    return t.postponedToDate <= todayDate;
+  });
+
+  // Count postponed todos for today
+  const postponedTodos = filteredTodos.filter(t => t.postponedToDate === todayDate && !t.completed);
+
   const completedCount = filteredTodos.filter(t => t.completed).length;
+  const postponedCount = postponedTodos.length;
   const totalCount = filteredTodos.length;
   const progress = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
 
@@ -130,6 +151,9 @@ export default function TodoList() {
           <Progress value={progress} className="h-2" />
           <p className="text-xs text-muted-foreground mt-2">
             {completedCount} of {totalCount} tasks completed
+            {postponedCount > 0 && (
+              <span className="text-orange-400 ml-1">({postponedCount} postponed)</span>
+            )}
           </p>
         </Card>
 
@@ -200,7 +224,7 @@ export default function TodoList() {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, x: -100 }}
                 >
-                  <Card className={`p-3 ${todo.completed ? 'bg-green-500/5 border-green-500/20' : ''}`}>
+                  <Card className={`p-3 ${todo.completed ? 'bg-green-500/5 border-green-500/20' : ''} ${todo.postponedToDate === todayDate ? 'border-orange-500/30' : ''}`}>
                     <div className="flex items-center gap-3">
                       <button
                         onClick={() => toggleMutation.mutate({ id: todo.id, completed: !todo.completed })}
@@ -217,7 +241,7 @@ export default function TodoList() {
                         <p className={`text-sm ${todo.completed ? 'line-through text-muted-foreground' : 'text-white'}`}>
                           {todo.title}
                         </p>
-                        <div className="flex items-center gap-2 mt-1">
+                        <div className="flex items-center gap-2 mt-1 flex-wrap">
                           {todo.assignedTo && todo.assignedTo.length > 0 && (
                             <div className="flex gap-1">
                               {todo.assignedTo.map((role: string) => (
@@ -227,6 +251,16 @@ export default function TodoList() {
                               ))}
                             </div>
                           )}
+                          {todo.isSystemGenerated && (
+                            <Badge variant="secondary" className="text-xs py-0 bg-blue-500/20 text-blue-400">
+                              Collection
+                            </Badge>
+                          )}
+                          {todo.postponedToDate === todayDate && (
+                            <Badge variant="secondary" className="text-xs py-0 bg-orange-500/20 text-orange-400">
+                              Postponed
+                            </Badge>
+                          )}
                           {todo.completed && todo.completedBy && (
                             <span className="text-xs text-muted-foreground">
                               Done by {todo.completedBy}
@@ -234,15 +268,27 @@ export default function TodoList() {
                           )}
                         </div>
                       </div>
-                      {user?.isAdmin && (
-                        <button
-                          onClick={() => deleteMutation.mutate(todo.id)}
-                          className="text-muted-foreground hover:text-red-500 transition-colors"
-                          data-testid={`button-delete-todo-${todo.id}`}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      )}
+                      <div className="flex items-center gap-1">
+                        {todo.isSystemGenerated && !todo.completed && todo.postponeCount === 0 && (
+                          <button
+                            onClick={() => postponeMutation.mutate(todo.id)}
+                            className="text-muted-foreground hover:text-orange-400 transition-colors p-1"
+                            title="Postpone to tomorrow"
+                            data-testid={`button-postpone-todo-${todo.id}`}
+                          >
+                            <CalendarClock className="w-4 h-4" />
+                          </button>
+                        )}
+                        {user?.isAdmin && !todo.isSystemGenerated && (
+                          <button
+                            onClick={() => deleteMutation.mutate(todo.id)}
+                            className="text-muted-foreground hover:text-red-500 transition-colors p-1"
+                            data-testid={`button-delete-todo-${todo.id}`}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        )}
+                      </div>
                     </div>
                   </Card>
                 </motion.div>

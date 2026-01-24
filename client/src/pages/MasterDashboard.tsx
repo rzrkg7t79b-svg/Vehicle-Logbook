@@ -12,10 +12,11 @@ import type { Todo, DriverTask, FlowTask } from "@shared/schema";
 type DashboardStatus = {
   timedriver: { isDone: boolean; details?: string };
   flow: { isDone: boolean; pending: number; total: number };
-  todo: { isDone: boolean; completed: number; total: number };
+  todo: { isDone: boolean; completed: number; total: number; postponed?: number };
   quality: { isDone: boolean; passedChecks: number; incompleteTasks: number };
   bodyshop: { isDone: boolean; vehiclesWithoutComment: number; total: number };
   overallProgress: number;
+  hasPostponedTasks?: boolean;
 };
 
 const MODULES = [
@@ -84,7 +85,9 @@ export default function MasterDashboard() {
           ? "All done" 
           : `${dashboardStatus.flow.pending} pending`;
       case "todo": 
-        return `${dashboardStatus.todo.completed}/${dashboardStatus.todo.total} tasks`;
+        const postponed = dashboardStatus.todo.postponed || 0;
+        const todoText = `${dashboardStatus.todo.completed}/${dashboardStatus.todo.total} tasks`;
+        return postponed > 0 ? `${todoText}, ${postponed} postponed` : todoText;
       case "quality": 
         return `${dashboardStatus.quality.passedChecks}/5 checks, ${dashboardStatus.quality.incompleteTasks} pending`;
       case "bodyshop": 
@@ -135,6 +138,11 @@ export default function MasterDashboard() {
           <p className="text-xs text-muted-foreground mt-2">
             {totalProgress === 100 ? 'All modules completed' : 'Complete all modules before 16:30'}
           </p>
+          {dashboardStatus?.hasPostponedTasks && totalProgress === 100 && (
+            <p className="text-xs text-orange-400 mt-1">
+              Finish postponed tasks for 100%
+            </p>
+          )}
         </Card>
 
         <Card className={`p-4 ${masterOverdue ? 'border-red-500/50 bg-red-500/10' : ''}`}>

@@ -213,6 +213,15 @@ export const api = {
         404: errorSchemas.notFound,
       },
     },
+    postpone: {
+      method: 'POST' as const,
+      path: '/api/todos/:id/postpone',
+      responses: {
+        200: z.custom<typeof todos.$inferSelect>(),
+        400: errorSchemas.validation,
+        404: errorSchemas.notFound,
+      },
+    },
   },
   qualityChecks: {
     list: {
