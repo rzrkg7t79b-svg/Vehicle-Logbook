@@ -42,6 +42,8 @@ Preferred communication style: Simple, everyday language.
 - **Context**: React Context (`UserContext`) provides current user state
 - **Branch Manager**: Default admin user (initials: "BM", PIN: 4266) auto-seeded on startup
 - **Role-Based Access**: Users tab visible only to admin users; user CRUD protected server-side
+- **Login Protection**: 3 failed attempts trigger 5-minute lockout with countdown timer
+- **Emergency Reset**: Master code 169949 unlocks system without granting access (visible only when locked)
 
 ### Key Design Decisions
 

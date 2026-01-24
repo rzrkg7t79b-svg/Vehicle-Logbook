@@ -1,0 +1,15 @@
+Extend the existing app by enhancing the authentication and security logic of the already implemented user code login system. Do not rebuild the app, only modify and extend the current implementation.
+
+Add a strict login attempt protection rule: if a user enters an invalid or non-existing 4-digit code three times in a row, the login input must be locked for exactly 5 minutes. While the login is locked, the app must display a visible countdown timer in minutes and seconds (mm:ss) showing how long the lockout will remain active. The login input (number pad) must be disabled during this time.
+
+The UI must show how many login attempts are still remaining before the lockout is triggered (for example: “2 attempts left”, “1 attempt left”). As long as there is at least one attempt remaining, this UI element is only an attempt counter and not a button.
+
+When the number of remaining attempts reaches 0 and the number pad is locked, this attempt counter UI element must change its behavior and become an “Emergency” button. Only in this locked state should the Emergency button be visible and clickable.
+
+Pressing the Emergency button allows entering a special master reset code: 169949. If this master reset code is entered, the lockout timer must be immediately reset to 0, the login input must be unlocked, and all users must be able to log in again with their normal personal 4-digit codes. The master reset code itself must never grant access to the app; it only resets the lockout timer and unlocks the login system.
+
+If the system is not currently locked, the Emergency button must not be shown at all, and entering the master reset code should not be possible. If the system is already unlocked, there should be no way to trigger the emergency reset flow.
+
+Make sure the failed attempt counter resets automatically after a successful login or after the lockout timer expires. Also ensure that only invalid or non-existing codes count as failed attempts; valid user codes must immediately log the user in as usual.
+
+This security mechanism must be added on top of the existing user system (Branch Manager, users, roles, codes) without breaking any current functionality. The login system must remain simple, code-based, fast, and fully mobile-friendly.
