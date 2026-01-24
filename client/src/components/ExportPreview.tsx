@@ -110,18 +110,33 @@ export function ExportPreview({ open, onOpenChange }: ExportPreviewProps) {
     
     try {
       const element = exportRef.current;
+      const contentWidth = 1200;
+      const contentHeight = element.scrollHeight;
+      
       const canvas = await html2canvas(element, {
         scale: 2,
         backgroundColor: "#1a1a1a",
-        width: 1920,
-        height: element.scrollHeight,
-        windowWidth: 1920,
-        windowHeight: element.scrollHeight,
+        width: contentWidth,
+        height: contentHeight,
+        windowWidth: contentWidth,
+        windowHeight: contentHeight,
       });
+      
+      const maxWidth = 1920;
+      const maxHeight = 1080;
+      const ratio = Math.min(maxWidth / canvas.width, maxHeight / canvas.height, 1);
+      
+      const finalCanvas = document.createElement("canvas");
+      finalCanvas.width = Math.round(canvas.width * ratio);
+      finalCanvas.height = Math.round(canvas.height * ratio);
+      const ctx = finalCanvas.getContext("2d");
+      if (ctx) {
+        ctx.drawImage(canvas, 0, 0, finalCanvas.width, finalCanvas.height);
+      }
       
       const link = document.createElement("a");
       link.download = `MasterSIXT-Export-${todayDate}.png`;
-      link.href = canvas.toDataURL("image/png");
+      link.href = finalCanvas.toDataURL("image/png");
       link.click();
     } catch (error) {
       console.error("Export failed:", error);
@@ -192,12 +207,11 @@ export function ExportPreview({ open, onOpenChange }: ExportPreviewProps) {
           <div 
             ref={exportRef}
             style={{ 
-              width: "1920px", 
-              minHeight: "1080px",
-              transform: "scale(0.4)",
+              width: "1200px", 
+              transform: "scale(0.5)",
               transformOrigin: "top left",
               backgroundColor: "#1a1a1a",
-              padding: "40px",
+              padding: "32px",
               fontFamily: "system-ui, -apple-system, sans-serif",
             }}
           >
@@ -228,7 +242,7 @@ export function ExportPreview({ open, onOpenChange }: ExportPreviewProps) {
             </div>
 
             {/* Module Cards Grid */}
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "20px" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "20px" }}>
               
               {/* TimeDriverSIXT */}
               <div style={{ 
