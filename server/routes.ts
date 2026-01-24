@@ -468,11 +468,11 @@ export async function registerRoutes(
     const incompleteTasks = await storage.getIncompleteDriverTasks();
     const qualityIsDone = passedChecks >= 5 && incompleteTasks.length === 0;
     
-    // Bodyshop status - all vehicles have daily comment
+    // Bodyshop status - all vehicles have daily comment (or no vehicles = done)
     const vehiclesWithoutComment = await storage.getVehiclesWithoutDailyComment(date);
     const allVehicles = await storage.getVehicles();
     const activeVehicles = allVehicles.filter(v => !v.isPast);
-    const bodyshopIsDone = activeVehicles.length > 0 && vehiclesWithoutComment.length === 0;
+    const bodyshopIsDone = activeVehicles.length === 0 || vehiclesWithoutComment.length === 0;
     
     // Calculate overall progress (4 modules, each worth 25%)
     let completedModules = 0;
