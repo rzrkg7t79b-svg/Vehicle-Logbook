@@ -1,25 +1,32 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Link } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { queryClient, apiRequest } from "@/lib/queryClient";
+import { queryClient } from "@/lib/queryClient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowLeft, Plus, Check, RotateCcw, GripVertical, Zap, AlertTriangle } from "lucide-react";
 import { GermanPlate } from "@/components/GermanPlate";
+import { LicensePlateInput, buildPlateFromParts } from "@/components/LicensePlateInput";
 import { useUser } from "@/contexts/UserContext";
 import type { FlowTask } from "@shared/schema";
 import { flowTaskTypes } from "@shared/schema";
 import { motion, AnimatePresence, Reorder } from "framer-motion";
 
+interface VehicleGroup {
+  licensePlate: string;
+  isEv: boolean;
+  tasks: FlowTask[];
+  allCompleted: boolean;
+  priority: number;
+}
+
 export default function FlowSIXT() {
   const { user } = useUser();
-  const [licensePlate, setLicensePlate] = useState("");
+  const [plateCity, setPlateCity] = useState("");
+  const [plateLetters, setPlateLetters] = useState("");
+  const [plateNumbers, setPlateNumbers] = useState("");
   const [isEv, setIsEv] = useState(false);
-  const [taskType, setTaskType] = useState<string>("");
+  const [selectedTasks, setSelectedTasks] = useState<string[]>([]);
   const [showCompleted, setShowCompleted] = useState(false);
 
   const isAdminOrCounter = user?.isAdmin || user?.roles?.includes("Counter");
@@ -29,24 +36,34 @@ export default function FlowSIXT() {
     queryKey: ["/api/flow-tasks"],
   });
 
-  const createTask = useMutation({
-    mutationFn: async (data: { licensePlate: string; isEv: boolean; taskType: string }) => {
-      const res = await fetch("/api/flow-tasks", {
-        method: "POST",
-        headers: { 
-          "Content-Type": "application/json",
-          "x-admin-pin": user?.pin || ""
-        },
-        body: JSON.stringify(data),
-      });
-      if (!res.ok) throw new Error("Failed to create task");
-      return res.json();
+  const createTasks = useMutation({
+    mutationFn: async (data: { licensePlate: string; isEv: boolean; taskTypes: string[] }) => {
+      const results = [];
+      for (const taskType of data.taskTypes) {
+        const res = await fetch("/api/flow-tasks", {
+          method: "POST",
+          headers: { 
+            "Content-Type": "application/json",
+            "x-admin-pin": user?.pin || ""
+          },
+          body: JSON.stringify({ 
+            licensePlate: data.licensePlate, 
+            isEv: data.isEv, 
+            taskType 
+          }),
+        });
+        if (!res.ok) throw new Error("Failed to create task");
+        results.push(await res.json());
+      }
+      return results;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/flow-tasks"] });
-      setLicensePlate("");
+      setPlateCity("");
+      setPlateLetters("");
+      setPlateNumbers("");
       setIsEv(false);
-      setTaskType("");
+      setSelectedTasks([]);
     },
   });
 
@@ -86,13 +103,24 @@ export default function FlowSIXT() {
     },
   });
 
+  const toggleTaskSelection = (taskType: string) => {
+    setSelectedTasks(prev => 
+      prev.includes(taskType) 
+        ? prev.filter(t => t !== taskType)
+        : [...prev, taskType]
+    );
+  };
+
+  const licensePlate = buildPlateFromParts(plateCity, plateLetters, plateNumbers, isEv);
+  const isValidPlate = plateCity && plateLetters && plateNumbers;
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!licensePlate.trim() || !taskType) return;
-    createTask.mutate({ 
-      licensePlate: licensePlate.trim().toUpperCase(), 
+    if (!isValidPlate || selectedTasks.length === 0) return;
+    createTasks.mutate({ 
+      licensePlate, 
       isEv, 
-      taskType 
+      taskTypes: selectedTasks 
     });
   };
 
@@ -111,11 +139,41 @@ export default function FlowSIXT() {
     });
   };
 
-  const pendingTasks = tasks.filter(t => !t.completed);
-  const completedTasks = tasks.filter(t => t.completed);
+  const vehicleGroups = useMemo(() => {
+    const groups = new Map<string, VehicleGroup>();
+    
+    tasks.forEach(task => {
+      const key = task.licensePlate;
+      if (!groups.has(key)) {
+        groups.set(key, {
+          licensePlate: task.licensePlate,
+          isEv: task.isEv,
+          tasks: [],
+          allCompleted: true,
+          priority: task.priority,
+        });
+      }
+      const group = groups.get(key)!;
+      group.tasks.push(task);
+      if (!task.completed) {
+        group.allCompleted = false;
+      }
+      if (task.priority < group.priority) {
+        group.priority = task.priority;
+      }
+    });
+    
+    return Array.from(groups.values()).sort((a, b) => a.priority - b.priority);
+  }, [tasks]);
 
-  const handleReorder = (newOrder: FlowTask[]) => {
-    const taskIds = newOrder.map(t => t.id);
+  const pendingGroups = vehicleGroups.filter(g => !g.allCompleted);
+  const completedGroups = vehicleGroups.filter(g => g.allCompleted);
+
+  const handleReorderGroups = (newOrder: VehicleGroup[]) => {
+    const taskIds: number[] = [];
+    newOrder.forEach(group => {
+      group.tasks.forEach(task => taskIds.push(task.id));
+    });
     reorderTasks.mutate(taskIds);
   };
 
@@ -139,54 +197,44 @@ export default function FlowSIXT() {
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="space-y-2">
-                  <Label>License Plate</Label>
-                  <Input
-                    value={licensePlate}
-                    onChange={(e) => setLicensePlate(e.target.value.toUpperCase())}
-                    placeholder="M-AB 1234"
-                    className="font-mono text-lg"
-                    data-testid="input-flow-license-plate"
-                  />
-                </div>
+                <LicensePlateInput
+                  city={plateCity}
+                  letters={plateLetters}
+                  numbers={plateNumbers}
+                  isEv={isEv}
+                  onCityChange={setPlateCity}
+                  onLettersChange={setPlateLetters}
+                  onNumbersChange={setPlateNumbers}
+                  onEvChange={setIsEv}
+                />
 
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Zap className="w-4 h-4 text-green-500" />
-                    <Label htmlFor="ev-switch">Electric Vehicle</Label>
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-muted-foreground">Select Tasks</p>
+                  <div className="flex flex-wrap gap-2">
+                    {flowTaskTypes.map((taskType) => (
+                      <Button
+                        key={taskType}
+                        type="button"
+                        variant={selectedTasks.includes(taskType) ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => toggleTaskSelection(taskType)}
+                        className={`text-xs ${selectedTasks.includes(taskType) ? "bg-primary text-primary-foreground" : ""}`}
+                        data-testid={`button-task-${taskType.replace(/\s+/g, '-').toLowerCase()}`}
+                      >
+                        {taskType}
+                      </Button>
+                    ))}
                   </div>
-                  <Switch
-                    id="ev-switch"
-                    checked={isEv}
-                    onCheckedChange={setIsEv}
-                    data-testid="switch-ev"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Task Type</Label>
-                  <Select value={taskType} onValueChange={setTaskType}>
-                    <SelectTrigger data-testid="select-task-type">
-                      <SelectValue placeholder="Select task type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {flowTaskTypes.map((type) => (
-                        <SelectItem key={type} value={type}>
-                          {type}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
                 </div>
 
                 <Button 
                   type="submit" 
                   className="w-full" 
-                  disabled={!licensePlate.trim() || !taskType || createTask.isPending}
+                  disabled={!isValidPlate || selectedTasks.length === 0 || createTasks.isPending}
                   data-testid="button-create-flow-task"
                 >
                   <Plus className="w-4 h-4 mr-2" />
-                  Create Task
+                  Create {selectedTasks.length > 0 ? `${selectedTasks.length} Task${selectedTasks.length > 1 ? 's' : ''}` : 'Tasks'}
                 </Button>
               </form>
             </CardContent>
@@ -196,53 +244,53 @@ export default function FlowSIXT() {
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-lg flex items-center gap-2">
-              Pending Tasks
+              Pending Vehicles
               <span className="text-sm font-normal text-muted-foreground">
-                ({pendingTasks.length})
+                ({pendingGroups.length})
               </span>
             </CardTitle>
           </CardHeader>
           <CardContent>
             {isLoading ? (
               <div className="text-center py-8 text-muted-foreground">Loading...</div>
-            ) : pendingTasks.length === 0 ? (
+            ) : pendingGroups.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
                 No pending tasks
               </div>
             ) : isAdminOrCounter ? (
               <Reorder.Group 
                 axis="y" 
-                values={pendingTasks} 
-                onReorder={handleReorder}
-                className="space-y-2"
+                values={pendingGroups} 
+                onReorder={handleReorderGroups}
+                className="space-y-3"
               >
                 <AnimatePresence>
-                  {pendingTasks.map((task) => (
-                    <Reorder.Item key={task.id} value={task}>
-                      <TaskCard 
-                        task={task} 
+                  {pendingGroups.map((group) => (
+                    <Reorder.Item key={group.licensePlate} value={group}>
+                      <VehicleCard 
+                        group={group}
                         onComplete={handleComplete}
                         onMarkUndone={handleMarkUndone}
-                        canReorder={isAdminOrCounter ?? false}
+                        canReorder={true}
                         canComplete={true}
-                        canMarkUndone={false}
+                        canMarkUndone={true}
                       />
                     </Reorder.Item>
                   ))}
                 </AnimatePresence>
               </Reorder.Group>
             ) : (
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <AnimatePresence>
-                  {pendingTasks.map((task) => (
+                  {pendingGroups.map((group) => (
                     <motion.div
-                      key={task.id}
+                      key={group.licensePlate}
                       initial={{ opacity: 0, y: -10 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: 10 }}
                     >
-                      <TaskCard 
-                        task={task} 
+                      <VehicleCard 
+                        group={group}
                         onComplete={handleComplete}
                         onMarkUndone={handleMarkUndone}
                         canReorder={false}
@@ -264,21 +312,21 @@ export default function FlowSIXT() {
             className="text-muted-foreground"
             data-testid="button-toggle-completed"
           >
-            {showCompleted ? "Hide" : "Show"} Completed ({completedTasks.length})
+            {showCompleted ? "Hide" : "Show"} Completed ({completedGroups.length})
           </Button>
         </div>
 
-        {showCompleted && completedTasks.length > 0 && (
+        {showCompleted && completedGroups.length > 0 && (
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-lg text-muted-foreground">Completed Tasks</CardTitle>
+              <CardTitle className="text-lg text-muted-foreground">Completed Vehicles</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-2">
-                {completedTasks.map((task) => (
-                  <TaskCard 
-                    key={task.id}
-                    task={task} 
+              <div className="space-y-3">
+                {completedGroups.map((group) => (
+                  <VehicleCard 
+                    key={group.licensePlate}
+                    group={group}
                     onComplete={() => {}}
                     onMarkUndone={handleMarkUndone}
                     canReorder={false}
@@ -295,8 +343,8 @@ export default function FlowSIXT() {
   );
 }
 
-interface TaskCardProps {
-  task: FlowTask;
+interface VehicleCardProps {
+  group: VehicleGroup;
   onComplete: (task: FlowTask) => void;
   onMarkUndone: (task: FlowTask) => void;
   canReorder: boolean;
@@ -304,27 +352,72 @@ interface TaskCardProps {
   canMarkUndone: boolean;
 }
 
-function TaskCard({ task, onComplete, onMarkUndone, canReorder, canComplete, canMarkUndone }: TaskCardProps) {
+function VehicleCard({ group, onComplete, onMarkUndone, canReorder, canComplete, canMarkUndone }: VehicleCardProps) {
+  const completedCount = group.tasks.filter(t => t.completed).length;
+  const totalCount = group.tasks.length;
+  const hasRetry = group.tasks.some(t => t.needsRetry);
+  
   return (
     <div 
-      className={`flex items-center gap-3 p-3 rounded-lg border ${
-        task.needsRetry 
+      className={`p-4 rounded-lg border ${
+        hasRetry 
           ? "bg-orange-500/10 border-orange-500/30" 
-          : task.completed 
+          : group.allCompleted 
             ? "bg-muted/50 border-muted" 
             : "bg-card border-border"
       }`}
+      data-testid={`flow-vehicle-${group.licensePlate.replace(/\s+/g, '-')}`}
+    >
+      <div className="flex items-center gap-3 mb-3">
+        {canReorder && !group.allCompleted && (
+          <GripVertical className="w-4 h-4 text-muted-foreground cursor-grab" />
+        )}
+        <div className="flex items-center gap-2">
+          <GermanPlate plate={group.licensePlate} size="sm" />
+          {group.isEv && <Zap className="w-4 h-4 text-green-500" />}
+        </div>
+        <div className="ml-auto text-sm text-muted-foreground">
+          {completedCount}/{totalCount} done
+        </div>
+      </div>
+      
+      <div className="space-y-2">
+        {group.tasks.map((task) => (
+          <SubTaskRow
+            key={task.id}
+            task={task}
+            onComplete={() => onComplete(task)}
+            onMarkUndone={() => onMarkUndone(task)}
+            canComplete={canComplete && !task.completed}
+            canMarkUndone={canMarkUndone && task.completed}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+interface SubTaskRowProps {
+  task: FlowTask;
+  onComplete: () => void;
+  onMarkUndone: () => void;
+  canComplete: boolean;
+  canMarkUndone: boolean;
+}
+
+function SubTaskRow({ task, onComplete, onMarkUndone, canComplete, canMarkUndone }: SubTaskRowProps) {
+  return (
+    <div 
+      className={`flex items-center gap-2 p-2 rounded ${
+        task.needsRetry 
+          ? "bg-orange-500/20" 
+          : task.completed 
+            ? "bg-green-500/10" 
+            : "bg-white/5"
+      }`}
       data-testid={`flow-task-${task.id}`}
     >
-      {canReorder && !task.completed && (
-        <GripVertical className="w-4 h-4 text-muted-foreground cursor-grab" />
-      )}
-      
       <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2 mb-1">
-          <GermanPlate plate={task.licensePlate} size="sm" />
-          {task.isEv && <Zap className="w-4 h-4 text-green-500" />}
-        </div>
         <div className="flex items-center gap-2">
           <span className={`text-sm font-medium ${task.completed ? "line-through text-muted-foreground" : ""}`}>
             {task.taskType}
@@ -343,28 +436,32 @@ function TaskCard({ task, onComplete, onMarkUndone, canReorder, canComplete, can
         )}
       </div>
 
-      {!task.completed && canComplete && (
+      {canComplete && (
         <Button 
           size="icon" 
           variant="ghost" 
-          className="text-green-500 hover:text-green-600 hover:bg-green-500/10"
-          onClick={() => onComplete(task)}
+          className="h-8 w-8 text-green-500 hover:text-green-600 hover:bg-green-500/10"
+          onClick={onComplete}
           data-testid={`button-complete-flow-task-${task.id}`}
         >
-          <Check className="w-5 h-5" />
+          <Check className="w-4 h-4" />
         </Button>
       )}
 
-      {task.completed && canMarkUndone && (
+      {canMarkUndone && (
         <Button 
           size="icon" 
           variant="ghost" 
-          className="text-orange-500 hover:text-orange-600 hover:bg-orange-500/10"
-          onClick={() => onMarkUndone(task)}
+          className="h-8 w-8 text-orange-500 hover:text-orange-600 hover:bg-orange-500/10"
+          onClick={onMarkUndone}
           data-testid={`button-retry-flow-task-${task.id}`}
         >
-          <RotateCcw className="w-5 h-5" />
+          <RotateCcw className="w-4 h-4" />
         </Button>
+      )}
+      
+      {task.completed && !canMarkUndone && (
+        <Check className="w-4 h-4 text-green-500" />
       )}
     </div>
   );

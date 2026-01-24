@@ -1,27 +1,30 @@
 import { useState } from "react";
 import { Link } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { ArrowLeft, ClipboardCheck, CheckCircle, XCircle, AlertTriangle, Zap } from "lucide-react";
+import { ArrowLeft, CheckCircle, XCircle, AlertTriangle, Zap } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
 import { motion, AnimatePresence } from "framer-motion";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useUser } from "@/contexts/UserContext";
 import { getGermanDateString } from "@/lib/germanTime";
 import { GermanPlate } from "@/components/GermanPlate";
+import { LicensePlateInput, buildPlateFromParts } from "@/components/LicensePlateInput";
 import type { QualityCheck as QualityCheckType, DriverTask, ModuleStatus } from "@shared/schema";
 
 export default function QualityCheck() {
   const { user } = useUser();
-  const [licensePlate, setLicensePlate] = useState("");
+  const [plateCity, setPlateCity] = useState("");
+  const [plateLetters, setPlateLetters] = useState("");
+  const [plateNumbers, setPlateNumbers] = useState("");
   const [isEv, setIsEv] = useState(false);
   const [passed, setPassed] = useState<boolean | null>(null);
   const [comment, setComment] = useState("");
   const todayDate = getGermanDateString();
+  
+  const licensePlate = buildPlateFromParts(plateCity, plateLetters, plateNumbers, isEv);
+  const isValidPlate = plateCity && plateLetters && plateNumbers;
 
   const isDriver = user?.roles?.includes("Driver");
 
@@ -87,7 +90,9 @@ export default function QualityCheck() {
   });
 
   const resetForm = () => {
-    setLicensePlate("");
+    setPlateCity("");
+    setPlateLetters("");
+    setPlateNumbers("");
     setIsEv(false);
     setPassed(null);
     setComment("");
@@ -147,29 +152,16 @@ export default function QualityCheck() {
           <h3 className="font-medium text-white mb-4">New Quality Check</h3>
           
           <div className="space-y-4">
-            <div>
-              <label className="text-sm text-muted-foreground mb-1 block">License Plate</label>
-              <Input
-                placeholder="e.g. M-AB 1234"
-                value={licensePlate}
-                onChange={(e) => setLicensePlate(e.target.value.toUpperCase())}
-                className="uppercase font-mono text-lg"
-                data-testid="input-license-plate"
-              />
-            </div>
-
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Zap className="w-4 h-4 text-green-500" />
-                <Label htmlFor="ev-switch-quality">Electric Vehicle</Label>
-              </div>
-              <Switch
-                id="ev-switch-quality"
-                checked={isEv}
-                onCheckedChange={setIsEv}
-                data-testid="switch-quality-ev"
-              />
-            </div>
+            <LicensePlateInput
+              city={plateCity}
+              letters={plateLetters}
+              numbers={plateNumbers}
+              isEv={isEv}
+              onCityChange={setPlateCity}
+              onLettersChange={setPlateLetters}
+              onNumbersChange={setPlateNumbers}
+              onEvChange={setIsEv}
+            />
 
             <div>
               <label className="text-sm text-muted-foreground mb-2 block">Result</label>
@@ -216,7 +208,7 @@ export default function QualityCheck() {
 
             <Button
               onClick={() => createCheckMutation.mutate()}
-              disabled={!licensePlate || passed === null || (passed === false && !comment) || createCheckMutation.isPending}
+              disabled={!isValidPlate || passed === null || (passed === false && !comment) || createCheckMutation.isPending}
               className="w-full"
               data-testid="button-submit-check"
             >

@@ -290,7 +290,7 @@ export function PinGate({ children }: PinGateProps) {
             {isEmergencyMode ? (
               "Emergency Reset"
             ) : (
-              <>Bodyshop<span className="text-primary">SIXT</span></>
+              <>Master<span className="text-primary">SIXT</span></>
             )}
           </h1>
           <p className="text-sm text-muted-foreground">
