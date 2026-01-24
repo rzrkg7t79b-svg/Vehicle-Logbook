@@ -35,11 +35,13 @@ Preferred communication style: Simple, everyday language.
 - **Vehicles**: License plates, names, notes, EV status, collection status, countdown timers
 - **Comments**: Linked to vehicles with user initials and timestamps
 
-### Authentication
-- **Method**: PIN-based authentication (4-digit codes)
+### Authentication & Authorization
+- **Method**: PIN-based authentication (4-digit codes) via `/api/auth/login`
 - **Session**: Client-side session storage with 5-minute timeout
-- **Admin Access**: Separate admin PIN header for protected operations
+- **Admin Access**: Server-side authorization via `x-admin-pin` header for user management routes
 - **Context**: React Context (`UserContext`) provides current user state
+- **Branch Manager**: Default admin user (initials: "BM", PIN: 4266) auto-seeded on startup
+- **Role-Based Access**: Users tab visible only to admin users; user CRUD protected server-side
 
 ### Key Design Decisions
 
