@@ -7,6 +7,7 @@ import { PinGate } from "@/components/PinGate";
 import Dashboard from "@/pages/Dashboard";
 import AddVehicle from "@/pages/AddVehicle";
 import VehicleDetail from "@/pages/VehicleDetail";
+import Users from "@/pages/Users";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -16,6 +17,7 @@ function Router() {
         <Route path="/" component={Dashboard} />
         <Route path="/add" component={AddVehicle} />
         <Route path="/vehicle/:id" component={VehicleDetail} />
+        <Route path="/users" component={Users} />
         <Route component={NotFound} />
       </Switch>
       <Navigation />

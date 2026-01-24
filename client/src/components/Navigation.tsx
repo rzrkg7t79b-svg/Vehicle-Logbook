@@ -1,8 +1,10 @@
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, PlusCircle } from "lucide-react";
+import { LayoutDashboard, PlusCircle, Users } from "lucide-react";
+import { useUser } from "@/contexts/UserContext";
 
 export function Navigation() {
   const [location] = useLocation();
+  const { user } = useUser();
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-lg border-t border-white/5 pb-[env(safe-area-inset-bottom)]">
@@ -22,6 +24,16 @@ export function Navigation() {
           <PlusCircle className="w-6 h-6" />
           <span className="text-[10px] font-medium tracking-wide uppercase">Add New</span>
         </Link>
+        
+        {user?.isAdmin && (
+          <Link href="/users" className={`
+            flex flex-col items-center justify-center w-full h-full space-y-1 transition-colors duration-200
+            ${location === "/users" ? "text-primary" : "text-muted-foreground hover:text-foreground"}
+          `} data-testid="nav-users">
+            <Users className="w-6 h-6" />
+            <span className="text-[10px] font-medium tracking-wide uppercase">Users</span>
+          </Link>
+        )}
       </div>
     </nav>
   );

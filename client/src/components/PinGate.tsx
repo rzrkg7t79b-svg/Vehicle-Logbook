@@ -1,24 +1,29 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { Lock, Timer } from "lucide-react";
+import { UserContext } from "@/contexts/UserContext";
+import type { User } from "@shared/schema";
+import { apiRequest } from "@/lib/queryClient";
 
 interface PinGateProps {
   children: React.ReactNode;
 }
 
-const CORRECT_PIN = "4035";
 const STORAGE_KEY = "bodyshop_auth";
 const TIMEOUT_SECONDS = 5 * 60;
 
 export function PinGate({ children }: PinGateProps) {
   const [pin, setPin] = useState("");
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isUnlocked, setIsUnlocked] = useState(false);
   const [error, setError] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [secondsLeft, setSecondsLeft] = useState(TIMEOUT_SECONDS);
   const countdownRef = useRef<NodeJS.Timeout | null>(null);
 
   const logout = useCallback(() => {
     sessionStorage.removeItem(STORAGE_KEY);
     setIsUnlocked(false);
+    setCurrentUser(null);
     setPin("");
     setSecondsLeft(TIMEOUT_SECONDS);
   }, []);
@@ -29,8 +34,14 @@ export function PinGate({ children }: PinGateProps) {
 
   useEffect(() => {
     const stored = sessionStorage.getItem(STORAGE_KEY);
-    if (stored === "true") {
-      setIsUnlocked(true);
+    if (stored) {
+      try {
+        const user = JSON.parse(stored) as User;
+        setCurrentUser(user);
+        setIsUnlocked(true);
+      } catch {
+        sessionStorage.removeItem(STORAGE_KEY);
+      }
     }
   }, []);
 
@@ -69,43 +80,55 @@ export function PinGate({ children }: PinGateProps) {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const handleDigit = (digit: string) => {
-    if (pin.length < 4) {
+  const handleDigit = async (digit: string) => {
+    if (pin.length < 4 && !isLoading) {
       const newPin = pin + digit;
       setPin(newPin);
       setError(false);
       
       if (newPin.length === 4) {
-        if (newPin === CORRECT_PIN) {
-          sessionStorage.setItem(STORAGE_KEY, "true");
+        setIsLoading(true);
+        try {
+          const response = await apiRequest("POST", "/api/auth/login", { pin: newPin });
+          const user = await response.json() as User;
+          sessionStorage.setItem(STORAGE_KEY, JSON.stringify(user));
+          setCurrentUser(user);
           setIsUnlocked(true);
-        } else {
+        } catch {
           setError(true);
           setTimeout(() => {
             setPin("");
             setError(false);
           }, 500);
+        } finally {
+          setIsLoading(false);
         }
       }
     }
   };
 
   const handleBackspace = () => {
-    setPin(pin.slice(0, -1));
-    setError(false);
+    if (!isLoading) {
+      setPin(pin.slice(0, -1));
+      setError(false);
+    }
   };
 
-  if (isUnlocked) {
+  if (isUnlocked && currentUser) {
     return (
-      <div className="relative">
-        <div className="fixed top-3 right-3 z-50 flex items-center gap-1.5 px-2.5 py-1.5 bg-card/90 backdrop-blur border border-white/10 rounded-lg shadow-lg">
-          <Timer className="w-3.5 h-3.5 text-muted-foreground" />
-          <span className={`text-xs font-mono font-bold ${secondsLeft <= 60 ? 'text-red-500' : 'text-muted-foreground'}`}>
-            {formatTime(secondsLeft)}
-          </span>
+      <UserContext.Provider value={{ user: currentUser, logout }}>
+        <div className="relative">
+          <div className="fixed top-3 right-3 z-50 flex items-center gap-2.5 px-2.5 py-1.5 bg-card/90 backdrop-blur border border-white/10 rounded-lg shadow-lg">
+            <span className="text-xs font-bold text-primary">{currentUser.initials}</span>
+            <div className="w-px h-3 bg-white/10" />
+            <Timer className="w-3.5 h-3.5 text-muted-foreground" />
+            <span className={`text-xs font-mono font-bold ${secondsLeft <= 60 ? 'text-red-500' : 'text-muted-foreground'}`}>
+              {formatTime(secondsLeft)}
+            </span>
+          </div>
+          {children}
         </div>
-        {children}
-      </div>
+      </UserContext.Provider>
     );
   }
 
@@ -142,7 +165,8 @@ export function PinGate({ children }: PinGateProps) {
             <button
               key={digit}
               onClick={() => handleDigit(digit.toString())}
-              className="h-16 rounded-xl bg-card border border-white/10 text-2xl font-bold text-white hover:bg-white/5 active:scale-95 transition-all"
+              disabled={isLoading}
+              className="h-16 rounded-xl bg-card border border-white/10 text-2xl font-bold text-white hover:bg-white/5 active:scale-95 transition-all disabled:opacity-50"
               data-testid={`pin-digit-${digit}`}
             >
               {digit}
@@ -150,20 +174,28 @@ export function PinGate({ children }: PinGateProps) {
           ))}
           <button
             onClick={handleBackspace}
-            className="h-16 rounded-xl bg-card border border-white/10 text-lg font-medium text-muted-foreground hover:bg-white/5 active:scale-95 transition-all"
+            disabled={isLoading}
+            className="h-16 rounded-xl bg-card border border-white/10 text-lg font-medium text-muted-foreground hover:bg-white/5 active:scale-95 transition-all disabled:opacity-50"
             data-testid="pin-backspace"
           >
             Del
           </button>
           <button
             onClick={() => handleDigit("0")}
-            className="h-16 rounded-xl bg-card border border-white/10 text-2xl font-bold text-white hover:bg-white/5 active:scale-95 transition-all"
+            disabled={isLoading}
+            className="h-16 rounded-xl bg-card border border-white/10 text-2xl font-bold text-white hover:bg-white/5 active:scale-95 transition-all disabled:opacity-50"
             data-testid="pin-digit-0"
           >
             0
           </button>
           <div className="h-16" />
         </div>
+        
+        {isLoading && (
+          <div className="text-center mt-4 text-sm text-muted-foreground">
+            Authenticating...
+          </div>
+        )}
       </div>
     </div>
   );
