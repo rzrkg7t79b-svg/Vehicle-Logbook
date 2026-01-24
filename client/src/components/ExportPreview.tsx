@@ -151,15 +151,45 @@ export function ExportPreview({ open, onOpenChange }: ExportPreviewProps) {
       finalCanvas.height = finalHeight;
       const ctx = finalCanvas.getContext("2d");
       if (ctx) {
+        ctx.fillStyle = "#1a1a1a";
+        ctx.fillRect(0, 0, finalWidth, finalHeight);
         ctx.imageSmoothingEnabled = true;
         ctx.imageSmoothingQuality = "high";
         ctx.drawImage(sourceCanvas, 0, 0, srcWidth, srcHeight, 0, 0, finalWidth, finalHeight);
       }
       
-      const link = document.createElement("a");
-      link.download = `MasterSIXT-Export-${todayDate}.png`;
-      link.href = finalCanvas.toDataURL("image/png");
-      link.click();
+      const fileName = `MasterSIXT-Export-${todayDate}.jpg`;
+      
+      finalCanvas.toBlob(async (blob) => {
+        if (!blob) return;
+        
+        const file = new File([blob], fileName, { type: "image/jpeg" });
+        
+        if (navigator.share && navigator.canShare?.({ files: [file] })) {
+          try {
+            await navigator.share({
+              files: [file],
+              title: "MasterSIXT Export",
+            });
+          } catch (err) {
+            if ((err as Error).name !== "AbortError") {
+              const url = URL.createObjectURL(blob);
+              const link = document.createElement("a");
+              link.download = fileName;
+              link.href = url;
+              link.click();
+              URL.revokeObjectURL(url);
+            }
+          }
+        } else {
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement("a");
+          link.download = fileName;
+          link.href = url;
+          link.click();
+          URL.revokeObjectURL(url);
+        }
+      }, "image/jpeg", 0.92);
     } catch (error) {
       console.error("Export failed:", error);
     } finally {
