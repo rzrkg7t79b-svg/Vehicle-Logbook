@@ -105,7 +105,7 @@ export default function TodoList() {
     },
   });
 
-  // Filter todos based on role and postpone status
+  // Filter todos based on role
   const baseTodos = user?.isAdmin 
     ? todos 
     : todos.filter(t => {
@@ -113,18 +113,22 @@ export default function TodoList() {
         return t.assignedTo.some((role: string) => userRoles.includes(role));
       });
 
-  // Filter out postponed todos (show only if postponedToDate is today or past, or not set)
-  const filteredTodos = baseTodos.filter(t => {
+  // Today's tasks: not postponed, or postponed to today or earlier
+  const todaysTasks = baseTodos.filter(t => {
     if (!t.postponedToDate) return true;
     return t.postponedToDate <= todayDate;
   });
 
-  // Count postponed todos for today
-  const postponedTodos = filteredTodos.filter(t => t.postponedToDate === todayDate && !t.completed);
+  // Tomorrow's tasks: postponed to future dates
+  const tomorrowTasks = baseTodos.filter(t => t.postponedToDate && t.postponedToDate > todayDate);
 
-  const completedCount = filteredTodos.filter(t => t.completed).length;
-  const postponedCount = postponedTodos.length;
-  const totalCount = filteredTodos.length;
+  // Count postponed todos that arrived today (from past postponement)
+  const arrivedFromPostponement = todaysTasks.filter(t => t.postponedToDate === todayDate && !t.completed);
+
+  const completedCount = todaysTasks.filter(t => t.completed).length;
+  const postponedToFutureCount = tomorrowTasks.length;
+  const arrivedPostponedCount = arrivedFromPostponement.length;
+  const totalCount = todaysTasks.length;
   const progress = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
 
   return (
@@ -151,8 +155,8 @@ export default function TodoList() {
           <Progress value={progress} className="h-2" />
           <p className="text-xs text-muted-foreground mt-2">
             {completedCount} of {totalCount} tasks completed
-            {postponedCount > 0 && (
-              <span className="text-orange-400 ml-1">({postponedCount} postponed)</span>
+            {postponedToFutureCount > 0 && (
+              <span className="text-orange-400 ml-1">({postponedToFutureCount} postponed to tomorrow)</span>
             )}
           </p>
         </Card>
@@ -204,10 +208,12 @@ export default function TodoList() {
           </Card>
         )}
 
+        {/* Today's Tasks */}
         <div className="space-y-2">
+          <h3 className="text-sm font-medium text-muted-foreground px-1">Today's Tasks</h3>
           {isLoading ? (
             <div className="text-center py-8 text-muted-foreground">Loading...</div>
-          ) : filteredTodos.length === 0 ? (
+          ) : todaysTasks.length === 0 ? (
             <Card className="p-8 text-center">
               <CheckSquare className="w-12 h-12 text-muted-foreground/30 mx-auto mb-3" />
               <p className="text-muted-foreground">No tasks yet</p>
@@ -217,7 +223,7 @@ export default function TodoList() {
             </Card>
           ) : (
             <AnimatePresence>
-              {filteredTodos.map((todo) => (
+              {todaysTasks.map((todo) => (
                 <motion.div
                   key={todo.id}
                   initial={{ opacity: 0, y: -10 }}
@@ -297,7 +303,48 @@ export default function TodoList() {
           )}
         </div>
 
-        {!isDone && todos.length > 0 && completedCount === totalCount && (
+        {/* Tomorrow's Tasks (Postponed) */}
+        {tomorrowTasks.length > 0 && (
+          <div className="space-y-2 mt-6">
+            <h3 className="text-sm font-medium text-orange-400 px-1 flex items-center gap-2">
+              <CalendarClock className="w-4 h-4" />
+              Tomorrow's Tasks
+            </h3>
+            <AnimatePresence>
+              {tomorrowTasks.map((todo) => (
+                <motion.div
+                  key={todo.id}
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, x: -100 }}
+                >
+                  <Card className="p-3 border-orange-500/30 bg-orange-500/5">
+                    <div className="flex items-center gap-3">
+                      <div className="flex-shrink-0">
+                        <Square className="w-5 h-5 text-orange-400/50" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm text-orange-200">{todo.title}</p>
+                        <div className="flex items-center gap-2 mt-1 flex-wrap">
+                          {todo.isSystemGenerated && (
+                            <Badge variant="secondary" className="text-xs py-0 bg-blue-500/20 text-blue-400">
+                              Collection
+                            </Badge>
+                          )}
+                          <Badge variant="secondary" className="text-xs py-0 bg-orange-500/20 text-orange-400">
+                            Postponed
+                          </Badge>
+                        </div>
+                      </div>
+                    </div>
+                  </Card>
+                </motion.div>
+              ))}
+            </AnimatePresence>
+          </div>
+        )}
+
+        {!isDone && todaysTasks.length > 0 && completedCount === totalCount && tomorrowTasks.length === 0 && (
           <Button
             onClick={() => markModuleDoneMutation.mutate()}
             disabled={markModuleDoneMutation.isPending}
