@@ -1,11 +1,11 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { X, Download, Clock, Car, ClipboardCheck, CheckSquare, Workflow, CheckCircle, AlertCircle } from "lucide-react";
+import { Download, Clock, Car, ClipboardCheck, CheckSquare, Workflow, CheckCircle, AlertCircle, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { getGermanDateString } from "@/lib/germanTime";
 import html2canvas from "html2canvas";
-import type { Todo, FlowTask, Vehicle } from "@shared/schema";
+import type { Todo, FlowTask, Vehicle, TimedriverCalculation, User } from "@shared/schema";
 
 type DashboardStatus = {
   timedriver: { isDone: boolean; details?: string };
@@ -24,6 +24,15 @@ type QualityCheck = {
   comment: string | null;
   createdBy: string;
   date: string;
+};
+
+type DriverData = {
+  id: number;
+  initials: string;
+  maxDailyHours: number;
+  hourlyRate: number;
+  allocatedBudget: number;
+  allocatedHours: number;
 };
 
 interface ExportPreviewProps {
@@ -64,18 +73,31 @@ export function ExportPreview({ open, onOpenChange }: ExportPreviewProps) {
     },
   });
 
+  const { data: timedriverCalc } = useQuery<TimedriverCalculation | null>({
+    queryKey: ["/api/timedriver-calculations", todayDate],
+    queryFn: async () => {
+      const res = await fetch(`/api/timedriver-calculations/${todayDate}`);
+      return res.json();
+    },
+  });
+
+  const { data: users = [] } = useQuery<User[]>({
+    queryKey: ["/api/users"],
+  });
+
   const handleExport = async () => {
     if (!exportRef.current) return;
     setIsExporting(true);
     
     try {
-      const canvas = await html2canvas(exportRef.current, {
+      const element = exportRef.current;
+      const canvas = await html2canvas(element, {
         scale: 2,
         backgroundColor: "#1a1a1a",
         width: 1920,
-        height: 1080,
+        height: element.scrollHeight,
         windowWidth: 1920,
-        windowHeight: 1080,
+        windowHeight: element.scrollHeight,
       });
       
       const link = document.createElement("a");
@@ -99,6 +121,16 @@ export function ExportPreview({ open, onOpenChange }: ExportPreviewProps) {
     return d.toLocaleDateString("de-DE", { weekday: "long", day: "2-digit", month: "2-digit", year: "numeric" });
   };
 
+  const formatHoursMinutes = (hours: number): string => {
+    const h = Math.floor(hours);
+    const m = Math.round((hours - h) * 60);
+    return `${h}h ${m}m`;
+  };
+
+  const driversData: DriverData[] = timedriverCalc?.driversData 
+    ? JSON.parse(timedriverCalc.driversData) 
+    : [];
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-auto">
@@ -112,12 +144,12 @@ export function ExportPreview({ open, onOpenChange }: ExportPreviewProps) {
           </DialogTitle>
         </DialogHeader>
 
-        <div className="overflow-auto border rounded-lg">
+        <div className="overflow-auto border rounded-lg" style={{ maxHeight: "70vh" }}>
           <div 
             ref={exportRef}
             style={{ 
               width: "1920px", 
-              height: "1080px",
+              minHeight: "1080px",
               transform: "scale(0.4)",
               transformOrigin: "top left",
               backgroundColor: "#1a1a1a",
@@ -181,9 +213,50 @@ export function ExportPreview({ open, onOpenChange }: ExportPreviewProps) {
                     <CheckCircle style={{ width: "24px", height: "24px", color: "#22c55e", marginLeft: "auto" }} />
                   )}
                 </div>
-                <p style={{ fontSize: "16px", color: dashboardStatus?.timedriver.isDone ? "#22c55e" : "#f97316", margin: 0 }}>
-                  {dashboardStatus?.timedriver.isDone ? "Calculation saved" : "Due before 8:00"}
-                </p>
+                <div style={{ fontSize: "14px", color: "#ccc" }}>
+                  {timedriverCalc ? (
+                    <>
+                      <div style={{ 
+                        display: "grid", 
+                        gridTemplateColumns: "1fr 1fr", 
+                        gap: "8px", 
+                        marginBottom: "12px",
+                        padding: "12px",
+                        backgroundColor: "#333",
+                        borderRadius: "8px",
+                      }}>
+                        <div>
+                          <p style={{ margin: 0, color: "#888", fontSize: "12px" }}>Rentals</p>
+                          <p style={{ margin: 0, color: "#fff", fontSize: "18px", fontWeight: "bold" }}>{timedriverCalc.rentals}</p>
+                        </div>
+                        <div>
+                          <p style={{ margin: 0, color: "#888", fontSize: "12px" }}>Total Budget</p>
+                          <p style={{ margin: 0, color: "#22c55e", fontSize: "18px", fontWeight: "bold" }}>{timedriverCalc.totalBudget.toFixed(2)} EUR</p>
+                        </div>
+                      </div>
+                      <p style={{ margin: "0 0 8px 0", color: "#888", fontSize: "12px" }}>Driver Allocation:</p>
+                      {driversData.map((driver: DriverData) => (
+                        <div key={driver.id} style={{ 
+                          display: "flex", 
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                          padding: "6px 8px",
+                          backgroundColor: "#333",
+                          borderRadius: "4px",
+                          marginBottom: "4px",
+                        }}>
+                          <span style={{ color: "#fff", fontWeight: "500" }}>{driver.initials}</span>
+                          <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+                            <span style={{ color: "#888", fontSize: "12px" }}>max {driver.maxDailyHours}h</span>
+                            <span style={{ color: "#f97316", fontWeight: "bold" }}>{formatHoursMinutes(driver.allocatedHours)}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </>
+                  ) : (
+                    <p style={{ margin: 0, color: "#f97316" }}>Not calculated yet</p>
+                  )}
+                </div>
               </div>
 
               {/* FlowSIXT */}
@@ -221,7 +294,7 @@ export function ExportPreview({ open, onOpenChange }: ExportPreviewProps) {
                       <p style={{ margin: "0 0 8px 0", color: dashboardStatus?.flow.isDone ? "#22c55e" : "#f97316" }}>
                         {flowTasks.filter(t => t.completed).length}/{flowTasks.length} tasks completed
                       </p>
-                      {flowTasks.slice(0, 4).map(task => (
+                      {flowTasks.map(task => (
                         <div key={task.id} style={{ 
                           display: "flex", 
                           alignItems: "center", 
@@ -230,13 +303,10 @@ export function ExportPreview({ open, onOpenChange }: ExportPreviewProps) {
                           color: task.completed ? "#888" : "#fff",
                           textDecoration: task.completed ? "line-through" : "none",
                         }}>
-                          {task.completed ? <CheckCircle style={{ width: "14px", height: "14px", color: "#22c55e" }} /> : <AlertCircle style={{ width: "14px", height: "14px", color: "#f97316" }} />}
-                          <span>{task.licensePlate} - {task.taskType}</span>
+                          {task.completed ? <CheckCircle style={{ width: "14px", height: "14px", color: "#22c55e", flexShrink: 0 }} /> : <AlertCircle style={{ width: "14px", height: "14px", color: "#f97316", flexShrink: 0 }} />}
+                          <span style={{ fontSize: "13px" }}>{task.licensePlate} - {task.taskType}</span>
                         </div>
                       ))}
-                      {flowTasks.length > 4 && (
-                        <p style={{ margin: "8px 0 0 0", color: "#888", fontSize: "12px" }}>+{flowTasks.length - 4} more tasks</p>
-                      )}
                     </>
                   )}
                 </div>
@@ -277,20 +347,18 @@ export function ExportPreview({ open, onOpenChange }: ExportPreviewProps) {
                       <p style={{ margin: "0 0 8px 0", color: dashboardStatus?.bodyshop.isDone ? "#22c55e" : "#f97316" }}>
                         {activeVehicles.length} vehicle{activeVehicles.length !== 1 ? "s" : ""} tracked
                       </p>
-                      {activeVehicles.slice(0, 3).map(vehicle => (
+                      {activeVehicles.map(vehicle => (
                         <div key={vehicle.id} style={{ 
                           display: "flex", 
                           alignItems: "center", 
                           gap: "8px", 
                           padding: "4px 0",
                         }}>
-                          <span style={{ color: "#fff" }}>{vehicle.licensePlate}</span>
+                          <span style={{ color: "#fff", fontSize: "13px" }}>{vehicle.licensePlate}</span>
                           {vehicle.isEv && <span style={{ fontSize: "10px", backgroundColor: "#22c55e", color: "#000", padding: "2px 6px", borderRadius: "4px" }}>EV</span>}
+                          {vehicle.readyForCollection && <span style={{ fontSize: "10px", backgroundColor: "#3b82f6", color: "#fff", padding: "2px 6px", borderRadius: "4px" }}>Ready</span>}
                         </div>
                       ))}
-                      {activeVehicles.length > 3 && (
-                        <p style={{ margin: "8px 0 0 0", color: "#888", fontSize: "12px" }}>+{activeVehicles.length - 3} more vehicles</p>
-                      )}
                     </>
                   )}
                 </div>
@@ -328,7 +396,7 @@ export function ExportPreview({ open, onOpenChange }: ExportPreviewProps) {
                     {dashboardStatus?.todo.completed}/{dashboardStatus?.todo.total} tasks completed
                     {postponedTodos.length > 0 && <span style={{ color: "#f97316" }}> ({postponedTodos.length} postponed)</span>}
                   </p>
-                  {todaysTodos.slice(0, 4).map(todo => (
+                  {todaysTodos.map(todo => (
                     <div key={todo.id} style={{ 
                       display: "flex", 
                       alignItems: "center", 
@@ -337,12 +405,26 @@ export function ExportPreview({ open, onOpenChange }: ExportPreviewProps) {
                       color: todo.completed ? "#888" : "#fff",
                       textDecoration: todo.completed ? "line-through" : "none",
                     }}>
-                      {todo.completed ? <CheckCircle style={{ width: "14px", height: "14px", color: "#22c55e" }} /> : <AlertCircle style={{ width: "14px", height: "14px", color: "#f97316" }} />}
-                      <span>{todo.title}</span>
+                      {todo.completed ? <CheckCircle style={{ width: "14px", height: "14px", color: "#22c55e", flexShrink: 0 }} /> : <AlertCircle style={{ width: "14px", height: "14px", color: "#f97316", flexShrink: 0 }} />}
+                      <span style={{ fontSize: "13px" }}>{todo.title}</span>
                     </div>
                   ))}
-                  {todaysTodos.length > 4 && (
-                    <p style={{ margin: "8px 0 0 0", color: "#888", fontSize: "12px" }}>+{todaysTodos.length - 4} more tasks</p>
+                  {postponedTodos.length > 0 && (
+                    <>
+                      <p style={{ margin: "12px 0 8px 0", color: "#f97316", fontSize: "12px" }}>Postponed to tomorrow:</p>
+                      {postponedTodos.map(todo => (
+                        <div key={todo.id} style={{ 
+                          display: "flex", 
+                          alignItems: "center", 
+                          gap: "8px", 
+                          padding: "4px 0",
+                          color: "#f97316",
+                        }}>
+                          <AlertCircle style={{ width: "14px", height: "14px", color: "#f97316", flexShrink: 0 }} />
+                          <span style={{ fontSize: "13px" }}>{todo.title}</span>
+                        </div>
+                      ))}
+                    </>
                   )}
                 </div>
               </div>
@@ -379,20 +461,21 @@ export function ExportPreview({ open, onOpenChange }: ExportPreviewProps) {
                     {dashboardStatus?.quality.passedChecks}/5 checks passed
                     {dashboardStatus?.quality.incompleteTasks ? `, ${dashboardStatus.quality.incompleteTasks} pending` : ""}
                   </p>
-                  {qualityChecks.slice(0, 4).map(check => (
-                    <div key={check.id} style={{ 
-                      display: "flex", 
-                      alignItems: "center", 
-                      gap: "8px", 
-                      padding: "4px 0",
-                    }}>
-                      {check.passed ? <CheckCircle style={{ width: "14px", height: "14px", color: "#22c55e" }} /> : <AlertCircle style={{ width: "14px", height: "14px", color: "#ef4444" }} />}
-                      <span style={{ color: check.passed ? "#22c55e" : "#ef4444" }}>{check.licensePlate}</span>
-                      <span style={{ color: "#888" }}>by {check.createdBy}</span>
-                    </div>
-                  ))}
-                  {qualityChecks.length > 4 && (
-                    <p style={{ margin: "8px 0 0 0", color: "#888", fontSize: "12px" }}>+{qualityChecks.length - 4} more checks</p>
+                  {qualityChecks.length === 0 ? (
+                    <p style={{ margin: 0, color: "#888" }}>No checks today</p>
+                  ) : (
+                    qualityChecks.map(check => (
+                      <div key={check.id} style={{ 
+                        display: "flex", 
+                        alignItems: "center", 
+                        gap: "8px", 
+                        padding: "4px 0",
+                      }}>
+                        {check.passed ? <CheckCircle style={{ width: "14px", height: "14px", color: "#22c55e", flexShrink: 0 }} /> : <AlertCircle style={{ width: "14px", height: "14px", color: "#ef4444", flexShrink: 0 }} />}
+                        <span style={{ color: check.passed ? "#22c55e" : "#ef4444", fontSize: "13px" }}>{check.licensePlate}</span>
+                        <span style={{ color: "#888", fontSize: "12px" }}>by {check.createdBy}</span>
+                      </div>
+                    ))
                   )}
                 </div>
               </div>
@@ -455,7 +538,7 @@ export function ExportPreview({ open, onOpenChange }: ExportPreviewProps) {
         </div>
 
         <p className="text-xs text-muted-foreground text-center mt-2">
-          Preview scaled to 40% - Export will be 1920x1080 (Full HD 16:9)
+          Preview scaled to 40% - Export will be 1920px wide (16:9 Full HD)
         </p>
       </DialogContent>
     </Dialog>

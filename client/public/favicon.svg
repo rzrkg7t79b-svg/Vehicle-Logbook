@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <defs>
+    <linearGradient id="carGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#3a3a3a"/>
+      <stop offset="100%" style="stop-color:#1a1a1a"/>
+    </linearGradient>
+  </defs>
+  <rect width="32" height="32" rx="6" fill="url(#carGradient)"/>
+  <g transform="translate(4, 8)">
+    <path d="M4 10h16v4H4z" fill="#f97316"/>
+    <path d="M6 6h12l2 4H4l2-4z" fill="#f97316"/>
+    <circle cx="7" cy="14" r="2" fill="#2a2a2a"/>
+    <circle cx="17" cy="14" r="2" fill="#2a2a2a"/>
+    <circle cx="7" cy="14" r="1" fill="#666"/>
+    <circle cx="17" cy="14" r="1" fill="#666"/>
+    <rect x="7" y="7" width="4" height="2" rx="0.5" fill="#4a4a4a"/>
+    <rect x="13" y="7" width="4" height="2" rx="0.5" fill="#4a4a4a"/>
+  </g>
+</svg>
