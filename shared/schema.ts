@@ -63,6 +63,8 @@ export const todos = pgTable("todos", {
   completedAt: timestamp("completed_at"),
   vehicleId: integer("vehicle_id"),
   isSystemGenerated: boolean("is_system_generated").default(false).notNull(),
+  postponedToDate: text("postponed_to_date"),
+  postponeCount: integer("postpone_count").default(0).notNull(),
   createdAt: timestamp("created_at").defaultNow(),
 });
 

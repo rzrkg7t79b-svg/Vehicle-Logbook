@@ -51,6 +51,30 @@ export async function registerRoutes(
     }
     try {
       const input = api.vehicles.update.input.parse(req.body);
+      
+      // Check if readyForCollection is being set to true
+      if (input.readyForCollection === true && !existing.readyForCollection) {
+        // Create a collection todo
+        const collectionTodo = await storage.createTodo({
+          title: `Bodyshop Collection: ${existing.licensePlate}`,
+          assignedTo: ["Counter"],
+          vehicleId: id,
+          isSystemGenerated: true,
+        });
+        // Update input to include the collection todo ID
+        (input as any).collectionTodoId = collectionTodo.id;
+        broadcastUpdate("todos");
+        broadcastUpdate("module-status");
+      }
+      
+      // If readyForCollection is being set to false, delete the collection todo
+      if (input.readyForCollection === false && existing.readyForCollection && existing.collectionTodoId) {
+        await storage.deleteTodo(existing.collectionTodoId);
+        (input as any).collectionTodoId = null;
+        broadcastUpdate("todos");
+        broadcastUpdate("module-status");
+      }
+      
       const updated = await storage.updateVehicle(id, input);
       broadcastUpdate("vehicles");
       res.json(updated);
