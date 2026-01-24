@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useRef, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 
 interface LicensePlateInputProps {
@@ -11,10 +11,10 @@ interface LicensePlateInputProps {
   onNumbersChange: (value: string) => void;
   onEvChange: (value: boolean) => void;
   showPreview?: boolean;
+  autoFocusLetters?: boolean;
 }
 
 export function LicensePlateInput({
-  city,
   letters,
   numbers,
   isEv,
@@ -23,22 +23,16 @@ export function LicensePlateInput({
   onNumbersChange,
   onEvChange,
   showPreview = true,
+  autoFocusLetters = false,
 }: LicensePlateInputProps) {
   const lettersRef = useRef<HTMLInputElement>(null);
   const numbersRef = useRef<HTMLInputElement>(null);
 
-  const handleCityChange = (value: string) => {
-    const cleaned = value.replace(/[^a-zA-Z]/g, '').toUpperCase();
-    onCityChange(cleaned);
-    if (cleaned.length >= 1 && cleaned.length <= 3 && value.length > city.length) {
-      if (cleaned.length === 3 || (cleaned.length >= 1 && cleaned.length === value.length && value.endsWith(' '))) {
-        lettersRef.current?.focus();
-      }
-    }
-    if (cleaned.length === 3) {
+  useEffect(() => {
+    if (autoFocusLetters) {
       lettersRef.current?.focus();
     }
-  };
+  }, [autoFocusLetters]);
 
   const handleLettersChange = (value: string) => {
     const cleaned = value.replace(/[^a-zA-Z]/g, '').toUpperCase();
@@ -47,12 +41,11 @@ export function LicensePlateInput({
       numbersRef.current?.focus();
     }
   };
+
   const buildLicensePlate = () => {
-    let plate = "";
-    if (city && letters) {
-      plate = `${city} - ${letters} ${numbers}`.trim();
-    } else if (city) {
-      plate = city;
+    let plate = "M";
+    if (letters) {
+      plate = `M - ${letters} ${numbers}`.trim();
     }
     if (isEv && plate) {
       plate += "E";
