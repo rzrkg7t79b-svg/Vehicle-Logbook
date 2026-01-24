@@ -32,10 +32,11 @@ type QualityCheck = {
 type DriverData = {
   id: number;
   initials: string;
-  maxDailyHours: number;
+  maxHours: number;
   hourlyRate: number;
-  allocatedBudget: number;
-  allocatedHours: number;
+  assignedHours: number;
+  assignedMinutes: number;
+  percent: number;
 };
 
 interface ExportPreviewProps {
@@ -290,8 +291,8 @@ export function ExportPreview({ open, onOpenChange }: ExportPreviewProps) {
                         }}>
                           <span style={{ color: "#fff", fontWeight: "500" }}>{driver.initials}</span>
                           <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
-                            <span style={{ color: "#888", fontSize: "12px" }}>max {driver.maxDailyHours}h</span>
-                            <span style={{ color: "#f97316", fontWeight: "bold" }}>{formatHoursMinutes(driver.allocatedHours)}</span>
+                            <span style={{ color: "#888", fontSize: "12px" }}>max {driver.maxHours}h</span>
+                            <span style={{ color: "#f97316", fontWeight: "bold" }}>{driver.assignedHours}h {driver.assignedMinutes}m</span>
                           </div>
                         </div>
                       ))}
