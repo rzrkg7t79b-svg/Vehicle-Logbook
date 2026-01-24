@@ -189,7 +189,7 @@ export function ExportPreview({ open, onOpenChange }: ExportPreviewProps) {
           link.click();
           URL.revokeObjectURL(url);
         }
-      }, "image/jpeg", 0.92);
+      }, "image/jpeg", 0.98);
     } catch (error) {
       console.error("Export failed:", error);
     } finally {
@@ -250,7 +250,7 @@ export function ExportPreview({ open, onOpenChange }: ExportPreviewProps) {
             <span>Export Preview - Dashboard Cards</span>
             <Button onClick={handleExport} disabled={isExporting} size="sm">
               <Download className="w-4 h-4 mr-2" />
-              {isExporting ? "Exporting..." : "Download PNG"}
+              {isExporting ? "Exporting..." : "Export"}
             </Button>
           </DialogTitle>
         </DialogHeader>
@@ -414,7 +414,7 @@ export function ExportPreview({ open, onOpenChange }: ExportPreviewProps) {
                           textDecoration: task.completed ? "line-through" : "none",
                         }}>
                           {task.completed ? <CheckCircle style={{ width: "14px", height: "14px", color: "#22c55e", flexShrink: 0 }} /> : <AlertCircle style={{ width: "14px", height: "14px", color: "#f97316", flexShrink: 0 }} />}
-                          <span style={{ fontSize: "13px" }}>{task.licensePlate} - {task.taskType}</span>
+                          <span style={{ fontSize: "13px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1 }}>{task.licensePlate} - {task.taskType}</span>
                         </div>
                       ))}
                     </>
@@ -541,7 +541,7 @@ export function ExportPreview({ open, onOpenChange }: ExportPreviewProps) {
                       textDecoration: todo.completed ? "line-through" : "none",
                     }}>
                       {todo.completed ? <CheckCircle style={{ width: "14px", height: "14px", color: "#22c55e", flexShrink: 0 }} /> : <AlertCircle style={{ width: "14px", height: "14px", color: "#f97316", flexShrink: 0 }} />}
-                      <span style={{ fontSize: "13px" }}>{todo.title}</span>
+                      <span style={{ fontSize: "13px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1 }}>{todo.title}</span>
                     </div>
                   ))}
                   {postponedTodos.length > 0 && (
@@ -556,7 +556,7 @@ export function ExportPreview({ open, onOpenChange }: ExportPreviewProps) {
                           color: "#f97316",
                         }}>
                           <AlertCircle style={{ width: "14px", height: "14px", color: "#f97316", flexShrink: 0 }} />
-                          <span style={{ fontSize: "13px" }}>{todo.title}</span>
+                          <span style={{ fontSize: "13px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1 }}>{todo.title}</span>
                         </div>
                       ))}
                     </>
@@ -611,7 +611,7 @@ export function ExportPreview({ open, onOpenChange }: ExportPreviewProps) {
                         </div>
                         {!check.passed && check.comment && (
                           <div style={{ marginTop: "4px", marginLeft: "22px", fontSize: "12px", color: "#f87171" }}>
-                            Reason: {check.comment}
+                            Reason: {check.comment && check.comment.length > 60 ? check.comment.substring(0, 60) + "..." : check.comment}
                           </div>
                         )}
                       </div>
