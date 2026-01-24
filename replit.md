@@ -112,6 +112,20 @@ Preferred communication style: Simple, everyday language.
 
 14. **Real-Time Updates**: WebSocket server broadcasts changes to all connected clients. When any user makes changes (creates/updates/deletes tasks, vehicles, etc.), all other users see the updates instantly without refreshing. Implemented using `ws` package on the server and a custom React hook (`useRealtimeUpdates`) on the client.
 
+15. **Dashboard Status API**: GET /api/dashboard/status?date=YYYY-MM-DD returns:
+   - `timedriver`: { isDone, details } - done if calculation saved before 8:00
+   - `todo`: { isDone, completed, total } - done if all todos completed
+   - `quality`: { isDone, passedChecks, incompleteTasks } - done if 5+ passed checks AND no incomplete driver tasks
+   - `bodyshop`: { isDone, vehiclesWithoutComment, total } - done if all active vehicles have daily comment (or no vehicles)
+   - `overallProgress`: 0-100 percentage (25% per completed module)
+
+16. **Midnight Reset Scheduler**: Automatically resets daily data at midnight Berlin time:
+   - Todos: Marked as not completed
+   - Module status: Deleted for fresh day
+   - Quality checks and driver tasks: Deleted
+   - TimeDriver calculations: Deleted
+   - Implemented in `server/scheduler.ts` using setTimeout with Berlin timezone calculation
+
 ## External Dependencies
 
 ### Database
