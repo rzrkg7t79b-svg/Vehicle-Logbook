@@ -6,6 +6,7 @@ import { Link } from "wouter";
 import { Input } from "@/components/ui/input";
 import { Search, Filter, Car, BatteryCharging } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { isToday } from "date-fns";
 
 export default function Dashboard() {
   const [search, setSearch] = useState("");
@@ -112,7 +113,10 @@ export default function Dashboard() {
                         <p className="text-sm text-muted-foreground font-medium truncate">
                           {vehicle.name || "Unknown Model"}
                         </p>
-                        <CountdownTimer startDate={vehicle.countdownStart} />
+                        <CountdownTimer 
+                          startDate={vehicle.countdownStart} 
+                          hasCommentToday={vehicle.comments?.some(c => isToday(new Date(c.createdAt!)))}
+                        />
                       </div>
                     </div>
                   </div>

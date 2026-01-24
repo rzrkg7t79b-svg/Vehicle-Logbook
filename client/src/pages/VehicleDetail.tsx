@@ -6,7 +6,7 @@ import { GermanPlate } from "@/components/GermanPlate";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ArrowLeft, Trash2, Send, Clock, User, AlertCircle, Loader2 } from "lucide-react";
-import { format } from "date-fns";
+import { format, isToday } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import {
   AlertDialog,
@@ -100,7 +100,11 @@ export default function VehicleDetail() {
 
         {/* Countdown Hero */}
         <section className="flex justify-center py-4">
-          <CountdownTimer startDate={vehicle.countdownStart} size="lg" />
+          <CountdownTimer 
+            startDate={vehicle.countdownStart} 
+            size="lg" 
+            hasCommentToday={vehicle.comments?.some(c => isToday(new Date(c.createdAt!)))}
+          />
         </section>
 
         {/* Info Card */}
