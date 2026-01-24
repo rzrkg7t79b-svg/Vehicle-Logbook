@@ -1,38 +1,87 @@
-import { type User, type InsertUser } from "@shared/schema";
-import { randomUUID } from "crypto";
 
-// modify the interface with any CRUD methods
-// you might need
+import { db } from "./db";
+import {
+  vehicles,
+  comments,
+  type InsertVehicle,
+  type InsertComment,
+  type Vehicle,
+  type Comment
+} from "@shared/schema";
+import { eq, desc, asc, lte, and, sql } from "drizzle-orm";
 
 export interface IStorage {
-  getUser(id: string): Promise<User | undefined>;
-  getUserByUsername(username: string): Promise<User | undefined>;
-  createUser(user: InsertUser): Promise<User>;
+  getVehicles(filter?: 'all' | 'expired', search?: string): Promise<Vehicle[]>;
+  getVehicle(id: number): Promise<Vehicle | undefined>;
+  getVehicleWithComments(id: number): Promise<(Vehicle & { comments: Comment[] }) | undefined>;
+  createVehicle(vehicle: InsertVehicle): Promise<Vehicle>;
+  deleteVehicle(id: number): Promise<void>;
+  createComment(comment: InsertComment): Promise<Comment>;
+  getComments(vehicleId: number): Promise<Comment[]>;
 }
 
-export class MemStorage implements IStorage {
-  private users: Map<string, User>;
+export class DatabaseStorage implements IStorage {
+  async getVehicles(filter: 'all' | 'expired' = 'all', search?: string): Promise<Vehicle[]> {
+    let query = db.select().from(vehicles);
+    const conditions = [];
 
-  constructor() {
-    this.users = new Map();
+    if (search) {
+      conditions.push(sql`${vehicles.licensePlate} ILIKE ${`%${search}%`}`);
+    }
+
+    if (filter === 'expired') {
+      // Logic for expired: countdownStart + 7 days < now
+      // This is a bit complex in SQL directly without raw query or helper,
+      // simplifying to return all and filter in app or standard query if possible.
+      // For now, let's just return all and let frontend sort/filter visuals,
+      // or implement basic DB filter.
+      // PostGres interval:
+      conditions.push(sql`${vehicles.countdownStart} + interval '7 days' < NOW()`);
+    }
+
+    if (conditions.length > 0) {
+        // @ts-ignore
+        query = query.where(and(...conditions));
+    }
+
+    // Sort by countdown end date (created + 7 days) ascending (soonest first)
+    return await query.orderBy(asc(vehicles.countdownStart));
   }
 
-  async getUser(id: string): Promise<User | undefined> {
-    return this.users.get(id);
+  async getVehicle(id: number): Promise<Vehicle | undefined> {
+    const [vehicle] = await db.select().from(vehicles).where(eq(vehicles.id, id));
+    return vehicle;
   }
 
-  async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.username === username,
-    );
+  async getVehicleWithComments(id: number): Promise<(Vehicle & { comments: Comment[] }) | undefined> {
+    const vehicle = await this.getVehicle(id);
+    if (!vehicle) return undefined;
+
+    const vehicleComments = await this.getComments(id);
+    return { ...vehicle, comments: vehicleComments };
   }
 
-  async createUser(insertUser: InsertUser): Promise<User> {
-    const id = randomUUID();
-    const user: User = { ...insertUser, id };
-    this.users.set(id, user);
-    return user;
+  async createVehicle(vehicle: InsertVehicle): Promise<Vehicle> {
+    const [newVehicle] = await db.insert(vehicles).values(vehicle).returning();
+    return newVehicle;
+  }
+
+  async deleteVehicle(id: number): Promise<void> {
+    await db.delete(vehicles).where(eq(vehicles.id, id));
+  }
+
+  async createComment(comment: InsertComment): Promise<Comment> {
+    const [newComment] = await db.insert(comments).values(comment).returning();
+    return newComment;
+  }
+
+  async getComments(vehicleId: number): Promise<Comment[]> {
+    return await db
+      .select()
+      .from(comments)
+      .where(eq(comments.vehicleId, vehicleId))
+      .orderBy(desc(comments.createdAt));
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new DatabaseStorage();
