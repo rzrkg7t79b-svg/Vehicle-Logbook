@@ -7,6 +7,7 @@ import {
   todos,
   qualityChecks,
   driverTasks,
+  flowTasks,
   moduleStatus,
   type InsertVehicle,
   type InsertComment,
@@ -14,6 +15,7 @@ import {
   type InsertTodo,
   type InsertQualityCheck,
   type InsertDriverTask,
+  type InsertFlowTask,
   type InsertModuleStatus,
   type Vehicle,
   type Comment,
@@ -21,6 +23,7 @@ import {
   type Todo,
   type QualityCheck,
   type DriverTask,
+  type FlowTask,
   type ModuleStatus
 } from "@shared/schema";
 import { eq, desc, asc, lte, and, sql, ne } from "drizzle-orm";
@@ -61,6 +64,13 @@ export interface IStorage {
 
   getModuleStatus(date: string): Promise<ModuleStatus[]>;
   setModuleStatus(moduleName: string, date: string, isDone: boolean, doneBy?: string): Promise<ModuleStatus>;
+
+  getFlowTasks(): Promise<FlowTask[]>;
+  getFlowTask(id: number): Promise<FlowTask | undefined>;
+  createFlowTask(task: InsertFlowTask): Promise<FlowTask>;
+  updateFlowTask(id: number, data: Partial<FlowTask>): Promise<FlowTask | undefined>;
+  deleteFlowTask(id: number): Promise<void>;
+  reorderFlowTasks(taskIds: number[]): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -262,6 +272,37 @@ export class DatabaseStorage implements IStorage {
       doneAt: isDone ? new Date() : null,
     }).returning();
     return newStatus;
+  }
+
+  async getFlowTasks(): Promise<FlowTask[]> {
+    return await db.select().from(flowTasks).orderBy(asc(flowTasks.priority), desc(flowTasks.createdAt));
+  }
+
+  async getFlowTask(id: number): Promise<FlowTask | undefined> {
+    const [task] = await db.select().from(flowTasks).where(eq(flowTasks.id, id));
+    return task;
+  }
+
+  async createFlowTask(task: InsertFlowTask): Promise<FlowTask> {
+    const allTasks = await this.getFlowTasks();
+    const maxPriority = allTasks.length > 0 ? Math.max(...allTasks.map(t => t.priority)) : 0;
+    const [newTask] = await db.insert(flowTasks).values({ ...task, priority: maxPriority + 1 }).returning();
+    return newTask;
+  }
+
+  async updateFlowTask(id: number, data: Partial<FlowTask>): Promise<FlowTask | undefined> {
+    const [updated] = await db.update(flowTasks).set(data).where(eq(flowTasks.id, id)).returning();
+    return updated;
+  }
+
+  async deleteFlowTask(id: number): Promise<void> {
+    await db.delete(flowTasks).where(eq(flowTasks.id, id));
+  }
+
+  async reorderFlowTasks(taskIds: number[]): Promise<void> {
+    for (let i = 0; i < taskIds.length; i++) {
+      await db.update(flowTasks).set({ priority: i + 1 }).where(eq(flowTasks.id, taskIds[i]));
+    }
   }
 }
 

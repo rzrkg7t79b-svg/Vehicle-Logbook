@@ -73,12 +73,23 @@ Preferred communication style: Simple, everyday language.
 
 7. **Module Routes**: 
    - `/` - MasterSIXT dashboard (main home)
-   - `/bodyshop` - BodyshopSIXT vehicle tracking
    - `/timedriver` - TimeDriverSIXT morning checks
+   - `/flow` - FlowSIXT driver task management
+   - `/bodyshop` - BodyshopSIXT vehicle tracking
    - `/todo` - ToDoSIXT task management
    - `/quality` - QualitySIXT quality checks
 
 8. **Auto-Task Creation**: Failed quality checks automatically create driver tasks visible to users with Driver role.
+
+9. **FlowSIXT Features**:
+   - Counter/Admin can create tasks with license plate, EV toggle, and task type
+   - Task types: refuelling, cleaning, AdBlue, delivery, collection, water, fast cleaning, Bodyshop collection, Bodyshop delivery, LiveCheckin, only CheckIN & Parking
+   - Counter/Admin can reorder tasks by drag-and-drop (priority system)
+   - Drivers can mark tasks as done
+   - Counter/Admin can mark completed tasks as "undone" which sets needsRetry flag
+   - Tasks with needsRetry show "Try again!" warning
+
+10. **ToDoSIXT Role Assignment**: Admin can assign todos to Counter and/or Driver roles. Non-admin users only see todos assigned to their role.
 
 ## External Dependencies
 

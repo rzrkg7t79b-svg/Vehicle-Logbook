@@ -381,6 +381,114 @@ export async function registerRoutes(
     }
   });
 
+  // Helper to check if user is admin or counter
+  async function requireAdminOrCounter(req: any, res: any): Promise<boolean> {
+    const adminPin = req.headers['x-admin-pin'] as string;
+    if (!adminPin) {
+      res.status(403).json({ message: "Authorization required" });
+      return false;
+    }
+    const user = await storage.getUserByPin(adminPin);
+    if (!user || (!user.isAdmin && !user.roles.includes("Counter"))) {
+      res.status(403).json({ message: "Only Admin or Counter can perform this action" });
+      return false;
+    }
+    return true;
+  }
+
+  // Flow task routes
+  app.get(api.flowTasks.list.path, async (req, res) => {
+    const tasks = await storage.getFlowTasks();
+    res.json(tasks);
+  });
+
+  app.post(api.flowTasks.create.path, async (req, res) => {
+    if (!(await requireAdminOrCounter(req, res))) return;
+    try {
+      const input = api.flowTasks.create.input.parse(req.body);
+      const task = await storage.createFlowTask(input);
+      res.status(201).json(task);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ message: err.errors[0].message });
+      }
+      throw err;
+    }
+  });
+
+  app.patch(api.flowTasks.update.path, async (req, res) => {
+    const id = Number(req.params.id);
+    const existing = await storage.getFlowTask(id);
+    if (!existing) {
+      return res.status(404).json({ message: "Flow task not found" });
+    }
+
+    // Check if changing license plate or marking as undone (needs admin/counter)
+    const isAdminAction = req.body.licensePlate !== undefined || 
+                          req.body.needsRetry !== undefined ||
+                          req.body.taskType !== undefined ||
+                          req.body.isEv !== undefined;
+    if (isAdminAction && !(await requireAdminOrCounter(req, res))) return;
+
+    // Completion requires Driver, Counter, or Admin role (header required)
+    if (req.body.completed === true) {
+      const userPin = req.headers['x-admin-pin'] as string;
+      if (!userPin) {
+        return res.status(401).json({ message: "Authentication required to complete tasks" });
+      }
+      const user = await storage.getUserByPin(userPin);
+      if (!user || (!user.isAdmin && !user.roles.includes("Counter") && !user.roles.includes("Driver"))) {
+        return res.status(403).json({ message: "Only Driver, Counter, or Admin can complete tasks" });
+      }
+    }
+
+    try {
+      const input = api.flowTasks.update.input.parse(req.body);
+      const updateData: any = { ...input };
+      if (input.completed) {
+        updateData.completedAt = new Date();
+        updateData.needsRetry = false;
+      }
+      if (input.needsRetry) {
+        updateData.completed = false;
+        updateData.completedAt = null;
+        updateData.completedBy = null;
+      }
+      const updated = await storage.updateFlowTask(id, updateData);
+      res.json(updated);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ message: err.errors[0].message });
+      }
+      throw err;
+    }
+  });
+
+  app.delete(api.flowTasks.delete.path, async (req, res) => {
+    if (!(await requireAdminOrCounter(req, res))) return;
+    const id = Number(req.params.id);
+    const existing = await storage.getFlowTask(id);
+    if (!existing) {
+      return res.status(404).json({ message: "Flow task not found" });
+    }
+    await storage.deleteFlowTask(id);
+    res.status(204).send();
+  });
+
+  app.post(api.flowTasks.reorder.path, async (req, res) => {
+    if (!(await requireAdminOrCounter(req, res))) return;
+    try {
+      const input = api.flowTasks.reorder.input.parse(req.body);
+      await storage.reorderFlowTasks(input.taskIds);
+      res.json({ success: true });
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ message: err.errors[0].message });
+      }
+      throw err;
+    }
+  });
+
   await seedDatabase();
   await storage.seedBranchManager();
 

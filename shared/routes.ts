@@ -1,6 +1,6 @@
 
 import { z } from 'zod';
-import { insertVehicleSchema, insertCommentSchema, insertUserSchema, insertTodoSchema, insertQualityCheckSchema, vehicles, comments, users, todos, qualityChecks, driverTasks, moduleStatus } from './schema';
+import { insertVehicleSchema, insertCommentSchema, insertUserSchema, insertTodoSchema, insertQualityCheckSchema, insertFlowTaskSchema, flowTaskTypes, vehicles, comments, users, todos, qualityChecks, driverTasks, flowTasks, moduleStatus } from './schema';
 
 export const errorSchemas = {
   validation: z.object({
@@ -261,6 +261,62 @@ export const api = {
       }),
       responses: {
         200: z.custom<typeof moduleStatus.$inferSelect>(),
+      },
+    },
+  },
+  flowTasks: {
+    list: {
+      method: 'GET' as const,
+      path: '/api/flow-tasks',
+      responses: {
+        200: z.array(z.custom<typeof flowTasks.$inferSelect>()),
+      },
+    },
+    create: {
+      method: 'POST' as const,
+      path: '/api/flow-tasks',
+      input: insertFlowTaskSchema,
+      responses: {
+        201: z.custom<typeof flowTasks.$inferSelect>(),
+        400: errorSchemas.validation,
+        403: errorSchemas.forbidden,
+      },
+    },
+    update: {
+      method: 'PATCH' as const,
+      path: '/api/flow-tasks/:id',
+      input: z.object({
+        licensePlate: z.string().optional(),
+        isEv: z.boolean().optional(),
+        taskType: z.enum(flowTaskTypes).optional(),
+        completed: z.boolean().optional(),
+        completedBy: z.string().optional(),
+        needsRetry: z.boolean().optional(),
+      }),
+      responses: {
+        200: z.custom<typeof flowTasks.$inferSelect>(),
+        403: errorSchemas.forbidden,
+        404: errorSchemas.notFound,
+      },
+    },
+    delete: {
+      method: 'DELETE' as const,
+      path: '/api/flow-tasks/:id',
+      responses: {
+        204: z.void(),
+        403: errorSchemas.forbidden,
+        404: errorSchemas.notFound,
+      },
+    },
+    reorder: {
+      method: 'POST' as const,
+      path: '/api/flow-tasks/reorder',
+      input: z.object({
+        taskIds: z.array(z.number()),
+      }),
+      responses: {
+        200: z.object({ success: z.boolean() }),
+        403: errorSchemas.forbidden,
       },
     },
   },

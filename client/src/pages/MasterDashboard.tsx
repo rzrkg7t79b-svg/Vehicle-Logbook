@@ -2,15 +2,16 @@ import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { motion } from "framer-motion";
-import { Clock, Car, ClipboardCheck, CheckSquare, AlertTriangle, CheckCircle } from "lucide-react";
+import { Clock, Car, ClipboardCheck, CheckSquare, AlertTriangle, CheckCircle, Workflow } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Card } from "@/components/ui/card";
 import { getSecondsUntilGermanTime, formatCountdown, isOverdue, getGermanDateString } from "@/lib/germanTime";
 import { useUser } from "@/contexts/UserContext";
-import type { Todo, DriverTask, ModuleStatus } from "@shared/schema";
+import type { Todo, DriverTask, FlowTask, ModuleStatus } from "@shared/schema";
 
 const MODULES = [
   { id: "timedriver", name: "TimeDriverSIXT", icon: Clock, path: "/timedriver", targetHour: 8, targetMinute: 0 },
+  { id: "flow", name: "FlowSIXT", icon: Workflow, path: "/flow", targetHour: null, targetMinute: null },
   { id: "bodyshop", name: "BodyshopSIXT", icon: Car, path: "/bodyshop", targetHour: null, targetMinute: null },
   { id: "todo", name: "ToDoSIXT", icon: CheckSquare, path: "/todo", targetHour: null, targetMinute: null },
   { id: "quality", name: "QualitySIXT", icon: ClipboardCheck, path: "/quality", targetHour: null, targetMinute: null },
@@ -28,6 +29,10 @@ export default function MasterDashboard() {
 
   const { data: driverTasks = [] } = useQuery<DriverTask[]>({
     queryKey: ["/api/driver-tasks"],
+  });
+
+  const { data: flowTasks = [] } = useQuery<FlowTask[]>({
+    queryKey: ["/api/flow-tasks"],
   });
 
   const { data: moduleStatuses = [] } = useQuery<ModuleStatus[]>({
@@ -59,7 +64,9 @@ export default function MasterDashboard() {
   const todoProgress = totalTodos > 0 ? Math.round((completedTodos / totalTodos) * 100) : 0;
 
   const pendingDriverTasks = driverTasks.filter(t => !t.completed);
-  const isDriver = user?.roles.includes("Driver");
+  const pendingFlowTasks = flowTasks.filter(t => !t.completed);
+  const isDriver = user?.roles?.includes("Driver");
+  const isAdminOrCounter = user?.isAdmin || user?.roles?.includes("Counter");
 
   return (
     <div className="pb-24">
@@ -149,6 +156,9 @@ export default function MasterDashboard() {
                           <p className="font-medium text-white">{module.name}</p>
                           {module.id === "todo" && totalTodos > 0 && (
                             <p className="text-xs text-muted-foreground">{todoProgress}% complete</p>
+                          )}
+                          {module.id === "flow" && pendingFlowTasks.length > 0 && (
+                            <p className="text-xs text-orange-400">{pendingFlowTasks.length} pending tasks</p>
                           )}
                           {module.id === "quality" && pendingDriverTasks.length > 0 && isDriver && (
                             <p className="text-xs text-orange-400">{pendingDriverTasks.length} pending tasks</p>

@@ -10,6 +10,7 @@ import AddVehicle from "@/pages/AddVehicle";
 import VehicleDetail from "@/pages/VehicleDetail";
 import Users from "@/pages/Users";
 import TimeDriver from "@/pages/TimeDriver";
+import FlowSIXT from "@/pages/FlowSIXT";
 import TodoList from "@/pages/TodoList";
 import QualityCheck from "@/pages/QualityCheck";
 import NotFound from "@/pages/not-found";
@@ -27,6 +28,7 @@ function Router() {
         <Route path="/vehicle/:id" component={VehicleDetail} />
         <Route path="/users" component={Users} />
         <Route path="/timedriver" component={TimeDriver} />
+        <Route path="/flow" component={FlowSIXT} />
         <Route path="/todo" component={TodoList} />
         <Route path="/quality" component={QualityCheck} />
         <Route component={NotFound} />

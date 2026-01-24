@@ -1,11 +1,13 @@
 import { useState } from "react";
 import { Link } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { ArrowLeft, ClipboardCheck, CheckCircle, XCircle, AlertTriangle } from "lucide-react";
+import { ArrowLeft, ClipboardCheck, CheckCircle, XCircle, AlertTriangle, Zap } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { motion, AnimatePresence } from "framer-motion";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useUser } from "@/contexts/UserContext";
@@ -16,11 +18,12 @@ import type { QualityCheck as QualityCheckType, DriverTask, ModuleStatus } from 
 export default function QualityCheck() {
   const { user } = useUser();
   const [licensePlate, setLicensePlate] = useState("");
+  const [isEv, setIsEv] = useState(false);
   const [passed, setPassed] = useState<boolean | null>(null);
   const [comment, setComment] = useState("");
   const todayDate = getGermanDateString();
 
-  const isDriver = user?.roles.includes("Driver");
+  const isDriver = user?.roles?.includes("Driver");
 
   const { data: qualityChecks = [] } = useQuery<QualityCheckType[]>({
     queryKey: ["/api/quality-checks"],
@@ -44,6 +47,7 @@ export default function QualityCheck() {
     mutationFn: async () => {
       await apiRequest("POST", "/api/quality-checks", {
         licensePlate: licensePlate.toUpperCase(),
+        isEv,
         passed: passed!,
         comment: passed ? undefined : comment,
         checkedBy: user?.initials,
@@ -84,6 +88,7 @@ export default function QualityCheck() {
 
   const resetForm = () => {
     setLicensePlate("");
+    setIsEv(false);
     setPassed(null);
     setComment("");
   };
@@ -145,11 +150,24 @@ export default function QualityCheck() {
             <div>
               <label className="text-sm text-muted-foreground mb-1 block">License Plate</label>
               <Input
-                placeholder="e.g. M-AB1234"
+                placeholder="e.g. M-AB 1234"
                 value={licensePlate}
                 onChange={(e) => setLicensePlate(e.target.value.toUpperCase())}
-                className="uppercase"
+                className="uppercase font-mono text-lg"
                 data-testid="input-license-plate"
+              />
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Zap className="w-4 h-4 text-green-500" />
+                <Label htmlFor="ev-switch-quality">Electric Vehicle</Label>
+              </div>
+              <Switch
+                id="ev-switch-quality"
+                checked={isEv}
+                onCheckedChange={setIsEv}
+                data-testid="switch-quality-ev"
               />
             </div>
 
@@ -220,7 +238,10 @@ export default function QualityCheck() {
                     className={`p-3 rounded-lg ${check.passed ? 'bg-green-500/10' : 'bg-red-500/10'}`}
                   >
                     <div className="flex items-center justify-between">
-                      <GermanPlate plate={check.licensePlate} size="sm" />
+                      <div className="flex items-center gap-2">
+                        <GermanPlate plate={check.licensePlate} size="sm" />
+                        {check.isEv && <Zap className="w-4 h-4 text-green-500" />}
+                      </div>
                       {check.passed ? (
                         <CheckCircle className="w-5 h-5 text-green-500" />
                       ) : (

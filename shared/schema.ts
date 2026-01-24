@@ -46,6 +46,7 @@ export const commentsRelations = relations(comments, ({ one }) => ({
 export const todos = pgTable("todos", {
   id: serial("id").primaryKey(),
   title: text("title").notNull(),
+  assignedTo: text("assigned_to").array().notNull().default([]),
   completed: boolean("completed").default(false).notNull(),
   completedBy: text("completed_by"),
   completedAt: timestamp("completed_at"),
@@ -55,9 +56,24 @@ export const todos = pgTable("todos", {
 export const qualityChecks = pgTable("quality_checks", {
   id: serial("id").primaryKey(),
   licensePlate: text("license_plate").notNull(),
+  isEv: boolean("is_ev").default(false).notNull(),
   passed: boolean("passed").notNull(),
   comment: text("comment"),
   checkedBy: text("checked_by"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const flowTasks = pgTable("flow_tasks", {
+  id: serial("id").primaryKey(),
+  licensePlate: text("license_plate").notNull(),
+  isEv: boolean("is_ev").default(false).notNull(),
+  taskType: text("task_type").notNull(),
+  priority: integer("priority").default(0).notNull(),
+  completed: boolean("completed").default(false).notNull(),
+  completedBy: text("completed_by"),
+  completedAt: timestamp("completed_at"),
+  needsRetry: boolean("needs_retry").default(false).notNull(),
+  createdBy: text("created_by"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -102,6 +118,7 @@ export const insertTodoSchema = createInsertSchema(todos)
   .omit({ id: true, createdAt: true, completedAt: true })
   .extend({
     title: z.string().min(1, "Title is required"),
+    assignedTo: z.array(z.enum(["Counter", "Driver"])).default([]),
     completed: z.boolean().default(false),
     completedBy: z.string().optional(),
   });
@@ -110,9 +127,37 @@ export const insertQualityCheckSchema = createInsertSchema(qualityChecks)
   .omit({ id: true, createdAt: true })
   .extend({
     licensePlate: z.string().min(1, "License plate is required"),
+    isEv: z.boolean().default(false),
     passed: z.boolean(),
     comment: z.string().optional(),
     checkedBy: z.string().optional(),
+  });
+
+export const flowTaskTypes = [
+  "refuelling",
+  "cleaning", 
+  "AdBlue",
+  "delivery",
+  "collection",
+  "water",
+  "fast cleaning",
+  "Bodyshop collection",
+  "Bodyshop delivery",
+  "LiveCheckin",
+  "only CheckIN & Parking"
+] as const;
+
+export const insertFlowTaskSchema = createInsertSchema(flowTasks)
+  .omit({ id: true, createdAt: true, completedAt: true })
+  .extend({
+    licensePlate: z.string().min(1, "License plate is required"),
+    isEv: z.boolean().default(false),
+    taskType: z.enum(flowTaskTypes),
+    priority: z.number().default(0),
+    completed: z.boolean().default(false),
+    completedBy: z.string().optional(),
+    needsRetry: z.boolean().default(false),
+    createdBy: z.string().optional(),
   });
 
 export const insertDriverTaskSchema = createInsertSchema(driverTasks)
@@ -131,6 +176,8 @@ export type Todo = typeof todos.$inferSelect;
 export type InsertTodo = z.infer<typeof insertTodoSchema>;
 export type QualityCheck = typeof qualityChecks.$inferSelect;
 export type InsertQualityCheck = z.infer<typeof insertQualityCheckSchema>;
+export type FlowTask = typeof flowTasks.$inferSelect;
+export type InsertFlowTask = z.infer<typeof insertFlowTaskSchema>;
 export type DriverTask = typeof driverTasks.$inferSelect;
 export type InsertDriverTask = z.infer<typeof insertDriverTaskSchema>;
 export type ModuleStatus = typeof moduleStatus.$inferSelect;
