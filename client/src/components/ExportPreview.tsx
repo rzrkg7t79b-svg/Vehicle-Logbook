@@ -113,7 +113,18 @@ export function ExportPreview({ open, onOpenChange }: ExportPreviewProps) {
       const contentWidth = 1200;
       const contentHeight = element.scrollHeight;
       
-      const contentAspect = contentWidth / contentHeight;
+      const sourceCanvas = await html2canvas(element, {
+        scale: 2,
+        backgroundColor: "#1a1a1a",
+        width: contentWidth,
+        height: contentHeight,
+        windowWidth: contentWidth,
+        windowHeight: contentHeight,
+      });
+      
+      const srcWidth = sourceCanvas.width;
+      const srcHeight = sourceCanvas.height;
+      const contentAspect = srcWidth / srcHeight;
       const hdAspect = 1920 / 1080;
       
       let finalWidth: number;
@@ -127,20 +138,19 @@ export function ExportPreview({ open, onOpenChange }: ExportPreviewProps) {
         finalWidth = Math.round(1080 * contentAspect);
       }
       
-      const scale = finalWidth / contentWidth;
-      
-      const canvas = await html2canvas(element, {
-        scale: scale,
-        backgroundColor: "#1a1a1a",
-        width: contentWidth,
-        height: contentHeight,
-        windowWidth: contentWidth,
-        windowHeight: contentHeight,
-      });
+      const finalCanvas = document.createElement("canvas");
+      finalCanvas.width = finalWidth;
+      finalCanvas.height = finalHeight;
+      const ctx = finalCanvas.getContext("2d");
+      if (ctx) {
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = "high";
+        ctx.drawImage(sourceCanvas, 0, 0, srcWidth, srcHeight, 0, 0, finalWidth, finalHeight);
+      }
       
       const link = document.createElement("a");
       link.download = `MasterSIXT-Export-${todayDate}.png`;
-      link.href = canvas.toDataURL("image/png");
+      link.href = finalCanvas.toDataURL("image/png");
       link.click();
     } catch (error) {
       console.error("Export failed:", error);
