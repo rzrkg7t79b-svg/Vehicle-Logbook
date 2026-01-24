@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Lock } from "lucide-react";
 
 interface PinGateProps {
@@ -7,11 +7,28 @@ interface PinGateProps {
 
 const CORRECT_PIN = "4035";
 const STORAGE_KEY = "bodyshop_auth";
+const TIMEOUT_MS = 5 * 60 * 1000;
 
 export function PinGate({ children }: PinGateProps) {
   const [pin, setPin] = useState("");
   const [isUnlocked, setIsUnlocked] = useState(false);
   const [error, setError] = useState(false);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const logout = useCallback(() => {
+    sessionStorage.removeItem(STORAGE_KEY);
+    setIsUnlocked(false);
+    setPin("");
+  }, []);
+
+  const resetTimer = useCallback(() => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+    if (isUnlocked) {
+      timeoutRef.current = setTimeout(logout, TIMEOUT_MS);
+    }
+  }, [isUnlocked, logout]);
 
   useEffect(() => {
     const stored = sessionStorage.getItem(STORAGE_KEY);
@@ -19,6 +36,27 @@ export function PinGate({ children }: PinGateProps) {
       setIsUnlocked(true);
     }
   }, []);
+
+  useEffect(() => {
+    if (!isUnlocked) return;
+
+    const events = ["mousedown", "mousemove", "keydown", "touchstart", "scroll"];
+    
+    events.forEach(event => {
+      document.addEventListener(event, resetTimer);
+    });
+
+    resetTimer();
+
+    return () => {
+      events.forEach(event => {
+        document.removeEventListener(event, resetTimer);
+      });
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, [isUnlocked, resetTimer]);
 
   const handleDigit = (digit: string) => {
     if (pin.length < 4) {
