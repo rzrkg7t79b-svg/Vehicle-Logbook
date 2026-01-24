@@ -3,12 +3,15 @@ import { db } from "./db";
 import {
   vehicles,
   comments,
+  users,
   type InsertVehicle,
   type InsertComment,
+  type InsertUser,
   type Vehicle,
-  type Comment
+  type Comment,
+  type User
 } from "@shared/schema";
-import { eq, desc, asc, lte, and, sql } from "drizzle-orm";
+import { eq, desc, asc, lte, and, sql, ne } from "drizzle-orm";
 
 export interface IStorage {
   getVehicles(filter?: 'all' | 'expired', search?: string): Promise<Vehicle[]>;
@@ -19,6 +22,15 @@ export interface IStorage {
   deleteVehicle(id: number): Promise<void>;
   createComment(comment: InsertComment): Promise<Comment>;
   getComments(vehicleId: number): Promise<Comment[]>;
+  
+  getUsers(): Promise<User[]>;
+  getUser(id: number): Promise<User | undefined>;
+  getUserByPin(pin: string): Promise<User | undefined>;
+  createUser(user: InsertUser): Promise<User>;
+  updateUser(id: number, data: Partial<User>): Promise<User | undefined>;
+  deleteUser(id: number): Promise<void>;
+  isPinUnique(pin: string, excludeId?: number): Promise<boolean>;
+  seedBranchManager(): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -87,6 +99,56 @@ export class DatabaseStorage implements IStorage {
       .from(comments)
       .where(eq(comments.vehicleId, vehicleId))
       .orderBy(desc(comments.createdAt));
+  }
+
+  async getUsers(): Promise<User[]> {
+    return await db.select().from(users).orderBy(asc(users.initials));
+  }
+
+  async getUser(id: number): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user;
+  }
+
+  async getUserByPin(pin: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.pin, pin));
+    return user;
+  }
+
+  async createUser(user: InsertUser): Promise<User> {
+    const [newUser] = await db.insert(users).values(user).returning();
+    return newUser;
+  }
+
+  async updateUser(id: number, data: Partial<User>): Promise<User | undefined> {
+    const [updated] = await db.update(users).set(data).where(eq(users.id, id)).returning();
+    return updated;
+  }
+
+  async deleteUser(id: number): Promise<void> {
+    await db.delete(users).where(eq(users.id, id));
+  }
+
+  async isPinUnique(pin: string, excludeId?: number): Promise<boolean> {
+    let query = db.select().from(users).where(eq(users.pin, pin));
+    if (excludeId) {
+      query = db.select().from(users).where(and(eq(users.pin, pin), ne(users.id, excludeId)));
+    }
+    const existing = await query;
+    return existing.length === 0;
+  }
+
+  async seedBranchManager(): Promise<void> {
+    const existing = await this.getUserByPin("4266");
+    if (!existing) {
+      await this.createUser({
+        initials: "BM",
+        pin: "4266",
+        roles: ["Counter", "Driver"],
+        isAdmin: true,
+      });
+      console.log("Branch Manager seeded with PIN 4266");
+    }
   }
 }
 
