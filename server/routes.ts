@@ -241,6 +241,146 @@ export async function registerRoutes(
     }
   });
 
+  // Todo routes
+  app.get(api.todos.list.path, async (req, res) => {
+    const todos = await storage.getTodos();
+    res.json(todos);
+  });
+
+  app.post(api.todos.create.path, async (req, res) => {
+    if (!(await requireAdmin(req, res))) return;
+    try {
+      const input = api.todos.create.input.parse(req.body);
+      const todo = await storage.createTodo(input);
+      res.status(201).json(todo);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ message: err.errors[0].message });
+      }
+      throw err;
+    }
+  });
+
+  app.patch(api.todos.update.path, async (req, res) => {
+    const id = Number(req.params.id);
+    const existing = await storage.getTodo(id);
+    if (!existing) {
+      return res.status(404).json({ message: "Todo not found" });
+    }
+
+    const isAdminRequest = req.body.title !== undefined;
+    if (isAdminRequest && !(await requireAdmin(req, res))) return;
+
+    try {
+      const input = api.todos.update.input.parse(req.body);
+      const updateData: any = { ...input };
+      if (input.completed) {
+        updateData.completedAt = new Date();
+      }
+      const updated = await storage.updateTodo(id, updateData);
+      res.json(updated);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ message: err.errors[0].message });
+      }
+      throw err;
+    }
+  });
+
+  app.delete(api.todos.delete.path, async (req, res) => {
+    if (!(await requireAdmin(req, res))) return;
+    const id = Number(req.params.id);
+    const existing = await storage.getTodo(id);
+    if (!existing) {
+      return res.status(404).json({ message: "Todo not found" });
+    }
+    await storage.deleteTodo(id);
+    res.status(204).send();
+  });
+
+  // Quality check routes
+  app.get(api.qualityChecks.list.path, async (req, res) => {
+    const checks = await storage.getQualityChecks();
+    res.json(checks);
+  });
+
+  app.post(api.qualityChecks.create.path, async (req, res) => {
+    try {
+      const input = api.qualityChecks.create.input.parse(req.body);
+      const check = await storage.createQualityCheck(input);
+      
+      // If not passed, create a driver task
+      if (!input.passed) {
+        await storage.createDriverTask({
+          qualityCheckId: check.id,
+          licensePlate: input.licensePlate,
+          description: input.comment || `Quality check failed for ${input.licensePlate}`,
+          completed: false,
+        });
+      }
+      
+      res.status(201).json(check);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ message: err.errors[0].message });
+      }
+      throw err;
+    }
+  });
+
+  // Driver task routes
+  app.get(api.driverTasks.list.path, async (req, res) => {
+    const tasks = await storage.getDriverTasks();
+    res.json(tasks);
+  });
+
+  app.patch(api.driverTasks.update.path, async (req, res) => {
+    const id = Number(req.params.id);
+    const existing = await storage.getDriverTask(id);
+    if (!existing) {
+      return res.status(404).json({ message: "Driver task not found" });
+    }
+    try {
+      const input = api.driverTasks.update.input.parse(req.body);
+      const updateData: any = { ...input };
+      if (input.completed) {
+        updateData.completedAt = new Date();
+      }
+      const updated = await storage.updateDriverTask(id, updateData);
+      res.json(updated);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ message: err.errors[0].message });
+      }
+      throw err;
+    }
+  });
+
+  // Module status routes
+  app.get(api.moduleStatus.list.path, async (req, res) => {
+    const date = req.query.date as string || new Date().toISOString().split('T')[0];
+    const statuses = await storage.getModuleStatus(date);
+    res.json(statuses);
+  });
+
+  app.post(api.moduleStatus.update.path, async (req, res) => {
+    try {
+      const input = api.moduleStatus.update.input.parse(req.body);
+      const status = await storage.setModuleStatus(
+        input.moduleName,
+        input.date,
+        input.isDone,
+        input.doneBy
+      );
+      res.json(status);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ message: err.errors[0].message });
+      }
+      throw err;
+    }
+  });
+
   await seedDatabase();
   await storage.seedBranchManager();
 

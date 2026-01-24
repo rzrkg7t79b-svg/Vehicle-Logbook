@@ -1,6 +1,6 @@
 
 import { z } from 'zod';
-import { insertVehicleSchema, insertCommentSchema, insertUserSchema, vehicles, comments, users } from './schema';
+import { insertVehicleSchema, insertCommentSchema, insertUserSchema, insertTodoSchema, insertQualityCheckSchema, vehicles, comments, users, todos, qualityChecks, driverTasks, moduleStatus } from './schema';
 
 export const errorSchemas = {
   validation: z.object({
@@ -155,6 +155,112 @@ export const api = {
       }),
       responses: {
         200: z.object({ available: z.boolean() }),
+      },
+    },
+  },
+  todos: {
+    list: {
+      method: 'GET' as const,
+      path: '/api/todos',
+      responses: {
+        200: z.array(z.custom<typeof todos.$inferSelect>()),
+      },
+    },
+    create: {
+      method: 'POST' as const,
+      path: '/api/todos',
+      input: insertTodoSchema,
+      responses: {
+        201: z.custom<typeof todos.$inferSelect>(),
+        400: errorSchemas.validation,
+        403: errorSchemas.forbidden,
+      },
+    },
+    update: {
+      method: 'PATCH' as const,
+      path: '/api/todos/:id',
+      input: z.object({
+        title: z.string().optional(),
+        completed: z.boolean().optional(),
+        completedBy: z.string().optional(),
+      }),
+      responses: {
+        200: z.custom<typeof todos.$inferSelect>(),
+        403: errorSchemas.forbidden,
+        404: errorSchemas.notFound,
+      },
+    },
+    delete: {
+      method: 'DELETE' as const,
+      path: '/api/todos/:id',
+      responses: {
+        204: z.void(),
+        403: errorSchemas.forbidden,
+        404: errorSchemas.notFound,
+      },
+    },
+  },
+  qualityChecks: {
+    list: {
+      method: 'GET' as const,
+      path: '/api/quality-checks',
+      responses: {
+        200: z.array(z.custom<typeof qualityChecks.$inferSelect>()),
+      },
+    },
+    create: {
+      method: 'POST' as const,
+      path: '/api/quality-checks',
+      input: insertQualityCheckSchema,
+      responses: {
+        201: z.custom<typeof qualityChecks.$inferSelect>(),
+        400: errorSchemas.validation,
+      },
+    },
+  },
+  driverTasks: {
+    list: {
+      method: 'GET' as const,
+      path: '/api/driver-tasks',
+      responses: {
+        200: z.array(z.custom<typeof driverTasks.$inferSelect>()),
+      },
+    },
+    update: {
+      method: 'PATCH' as const,
+      path: '/api/driver-tasks/:id',
+      input: z.object({
+        completed: z.boolean().optional(),
+        completedBy: z.string().optional(),
+      }),
+      responses: {
+        200: z.custom<typeof driverTasks.$inferSelect>(),
+        404: errorSchemas.notFound,
+      },
+    },
+  },
+  moduleStatus: {
+    list: {
+      method: 'GET' as const,
+      path: '/api/module-status',
+      input: z.object({
+        date: z.string(),
+      }),
+      responses: {
+        200: z.array(z.custom<typeof moduleStatus.$inferSelect>()),
+      },
+    },
+    update: {
+      method: 'POST' as const,
+      path: '/api/module-status',
+      input: z.object({
+        moduleName: z.string(),
+        date: z.string(),
+        isDone: z.boolean(),
+        doneBy: z.string().optional(),
+      }),
+      responses: {
+        200: z.custom<typeof moduleStatus.$inferSelect>(),
       },
     },
   },

@@ -4,12 +4,24 @@ import {
   vehicles,
   comments,
   users,
+  todos,
+  qualityChecks,
+  driverTasks,
+  moduleStatus,
   type InsertVehicle,
   type InsertComment,
   type InsertUser,
+  type InsertTodo,
+  type InsertQualityCheck,
+  type InsertDriverTask,
+  type InsertModuleStatus,
   type Vehicle,
   type Comment,
-  type User
+  type User,
+  type Todo,
+  type QualityCheck,
+  type DriverTask,
+  type ModuleStatus
 } from "@shared/schema";
 import { eq, desc, asc, lte, and, sql, ne } from "drizzle-orm";
 
@@ -31,6 +43,24 @@ export interface IStorage {
   deleteUser(id: number): Promise<void>;
   isPinUnique(pin: string, excludeId?: number): Promise<boolean>;
   seedBranchManager(): Promise<void>;
+
+  getTodos(): Promise<Todo[]>;
+  getTodo(id: number): Promise<Todo | undefined>;
+  createTodo(todo: InsertTodo): Promise<Todo>;
+  updateTodo(id: number, data: Partial<Todo>): Promise<Todo | undefined>;
+  deleteTodo(id: number): Promise<void>;
+
+  getQualityChecks(): Promise<QualityCheck[]>;
+  getQualityCheck(id: number): Promise<QualityCheck | undefined>;
+  createQualityCheck(check: InsertQualityCheck): Promise<QualityCheck>;
+
+  getDriverTasks(): Promise<DriverTask[]>;
+  getDriverTask(id: number): Promise<DriverTask | undefined>;
+  createDriverTask(task: InsertDriverTask): Promise<DriverTask>;
+  updateDriverTask(id: number, data: Partial<DriverTask>): Promise<DriverTask | undefined>;
+
+  getModuleStatus(date: string): Promise<ModuleStatus[]>;
+  setModuleStatus(moduleName: string, date: string, isDone: boolean, doneBy?: string): Promise<ModuleStatus>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -149,6 +179,89 @@ export class DatabaseStorage implements IStorage {
       });
       console.log("Branch Manager seeded with PIN 4266");
     }
+  }
+
+  async getTodos(): Promise<Todo[]> {
+    return await db.select().from(todos).orderBy(asc(todos.createdAt));
+  }
+
+  async getTodo(id: number): Promise<Todo | undefined> {
+    const [todo] = await db.select().from(todos).where(eq(todos.id, id));
+    return todo;
+  }
+
+  async createTodo(todo: InsertTodo): Promise<Todo> {
+    const [newTodo] = await db.insert(todos).values(todo).returning();
+    return newTodo;
+  }
+
+  async updateTodo(id: number, data: Partial<Todo>): Promise<Todo | undefined> {
+    const [updated] = await db.update(todos).set(data).where(eq(todos.id, id)).returning();
+    return updated;
+  }
+
+  async deleteTodo(id: number): Promise<void> {
+    await db.delete(todos).where(eq(todos.id, id));
+  }
+
+  async getQualityChecks(): Promise<QualityCheck[]> {
+    return await db.select().from(qualityChecks).orderBy(desc(qualityChecks.createdAt));
+  }
+
+  async getQualityCheck(id: number): Promise<QualityCheck | undefined> {
+    const [check] = await db.select().from(qualityChecks).where(eq(qualityChecks.id, id));
+    return check;
+  }
+
+  async createQualityCheck(check: InsertQualityCheck): Promise<QualityCheck> {
+    const [newCheck] = await db.insert(qualityChecks).values(check).returning();
+    return newCheck;
+  }
+
+  async getDriverTasks(): Promise<DriverTask[]> {
+    return await db.select().from(driverTasks).orderBy(desc(driverTasks.createdAt));
+  }
+
+  async getDriverTask(id: number): Promise<DriverTask | undefined> {
+    const [task] = await db.select().from(driverTasks).where(eq(driverTasks.id, id));
+    return task;
+  }
+
+  async createDriverTask(task: InsertDriverTask): Promise<DriverTask> {
+    const [newTask] = await db.insert(driverTasks).values(task).returning();
+    return newTask;
+  }
+
+  async updateDriverTask(id: number, data: Partial<DriverTask>): Promise<DriverTask | undefined> {
+    const [updated] = await db.update(driverTasks).set(data).where(eq(driverTasks.id, id)).returning();
+    return updated;
+  }
+
+  async getModuleStatus(date: string): Promise<ModuleStatus[]> {
+    return await db.select().from(moduleStatus).where(eq(moduleStatus.date, date));
+  }
+
+  async setModuleStatus(moduleName: string, date: string, isDone: boolean, doneBy?: string): Promise<ModuleStatus> {
+    const existing = await db.select().from(moduleStatus).where(
+      and(eq(moduleStatus.moduleName, moduleName), eq(moduleStatus.date, date))
+    );
+    
+    if (existing.length > 0) {
+      const [updated] = await db.update(moduleStatus)
+        .set({ isDone, doneBy, doneAt: isDone ? new Date() : null })
+        .where(and(eq(moduleStatus.moduleName, moduleName), eq(moduleStatus.date, date)))
+        .returning();
+      return updated;
+    }
+    
+    const [newStatus] = await db.insert(moduleStatus).values({
+      moduleName,
+      date,
+      isDone,
+      doneBy,
+      doneAt: isDone ? new Date() : null,
+    }).returning();
+    return newStatus;
   }
 }
 

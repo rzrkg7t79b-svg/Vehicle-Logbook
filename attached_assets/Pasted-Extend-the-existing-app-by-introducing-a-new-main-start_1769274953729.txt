@@ -1,0 +1,13 @@
+Extend the existing app by introducing a new main start dashboard called “MasterSIXT”. The currently existing “BodyshopSIXT” module is only one part of the app and must remain fully functional and unchanged. The new “MasterSIXT” dashboard becomes the main home screen and acts as a gamified daily task and process overview.
+
+The “MasterSIXT” start page must show a global progress bar that represents how much of the total daily workload is completed. The progress is calculated based on how many sub-pages or modules are marked as “done” compared to the total number of pages. Each page can later receive a “done” status. The progress bar must visually show the overall completion percentage.
+
+The “MasterSIXT” start page must also display a daily countdown timer that always counts down to 16:30 German local time. This countdown resets every day. If the countdown reaches zero and the required tasks are not completed, the state must be shown as “Overdue”. All countdowns in the app must be based on German local time.
+
+The “MasterSIXT” dashboard must contain the following sub-pages (some of them are currently empty placeholders and will be implemented later):
+	•	TimeDriverSIXT: This page has its own daily countdown timer that always counts down to 08:00 German local time, resets every day, and shows “Overdue” if not completed in time.
+	•	BodyshopSIXT: This module already exists and must be integrated into the MasterSIXT dashboard without changing its current functionality.
+	•	ToDoSIXT: This page contains a list of ToDos. Only the admin (Branch Manager) is allowed to create, edit, or delete ToDos. Normal users can only mark ToDos as completed. Each completed ToDo contributes proportionally to the total ToDo progress. For example, if there are 10 ToDos and 1 is completed, the progress is 10%. The current ToDo completion percentage must be displayed directly on the “ToDoSIXT” button on the MasterSIXT dashboard.
+	•	QualitySIXT: This page allows entering German license plates for which a quality check was performed. When a quality check is entered as “not passed”, a comment can be added. In this case, an automatic TASK must be created and shown in the MasterSIXT overview specifically for users with the role “Driver”.
+
+The MasterSIXT dashboard must act as a central control center that shows the state of all these modules, their progress, their done/overdue states, and their countdown statuses in a clear, simple, mobile-friendly way. This entire MasterSIXT system must be added on top of the existing app without breaking any current functionality, especially the already implemented BodyshopSIXT module and the existing user and login system.
