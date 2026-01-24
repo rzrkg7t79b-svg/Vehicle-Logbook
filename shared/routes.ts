@@ -45,6 +45,17 @@ export const api = {
         400: errorSchemas.validation,
       },
     },
+    update: {
+      method: 'PATCH' as const,
+      path: '/api/vehicles/:id',
+      input: z.object({
+        readyForCollection: z.boolean().optional(),
+      }),
+      responses: {
+        200: z.custom<typeof vehicles.$inferSelect>(),
+        404: errorSchemas.notFound,
+      },
+    },
     delete: {
       method: 'DELETE' as const,
       path: '/api/vehicles/:id',

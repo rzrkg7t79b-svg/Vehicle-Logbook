@@ -41,6 +41,27 @@ export async function registerRoutes(
     }
   });
 
+  app.patch(api.vehicles.update.path, async (req, res) => {
+    const id = Number(req.params.id);
+    const existing = await storage.getVehicle(id);
+    if (!existing) {
+      return res.status(404).json({ message: 'Vehicle not found' });
+    }
+    try {
+      const input = api.vehicles.update.input.parse(req.body);
+      const updated = await storage.updateVehicle(id, input);
+      res.json(updated);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({
+          message: err.errors[0].message,
+          field: err.errors[0].path.join('.'),
+        });
+      }
+      throw err;
+    }
+  });
+
   app.delete(api.vehicles.delete.path, async (req, res) => {
     const id = Number(req.params.id);
     const existing = await storage.getVehicle(id);

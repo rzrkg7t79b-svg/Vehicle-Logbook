@@ -4,7 +4,7 @@ import { CountdownTimer } from "@/components/CountdownTimer";
 import { GermanPlate } from "@/components/GermanPlate";
 import { Link } from "wouter";
 import { Input } from "@/components/ui/input";
-import { Search, Filter, Car, BatteryCharging } from "lucide-react";
+import { Search, Filter, Car, BatteryCharging, PackageCheck } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { isToday } from "date-fns";
 
@@ -89,7 +89,13 @@ export default function Dashboard() {
           </div>
         ) : (
           <AnimatePresence mode="popLayout">
-            {vehicles.map((vehicle, index) => (
+            {[...vehicles]
+              .sort((a, b) => {
+                if (a.readyForCollection && !b.readyForCollection) return -1;
+                if (!a.readyForCollection && b.readyForCollection) return 1;
+                return 0;
+              })
+              .map((vehicle, index) => (
               <motion.div
                 key={vehicle.id}
                 initial={{ opacity: 0, y: 20 }}
@@ -98,11 +104,21 @@ export default function Dashboard() {
                 transition={{ delay: index * 0.05 }}
               >
                 <Link href={`/vehicle/${vehicle.id}`}>
-                  <div className="group glass-card rounded-xl p-4 active:scale-[0.98] transition-all hover:border-primary/30 relative overflow-hidden">
+                  <div className={`group glass-card rounded-xl p-4 active:scale-[0.98] transition-all relative overflow-hidden ${
+                    vehicle.readyForCollection 
+                      ? 'border-2 border-green-500 bg-green-500/10' 
+                      : 'hover:border-primary/30'
+                  }`}>
+                    {vehicle.readyForCollection && (
+                      <div className="absolute top-2 right-2 flex items-center gap-1 px-2 py-1 bg-green-500 text-white text-[10px] font-bold rounded-full">
+                        <PackageCheck className="w-3 h-3" />
+                        READY
+                      </div>
+                    )}
                     <div className="flex flex-col gap-3">
                       <div className="flex justify-between items-start">
                         <GermanPlate plate={vehicle.licensePlate} size="sm" />
-                        {vehicle.isEv && (
+                        {vehicle.isEv && !vehicle.readyForCollection && (
                           <div className="flex items-center gap-1 text-green-400">
                             <BatteryCharging className="w-4 h-4" />
                             <span className="text-xs font-bold">EV</span>

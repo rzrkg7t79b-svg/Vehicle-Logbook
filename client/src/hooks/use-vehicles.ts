@@ -62,6 +62,27 @@ export function useCreateVehicle() {
   });
 }
 
+export function useUpdateVehicle() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, data }: { id: number, data: { readyForCollection?: boolean } }) => {
+      const url = buildUrl(api.vehicles.update.path, { id });
+      const res = await fetch(url, {
+        method: 'PATCH',
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error("Failed to update vehicle");
+      return res.json();
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: [api.vehicles.list.path] });
+      queryClient.invalidateQueries({ queryKey: [api.vehicles.get.path, variables.id] });
+    },
+  });
+}
+
 export function useDeleteVehicle() {
   const queryClient = useQueryClient();
   return useMutation({

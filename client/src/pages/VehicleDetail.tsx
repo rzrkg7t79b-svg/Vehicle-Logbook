@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { useRoute, useLocation } from "wouter";
-import { useVehicle, useCreateComment, useDeleteVehicle } from "@/hooks/use-vehicles";
+import { useVehicle, useCreateComment, useDeleteVehicle, useUpdateVehicle } from "@/hooks/use-vehicles";
 import { CountdownTimer } from "@/components/CountdownTimer";
 import { GermanPlate } from "@/components/GermanPlate";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, Trash2, Send, Clock, User, AlertCircle, Loader2 } from "lucide-react";
+import { ArrowLeft, Trash2, Send, Clock, User, AlertCircle, Loader2, PackageCheck } from "lucide-react";
 import { format, isToday } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -29,8 +29,23 @@ export default function VehicleDetail() {
   const { data: vehicle, isLoading, isError } = useVehicle(id);
   const deleteMutation = useDeleteVehicle();
   const createComment = useCreateComment();
+  const updateVehicle = useUpdateVehicle();
   
   const [commentText, setCommentText] = useState("");
+
+  const handleToggleCollection = async () => {
+    try {
+      await updateVehicle.mutateAsync({ 
+        id, 
+        data: { readyForCollection: !vehicle?.readyForCollection } 
+      });
+      toast({ 
+        title: vehicle?.readyForCollection ? "Removed from collection" : "Ready for collection" 
+      });
+    } catch (error) {
+      toast({ title: "Update failed", variant: "destructive" });
+    }
+  };
 
   if (isLoading) return <div className="p-8 text-center"><Loader2 className="w-8 h-8 animate-spin mx-auto text-primary"/></div>;
   if (isError || !vehicle) return <div className="p-8 text-center text-red-500">Vehicle not found</div>;
@@ -131,6 +146,39 @@ export default function VehicleDetail() {
               <p className="text-sm text-gray-300 leading-relaxed">{vehicle.notes}</p>
             </div>
           )}
+        </section>
+
+        {/* Collection Checkbox */}
+        <section>
+          <button
+            onClick={handleToggleCollection}
+            disabled={updateVehicle.isPending}
+            className={`w-full flex items-center justify-between p-4 rounded-xl border-2 transition-all ${
+              vehicle.readyForCollection 
+                ? 'bg-green-500/20 border-green-500 text-green-400' 
+                : 'bg-card border-white/10 text-muted-foreground hover:border-white/20'
+            }`}
+            data-testid="button-toggle-collection"
+          >
+            <div className="flex items-center gap-3">
+              <PackageCheck className={`w-6 h-6 ${vehicle.readyForCollection ? 'text-green-400' : ''}`} />
+              <div className="text-left">
+                <p className="font-bold">Ready for Collection</p>
+                <p className="text-xs opacity-70">Mark when vehicle is ready for pickup</p>
+              </div>
+            </div>
+            <div className={`w-6 h-6 rounded-md border-2 flex items-center justify-center transition-all ${
+              vehicle.readyForCollection 
+                ? 'bg-green-500 border-green-500' 
+                : 'border-white/30'
+            }`}>
+              {vehicle.readyForCollection && (
+                <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                </svg>
+              )}
+            </div>
+          </button>
         </section>
 
         {/* Comments Section */}

@@ -10,6 +10,7 @@ export const vehicles = pgTable("vehicles", {
   name: text("name"), // Model or name
   notes: text("notes"), // Initial notes
   isEv: boolean("is_ev").default(false).notNull(),
+  readyForCollection: boolean("ready_for_collection").default(false).notNull(),
   countdownStart: timestamp("countdown_start").notNull().defaultNow(),
   createdAt: timestamp("created_at").defaultNow(),
 });
