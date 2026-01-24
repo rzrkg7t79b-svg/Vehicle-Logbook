@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import { Input } from "@/components/ui/input";
 
 interface LicensePlateInputProps {
@@ -23,6 +24,29 @@ export function LicensePlateInput({
   onEvChange,
   showPreview = true,
 }: LicensePlateInputProps) {
+  const lettersRef = useRef<HTMLInputElement>(null);
+  const numbersRef = useRef<HTMLInputElement>(null);
+
+  const handleCityChange = (value: string) => {
+    const cleaned = value.replace(/[^a-zA-Z]/g, '').toUpperCase();
+    onCityChange(cleaned);
+    if (cleaned.length >= 1 && cleaned.length <= 3 && value.length > city.length) {
+      if (cleaned.length === 3 || (cleaned.length >= 1 && cleaned.length === value.length && value.endsWith(' '))) {
+        lettersRef.current?.focus();
+      }
+    }
+    if (cleaned.length === 3) {
+      lettersRef.current?.focus();
+    }
+  };
+
+  const handleLettersChange = (value: string) => {
+    const cleaned = value.replace(/[^a-zA-Z]/g, '').toUpperCase();
+    onLettersChange(cleaned);
+    if (cleaned.length === 2) {
+      numbersRef.current?.focus();
+    }
+  };
   const buildLicensePlate = () => {
     let plate = "";
     if (city && letters) {
@@ -72,7 +96,7 @@ export function LicensePlateInput({
             maxLength={3}
             placeholder="M"
             value={city}
-            onChange={(e) => onCityChange(e.target.value.replace(/[^a-zA-Z]/g, '').toUpperCase())}
+            onChange={(e) => handleCityChange(e.target.value)}
             className="w-14 h-14 text-xl font-mono font-bold uppercase text-center bg-white text-black border-2 border-black rounded-sm focus:border-primary focus:ring-1 focus:ring-primary"
             data-testid="input-plate-city"
           />
@@ -83,10 +107,11 @@ export function LicensePlateInput({
 
         <div className="flex flex-col items-center">
           <Input
+            ref={lettersRef}
             maxLength={2}
             placeholder="AB"
             value={letters}
-            onChange={(e) => onLettersChange(e.target.value.replace(/[^a-zA-Z]/g, '').toUpperCase())}
+            onChange={(e) => handleLettersChange(e.target.value)}
             className="w-14 h-14 text-xl font-mono font-bold uppercase text-center bg-white text-black border-2 border-black rounded-sm focus:border-primary focus:ring-1 focus:ring-primary"
             data-testid="input-plate-letters"
           />
@@ -95,6 +120,7 @@ export function LicensePlateInput({
 
         <div className="flex flex-col items-center flex-1">
           <Input
+            ref={numbersRef}
             maxLength={4}
             placeholder="1234"
             value={numbers}

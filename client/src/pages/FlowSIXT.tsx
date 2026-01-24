@@ -1,13 +1,15 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Link } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Plus, Check, RotateCcw, GripVertical, Zap, AlertTriangle } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { ArrowLeft, Plus, Check, RotateCcw, GripVertical, Zap, AlertTriangle, Clock } from "lucide-react";
 import { GermanPlate } from "@/components/GermanPlate";
 import { LicensePlateInput, buildPlateFromParts } from "@/components/LicensePlateInput";
 import { useUser } from "@/contexts/UserContext";
+import { getGermanTime } from "@/lib/germanTime";
 import type { FlowTask } from "@shared/schema";
 import { flowTaskTypes } from "@shared/schema";
 import { motion, AnimatePresence, Reorder } from "framer-motion";
@@ -27,30 +29,42 @@ export default function FlowSIXT() {
   const [plateNumbers, setPlateNumbers] = useState("");
   const [isEv, setIsEv] = useState(false);
   const [selectedTasks, setSelectedTasks] = useState<string[]>([]);
+  const [needAt, setNeedAt] = useState("");
   const [showCompleted, setShowCompleted] = useState(false);
+  const [now, setNow] = useState(() => new Date());
 
   const isAdminOrCounter = user?.isAdmin || user?.roles?.includes("Counter");
   const isDriver = user?.roles?.includes("Driver");
+
+  useEffect(() => {
+    const timer = setInterval(() => setNow(new Date()), 30000);
+    return () => clearInterval(timer);
+  }, []);
 
   const { data: tasks = [], isLoading } = useQuery<FlowTask[]>({
     queryKey: ["/api/flow-tasks"],
   });
 
   const createTasks = useMutation({
-    mutationFn: async (data: { licensePlate: string; isEv: boolean; taskTypes: string[] }) => {
+    mutationFn: async (data: { licensePlate: string; isEv: boolean; taskTypes: string[]; needAt?: string }) => {
       const results = [];
       for (const taskType of data.taskTypes) {
+        const body: any = { 
+          licensePlate: data.licensePlate, 
+          isEv: data.isEv, 
+          taskType 
+        };
+        if (data.needAt) {
+          const today = getGermanTime().toISOString().split('T')[0];
+          body.needAt = new Date(`${today}T${data.needAt}:00`);
+        }
         const res = await fetch("/api/flow-tasks", {
           method: "POST",
           headers: { 
             "Content-Type": "application/json",
             "x-admin-pin": user?.pin || ""
           },
-          body: JSON.stringify({ 
-            licensePlate: data.licensePlate, 
-            isEv: data.isEv, 
-            taskType 
-          }),
+          body: JSON.stringify(body),
         });
         if (!res.ok) throw new Error("Failed to create task");
         results.push(await res.json());
@@ -64,6 +78,7 @@ export default function FlowSIXT() {
       setPlateNumbers("");
       setIsEv(false);
       setSelectedTasks([]);
+      setNeedAt("");
     },
   });
 
@@ -120,7 +135,8 @@ export default function FlowSIXT() {
     createTasks.mutate({ 
       licensePlate, 
       isEv, 
-      taskTypes: selectedTasks 
+      taskTypes: selectedTasks,
+      needAt: needAt || undefined
     });
   };
 
@@ -227,6 +243,20 @@ export default function FlowSIXT() {
                   </div>
                 </div>
 
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                    <Clock className="w-4 h-4" />
+                    Need at (optional)
+                  </label>
+                  <Input
+                    type="time"
+                    value={needAt}
+                    onChange={(e) => setNeedAt(e.target.value)}
+                    className="w-full"
+                    data-testid="input-need-at"
+                  />
+                </div>
+
                 <Button 
                   type="submit" 
                   className="w-full" 
@@ -269,6 +299,7 @@ export default function FlowSIXT() {
                     <Reorder.Item key={group.licensePlate} value={group}>
                       <VehicleCard 
                         group={group}
+                        now={now}
                         onComplete={handleComplete}
                         onMarkUndone={handleMarkUndone}
                         canReorder={true}
@@ -291,6 +322,7 @@ export default function FlowSIXT() {
                     >
                       <VehicleCard 
                         group={group}
+                        now={now}
                         onComplete={handleComplete}
                         onMarkUndone={handleMarkUndone}
                         canReorder={false}
@@ -327,6 +359,7 @@ export default function FlowSIXT() {
                   <VehicleCard 
                     key={group.licensePlate}
                     group={group}
+                    now={now}
                     onComplete={() => {}}
                     onMarkUndone={handleMarkUndone}
                     canReorder={false}
@@ -345,6 +378,7 @@ export default function FlowSIXT() {
 
 interface VehicleCardProps {
   group: VehicleGroup;
+  now: Date;
   onComplete: (task: FlowTask) => void;
   onMarkUndone: (task: FlowTask) => void;
   canReorder: boolean;
@@ -352,7 +386,7 @@ interface VehicleCardProps {
   canMarkUndone: boolean;
 }
 
-function VehicleCard({ group, onComplete, onMarkUndone, canReorder, canComplete, canMarkUndone }: VehicleCardProps) {
+function VehicleCard({ group, now, onComplete, onMarkUndone, canReorder, canComplete, canMarkUndone }: VehicleCardProps) {
   const completedCount = group.tasks.filter(t => t.completed).length;
   const totalCount = group.tasks.length;
   const hasRetry = group.tasks.some(t => t.needsRetry);
@@ -386,6 +420,7 @@ function VehicleCard({ group, onComplete, onMarkUndone, canReorder, canComplete,
           <SubTaskRow
             key={task.id}
             task={task}
+            now={now}
             onComplete={() => onComplete(task)}
             onMarkUndone={() => onMarkUndone(task)}
             canComplete={canComplete && !task.completed}
@@ -399,26 +434,51 @@ function VehicleCard({ group, onComplete, onMarkUndone, canReorder, canComplete,
 
 interface SubTaskRowProps {
   task: FlowTask;
+  now: Date;
   onComplete: () => void;
   onMarkUndone: () => void;
   canComplete: boolean;
   canMarkUndone: boolean;
 }
 
-function SubTaskRow({ task, onComplete, onMarkUndone, canComplete, canMarkUndone }: SubTaskRowProps) {
+function getCountdownStatus(needAt: Date | null | undefined, now: Date): { text: string; isOverdue: boolean } | null {
+  if (!needAt) return null;
+  
+  const needAtTime = new Date(needAt);
+  const diffMs = needAtTime.getTime() - now.getTime();
+  
+  if (diffMs <= 0) {
+    return { text: "overdue/immediately", isOverdue: true };
+  }
+  
+  const diffMinutes = Math.floor(diffMs / 60000);
+  const hours = Math.floor(diffMinutes / 60);
+  const minutes = diffMinutes % 60;
+  
+  if (hours > 0) {
+    return { text: `Need in ${hours}h ${minutes}min`, isOverdue: false };
+  }
+  return { text: `Need in ${minutes}min`, isOverdue: false };
+}
+
+function SubTaskRow({ task, now, onComplete, onMarkUndone, canComplete, canMarkUndone }: SubTaskRowProps) {
+  const countdownStatus = getCountdownStatus(task.needAt, now);
+  
   return (
     <div 
       className={`flex items-center gap-2 p-2 rounded ${
-        task.needsRetry 
-          ? "bg-orange-500/20" 
-          : task.completed 
-            ? "bg-green-500/10" 
-            : "bg-white/5"
+        countdownStatus?.isOverdue && !task.completed
+          ? "bg-red-500/20"
+          : task.needsRetry 
+            ? "bg-orange-500/20" 
+            : task.completed 
+              ? "bg-green-500/10" 
+              : "bg-white/5"
       }`}
       data-testid={`flow-task-${task.id}`}
     >
       <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <span className={`text-sm font-medium ${task.completed ? "line-through text-muted-foreground" : ""}`}>
             {task.taskType}
           </span>
@@ -429,6 +489,12 @@ function SubTaskRow({ task, onComplete, onMarkUndone, canComplete, canMarkUndone
             </span>
           )}
         </div>
+        {countdownStatus && !task.completed && (
+          <span className={`text-xs flex items-center gap-1 ${countdownStatus.isOverdue ? "text-red-500 font-semibold" : "text-muted-foreground"}`}>
+            <Clock className="w-3 h-3" />
+            {countdownStatus.text}
+          </span>
+        )}
         {task.completed && task.completedBy && (
           <span className="text-xs text-muted-foreground">
             Done by {task.completedBy}

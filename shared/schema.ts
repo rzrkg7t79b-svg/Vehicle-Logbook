@@ -73,6 +73,7 @@ export const flowTasks = pgTable("flow_tasks", {
   completedBy: text("completed_by"),
   completedAt: timestamp("completed_at"),
   needsRetry: boolean("needs_retry").default(false).notNull(),
+  needAt: timestamp("need_at"),
   createdBy: text("created_by"),
   createdAt: timestamp("created_at").defaultNow(),
 });
@@ -157,6 +158,7 @@ export const insertFlowTaskSchema = createInsertSchema(flowTasks)
     completed: z.boolean().default(false),
     completedBy: z.string().optional(),
     needsRetry: z.boolean().default(false),
+    needAt: z.coerce.date().optional().nullable(),
     createdBy: z.string().optional(),
   });
 
