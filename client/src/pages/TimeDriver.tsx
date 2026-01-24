@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "wouter";
-import { ArrowLeft, Users, Calculator, Clock, Edit2, Check } from "lucide-react";
+import { ArrowLeft, Users, Calculator, Clock, Edit2, Check, RefreshCw } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,12 +13,15 @@ const DEFAULT_BUDGET_PER_RENTAL = "16.39";
 export default function TimeDriver() {
   const { user } = useUser();
   const isAdmin = user?.isAdmin;
+  const isCounter = user?.roles?.includes("Counter");
+  const canView = isAdmin || isCounter;
   
   const [rentalsToday, setRentalsToday] = useState("");
   const [selectedDrivers, setSelectedDrivers] = useState<number[]>([]);
+  const [isCalculated, setIsCalculated] = useState(false);
   const [calculationResult, setCalculationResult] = useState<{
     totalBudget: number;
-    drivers: { id: number; initials: string; maxHours: number; fairHours: number; fairMinutes: number; percent: number }[];
+    drivers: { id: number; initials: string; maxHours: number; assignedHours: number; assignedMinutes: number; percent: number }[];
   } | null>(null);
   const [isEditingBudget, setIsEditingBudget] = useState(false);
   const [tempBudget, setTempBudget] = useState("");
@@ -51,21 +54,21 @@ export default function TimeDriver() {
   });
 
   const toggleDriver = (userId: number) => {
+    if (isCalculated) return;
     if (selectedDrivers.includes(userId)) {
       setSelectedDrivers(selectedDrivers.filter(id => id !== userId));
     } else {
       setSelectedDrivers([...selectedDrivers, userId]);
     }
-    setCalculationResult(null);
   };
 
   const selectAllDrivers = () => {
+    if (isCalculated) return;
     if (selectedDrivers.length === driverUsers.length) {
       setSelectedDrivers([]);
     } else {
       setSelectedDrivers(driverUsers.map(u => u.id));
     }
-    setCalculationResult(null);
   };
 
   const handleCalculate = () => {
@@ -85,21 +88,33 @@ export default function TimeDriver() {
       const maxHours = driver.maxDailyHours || 0;
       const proportion = maxHours / totalMaxHours;
       const fairTotalMinutes = Math.round(proportion * totalBudget);
-      const fairHours = Math.floor(fairTotalMinutes / 60);
-      const fairMinutes = fairTotalMinutes % 60;
-      const percent = Math.min(100, Math.round((fairTotalMinutes / 60 / maxHours) * 100));
+      
+      const maxMinutes = maxHours * 60;
+      const cappedMinutes = Math.min(fairTotalMinutes, maxMinutes);
+      
+      const assignedHours = Math.floor(cappedMinutes / 60);
+      const assignedMinutes = cappedMinutes % 60;
+      const percent = Math.round((cappedMinutes / maxMinutes) * 100);
 
       return {
         id: driver.id,
         initials: driver.initials,
         maxHours,
-        fairHours,
-        fairMinutes,
+        assignedHours,
+        assignedMinutes,
         percent,
       };
     });
 
     setCalculationResult({ totalBudget, drivers });
+    setIsCalculated(true);
+  };
+
+  const handleNewCalculation = () => {
+    setRentalsToday("");
+    setSelectedDrivers([]);
+    setCalculationResult(null);
+    setIsCalculated(false);
   };
 
   const startEditBudget = () => {
@@ -116,17 +131,29 @@ export default function TimeDriver() {
 
   return (
     <div className="pb-24">
-      <div className="bg-gradient-to-b from-blue-500/20 to-transparent p-6">
+      <div className={`bg-gradient-to-b ${isCalculated ? 'from-green-500/20' : 'from-blue-500/20'} to-transparent p-6 transition-colors`}>
         <Link href="/">
           <button className="flex items-center gap-2 text-muted-foreground hover:text-white mb-4 transition-colors" data-testid="button-back">
             <ArrowLeft className="w-4 h-4" />
             <span className="text-sm">Back to Master</span>
           </button>
         </Link>
-        <h1 className="text-2xl font-bold text-white mb-1">
-          TimeDriver<span className="text-blue-400">SIXT</span>
-        </h1>
-        <p className="text-sm text-muted-foreground">Labor Planning Budget Tool</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-white mb-1">
+              TimeDriver<span className={isCalculated ? "text-green-400" : "text-blue-400"}>SIXT</span>
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              {isCalculated ? "Calculation Complete" : "Labor Planning Budget Tool"}
+            </p>
+          </div>
+          {isCalculated && (
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse" />
+              <span className="text-green-400 font-medium text-sm">Done</span>
+            </div>
+          )}
+        </div>
       </div>
 
       <div className="p-4 space-y-4">
@@ -142,20 +169,18 @@ export default function TimeDriver() {
               <Input
                 type="number"
                 value={rentalsToday}
-                onChange={(e) => {
-                  setRentalsToday(e.target.value.replace(/\D/g, ""));
-                  setCalculationResult(null);
-                }}
+                onChange={(e) => setRentalsToday(e.target.value.replace(/\D/g, ""))}
                 placeholder="Enter number of rentals"
                 className="bg-background"
                 min={0}
+                disabled={isCalculated}
                 data-testid="input-rentals-today"
               />
             </div>
 
             <div>
               <label className="text-xs text-muted-foreground mb-1 block">
-                Labor Minutes per Rental {!isAdmin && <span className="text-muted-foreground">(Admin only)</span>}
+                Budget per Rental (EUR) {!isAdmin && <span className="text-muted-foreground">(Admin only)</span>}
               </label>
               {isEditingBudget && isAdmin ? (
                 <div className="flex gap-2">
@@ -173,9 +198,9 @@ export default function TimeDriver() {
               ) : (
                 <div className="flex items-center gap-2">
                   <div className="flex-1 px-3 py-2 bg-background border border-white/10 rounded-md text-white font-mono">
-                    {budgetPerRental} min
+                    {budgetPerRental} EUR
                   </div>
-                  {isAdmin && (
+                  {isAdmin && !isCalculated && (
                     <Button size="icon" variant="outline" onClick={startEditBudget} data-testid="button-edit-budget">
                       <Edit2 className="w-4 h-4" />
                     </Button>
@@ -192,9 +217,11 @@ export default function TimeDriver() {
               <Users className="w-4 h-4 text-blue-400" />
               Select Drivers
             </h3>
-            <Button size="sm" variant="outline" onClick={selectAllDrivers} data-testid="button-select-all">
-              {selectedDrivers.length === driverUsers.length ? "Deselect All" : "Select All"}
-            </Button>
+            {!isCalculated && (
+              <Button size="sm" variant="outline" onClick={selectAllDrivers} data-testid="button-select-all">
+                {selectedDrivers.length === driverUsers.length ? "Deselect All" : "Select All"}
+              </Button>
+            )}
           </div>
 
           {driverUsers.length === 0 ? (
@@ -207,39 +234,54 @@ export default function TimeDriver() {
                 <button
                   key={driver.id}
                   onClick={() => toggleDriver(driver.id)}
+                  disabled={isCalculated}
                   className={`p-3 rounded-lg text-center transition-all ${
                     selectedDrivers.includes(driver.id)
-                      ? "bg-blue-500 text-white border-2 border-blue-400"
+                      ? isCalculated
+                        ? "bg-green-500/20 text-green-400 border-2 border-green-500"
+                        : "bg-blue-500 text-white border-2 border-blue-400"
                       : "bg-card border border-white/10 text-muted-foreground hover:bg-white/5"
-                  }`}
+                  } ${isCalculated ? "cursor-default" : ""}`}
                   data-testid={`button-driver-${driver.id}`}
                 >
                   <div className="font-bold text-lg">{driver.initials}</div>
-                  <div className="text-[10px] opacity-70">{driver.maxDailyHours}h max</div>
+                  <div className="text-[10px] opacity-70">{driver.maxDailyHours}h/day</div>
                 </button>
               ))}
             </div>
           )}
         </Card>
 
-        <Button 
-          onClick={handleCalculate} 
-          className="w-full" 
-          disabled={!rentalsToday || selectedDrivers.length === 0}
-          data-testid="button-calculate"
-        >
-          <Calculator className="w-4 h-4 mr-2" />
-          Calculate Working Time
-        </Button>
+        {!isCalculated ? (
+          <Button 
+            onClick={handleCalculate} 
+            className="w-full" 
+            disabled={!rentalsToday || selectedDrivers.length === 0}
+            data-testid="button-calculate"
+          >
+            <Calculator className="w-4 h-4 mr-2" />
+            Calculate Working Time
+          </Button>
+        ) : (
+          <Button 
+            onClick={handleNewCalculation} 
+            className="w-full" 
+            variant="outline"
+            data-testid="button-new-calculation"
+          >
+            <RefreshCw className="w-4 h-4 mr-2" />
+            New Calculation
+          </Button>
+        )}
 
-        {calculationResult && (
-          <Card className="p-4">
+        {calculationResult && canView && (
+          <Card className="p-4 border-2 border-green-500/30 bg-green-500/5">
             <h3 className="font-medium text-white mb-2 flex items-center gap-2">
               <Clock className="w-4 h-4 text-green-400" />
               Working Time Distribution
             </h3>
             <p className="text-xs text-muted-foreground mb-4">
-              Total Labor: {Math.floor(calculationResult.totalBudget / 60)}h {Math.round(calculationResult.totalBudget % 60)}min for {rentalsToday} rentals
+              Total Budget: {calculationResult.totalBudget.toFixed(2)} EUR for {rentalsToday} rentals
             </p>
 
             <div className="space-y-4">
@@ -248,11 +290,11 @@ export default function TimeDriver() {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <span className="font-bold text-white">{driver.initials}</span>
-                      <span className="text-xs text-muted-foreground">({driver.maxHours}h max)</span>
+                      <span className="text-xs text-muted-foreground">(max {driver.maxHours}h/day)</span>
                     </div>
                     <div className="text-right">
                       <span className="font-mono font-bold text-green-400">
-                        {driver.fairHours}h {driver.fairMinutes}min
+                        {driver.assignedHours}h {driver.assignedMinutes}min
                       </span>
                     </div>
                   </div>
