@@ -1,6 +1,6 @@
 
 import { z } from 'zod';
-import { insertVehicleSchema, insertCommentSchema, vehicles, comments } from './schema';
+import { insertVehicleSchema, insertCommentSchema, insertUserSchema, vehicles, comments, users } from './schema';
 
 export const errorSchemas = {
   validation: z.object({
@@ -11,6 +11,9 @@ export const errorSchemas = {
     message: z.string(),
   }),
   internal: z.object({
+    message: z.string(),
+  }),
+  forbidden: z.object({
     message: z.string(),
   }),
 };
@@ -81,6 +84,79 @@ export const api = {
             404: errorSchemas.notFound
         }
     }
+  },
+  users: {
+    list: {
+      method: 'GET' as const,
+      path: '/api/users',
+      responses: {
+        200: z.array(z.custom<typeof users.$inferSelect>()),
+      },
+    },
+    get: {
+      method: 'GET' as const,
+      path: '/api/users/:id',
+      responses: {
+        200: z.custom<typeof users.$inferSelect>(),
+        404: errorSchemas.notFound,
+      },
+    },
+    authenticate: {
+      method: 'POST' as const,
+      path: '/api/auth/login',
+      input: z.object({
+        pin: z.string().length(4),
+      }),
+      responses: {
+        200: z.custom<typeof users.$inferSelect>(),
+        401: z.object({ message: z.string() }),
+      },
+    },
+    create: {
+      method: 'POST' as const,
+      path: '/api/users',
+      input: insertUserSchema,
+      responses: {
+        201: z.custom<typeof users.$inferSelect>(),
+        400: errorSchemas.validation,
+        403: errorSchemas.forbidden,
+      },
+    },
+    update: {
+      method: 'PATCH' as const,
+      path: '/api/users/:id',
+      input: z.object({
+        initials: z.string().min(1).max(3).optional(),
+        pin: z.string().length(4).regex(/^\d{4}$/).optional(),
+        roles: z.array(z.enum(["Counter", "Driver"])).optional(),
+      }),
+      responses: {
+        200: z.custom<typeof users.$inferSelect>(),
+        400: errorSchemas.validation,
+        403: errorSchemas.forbidden,
+        404: errorSchemas.notFound,
+      },
+    },
+    delete: {
+      method: 'DELETE' as const,
+      path: '/api/users/:id',
+      responses: {
+        204: z.void(),
+        403: errorSchemas.forbidden,
+        404: errorSchemas.notFound,
+      },
+    },
+    checkPin: {
+      method: 'POST' as const,
+      path: '/api/users/check-pin',
+      input: z.object({
+        pin: z.string().length(4),
+        excludeId: z.number().optional(),
+      }),
+      responses: {
+        200: z.object({ available: z.boolean() }),
+      },
+    },
   },
 };
 

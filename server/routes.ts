@@ -102,7 +102,126 @@ export async function registerRoutes(
       res.json(comments);
   });
 
+  // User routes
+  app.post(api.users.authenticate.path, async (req, res) => {
+    try {
+      const { pin } = api.users.authenticate.input.parse(req.body);
+      const user = await storage.getUserByPin(pin);
+      if (!user) {
+        return res.status(401).json({ message: "Invalid PIN" });
+      }
+      res.json(user);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ message: err.errors[0].message });
+      }
+      throw err;
+    }
+  });
+
+  app.get(api.users.list.path, async (req, res) => {
+    const users = await storage.getUsers();
+    res.json(users);
+  });
+
+  app.get(api.users.get.path, async (req, res) => {
+    const user = await storage.getUser(Number(req.params.id));
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    res.json(user);
+  });
+
+  app.post(api.users.create.path, async (req, res) => {
+    try {
+      const input = api.users.create.input.parse(req.body);
+      
+      // Check PIN uniqueness
+      const isUnique = await storage.isPinUnique(input.pin);
+      if (!isUnique) {
+        return res.status(400).json({ message: "PIN already in use", field: "pin" });
+      }
+
+      const user = await storage.createUser(input);
+      res.status(201).json(user);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({
+          message: err.errors[0].message,
+          field: err.errors[0].path.join('.'),
+        });
+      }
+      throw err;
+    }
+  });
+
+  app.patch(api.users.update.path, async (req, res) => {
+    const id = Number(req.params.id);
+    const existing = await storage.getUser(id);
+    if (!existing) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    
+    // Prevent modifying Branch Manager's admin status
+    if (existing.isAdmin && req.body.isAdmin === false) {
+      return res.status(403).json({ message: "Cannot remove admin status from Branch Manager" });
+    }
+
+    try {
+      const input = api.users.update.input.parse(req.body);
+
+      // Check PIN uniqueness if being updated
+      if (input.pin) {
+        const isUnique = await storage.isPinUnique(input.pin, id);
+        if (!isUnique) {
+          return res.status(400).json({ message: "PIN already in use", field: "pin" });
+        }
+      }
+
+      const updated = await storage.updateUser(id, input);
+      res.json(updated);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({
+          message: err.errors[0].message,
+          field: err.errors[0].path.join('.'),
+        });
+      }
+      throw err;
+    }
+  });
+
+  app.delete(api.users.delete.path, async (req, res) => {
+    const id = Number(req.params.id);
+    const existing = await storage.getUser(id);
+    if (!existing) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    
+    // Prevent deleting the Branch Manager
+    if (existing.isAdmin) {
+      return res.status(403).json({ message: "Cannot delete Branch Manager" });
+    }
+
+    await storage.deleteUser(id);
+    res.status(204).send();
+  });
+
+  app.post(api.users.checkPin.path, async (req, res) => {
+    try {
+      const { pin, excludeId } = api.users.checkPin.input.parse(req.body);
+      const available = await storage.isPinUnique(pin, excludeId);
+      res.json({ available });
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ message: err.errors[0].message });
+      }
+      throw err;
+    }
+  });
+
   await seedDatabase();
+  await storage.seedBranchManager();
 
   return httpServer;
 }
