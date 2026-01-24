@@ -24,7 +24,6 @@ interface VehicleGroup {
 
 export default function FlowSIXT() {
   const { user } = useUser();
-  const [plateCity, setPlateCity] = useState("");
   const [plateLetters, setPlateLetters] = useState("");
   const [plateNumbers, setPlateNumbers] = useState("");
   const [isEv, setIsEv] = useState(false);
@@ -73,7 +72,6 @@ export default function FlowSIXT() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/flow-tasks"] });
-      setPlateCity("");
       setPlateLetters("");
       setPlateNumbers("");
       setIsEv(false);
@@ -126,8 +124,8 @@ export default function FlowSIXT() {
     );
   };
 
-  const licensePlate = buildPlateFromParts(plateCity, plateLetters, plateNumbers, isEv);
-  const isValidPlate = plateCity && plateLetters && plateNumbers;
+  const licensePlate = buildPlateFromParts(plateLetters, plateNumbers, isEv);
+  const isValidPlate = plateLetters && plateNumbers;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -214,14 +212,13 @@ export default function FlowSIXT() {
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <LicensePlateInput
-                  city={plateCity}
                   letters={plateLetters}
                   numbers={plateNumbers}
                   isEv={isEv}
-                  onCityChange={setPlateCity}
                   onLettersChange={setPlateLetters}
                   onNumbersChange={setPlateNumbers}
                   onEvChange={setIsEv}
+                  autoFocusLetters
                 />
 
                 <div className="space-y-2">
@@ -244,17 +241,19 @@ export default function FlowSIXT() {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                  <label className="text-sm font-medium text-muted-foreground flex items-center justify-center gap-2">
                     <Clock className="w-4 h-4" />
                     Need at (optional)
                   </label>
-                  <Input
-                    type="time"
-                    value={needAt}
-                    onChange={(e) => setNeedAt(e.target.value)}
-                    className="w-full"
-                    data-testid="input-need-at"
-                  />
+                  <div className="flex justify-center">
+                    <Input
+                      type="time"
+                      value={needAt}
+                      onChange={(e) => setNeedAt(e.target.value)}
+                      className="w-40 text-center"
+                      data-testid="input-need-at"
+                    />
+                  </div>
                 </div>
 
                 <Button 

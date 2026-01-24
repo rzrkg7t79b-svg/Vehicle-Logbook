@@ -8,7 +8,7 @@ import { Check, Clock, AlertTriangle, Zap, CheckSquare, Workflow } from "lucide-
 import { GermanPlate } from "@/components/GermanPlate";
 import { useUser } from "@/contexts/UserContext";
 import { getGermanTime } from "@/lib/germanTime";
-import type { FlowTask, Todo} from "@shared/schema";
+import type { FlowTask, Todo, DriverTask } from "@shared/schema";
 import { motion, AnimatePresence } from "framer-motion";
 
 function getCountdownStatus(needAt: Date | null | undefined, now: Date): { text: string; isOverdue: boolean } | null {
@@ -48,6 +48,10 @@ export default function DriverSIXT() {
     queryKey: ["/api/todos"],
   });
 
+  const { data: qualityDriverTasks = [], isLoading: qualityLoading } = useQuery<DriverTask[]>({
+    queryKey: ["/api/driver-tasks"],
+  });
+
   const completeFlowTask = useMutation({
     mutationFn: async ({ id }: { id: number }) => {
       const res = await fetch(`/api/flow-tasks/${id}`, {
@@ -84,6 +88,24 @@ export default function DriverSIXT() {
     },
   });
 
+  const completeQualityTask = useMutation({
+    mutationFn: async ({ id }: { id: number }) => {
+      const res = await fetch(`/api/driver-tasks/${id}`, {
+        method: "PATCH",
+        headers: { 
+          "Content-Type": "application/json",
+          "x-admin-pin": user?.pin || ""
+        },
+        body: JSON.stringify({ completed: true, completedBy: user?.initials }),
+      });
+      if (!res.ok) throw new Error("Failed to complete task");
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/driver-tasks"] });
+    },
+  });
+
   const driverTodos = useMemo(() => {
     return todos.filter(todo => 
       todo.assignedTo.includes("Driver") || todo.assignedTo.length === 0
@@ -94,9 +116,11 @@ export default function DriverSIXT() {
   const completedFlowTasks = flowTasks.filter(t => t.completed);
   const pendingTodos = driverTodos.filter(t => !t.completed);
   const completedTodos = driverTodos.filter(t => t.completed);
+  const pendingQualityTasks = qualityDriverTasks.filter(t => !t.completed);
+  const completedQualityTasks = qualityDriverTasks.filter(t => t.completed);
 
-  const totalTasks = flowTasks.length + driverTodos.length;
-  const completedCount = completedFlowTasks.length + completedTodos.length;
+  const totalTasks = flowTasks.length + driverTodos.length + qualityDriverTasks.length;
+  const completedCount = completedFlowTasks.length + completedTodos.length + completedQualityTasks.length;
   const progress = totalTasks > 0 ? Math.round((completedCount / totalTasks) * 100) : 0;
 
   const flowVehicleGroups = useMemo(() => {
@@ -121,7 +145,7 @@ export default function DriverSIXT() {
     });
   }, [pendingFlowTasks]);
 
-  const isLoading = flowLoading || todosLoading;
+  const isLoading = flowLoading || todosLoading || qualityLoading;
 
   return (
     <div className="min-h-screen bg-background pb-24">
@@ -267,7 +291,51 @@ export default function DriverSIXT() {
               </Card>
             )}
 
-            {pendingFlowTasks.length === 0 && pendingTodos.length === 0 && (
+            {pendingQualityTasks.length > 0 && (
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <AlertTriangle className="w-5 h-5 text-red-500" />
+                    Quality Issues
+                    <span className="text-sm font-normal text-muted-foreground">
+                      ({pendingQualityTasks.length})
+                    </span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  <AnimatePresence>
+                    {pendingQualityTasks.map((task) => (
+                      <motion.div
+                        key={task.id}
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 10 }}
+                        className="flex items-center gap-2 p-3 rounded-lg border bg-card border-red-500/30"
+                        data-testid={`driver-quality-task-${task.id}`}
+                      >
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <GermanPlate plate={task.licensePlate} size="sm" />
+                          </div>
+                          <span className="text-sm text-muted-foreground">{task.description}</span>
+                        </div>
+                        <Button 
+                          size="icon" 
+                          variant="ghost" 
+                          onClick={() => completeQualityTask.mutate({ id: task.id })}
+                          disabled={completeQualityTask.isPending}
+                          data-testid={`button-complete-driver-quality-${task.id}`}
+                        >
+                          <Check className="w-4 h-4 text-green-500" />
+                        </Button>
+                      </motion.div>
+                    ))}
+                  </AnimatePresence>
+                </CardContent>
+              </Card>
+            )}
+
+            {pendingFlowTasks.length === 0 && pendingTodos.length === 0 && pendingQualityTasks.length === 0 && (
               <Card className="p-8 text-center border-green-500/30 bg-green-500/5">
                 <Check className="w-12 h-12 text-green-500 mx-auto mb-3" />
                 <h3 className="text-lg font-medium text-green-500">All Done!</h3>

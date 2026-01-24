@@ -2,11 +2,9 @@ import { useRef, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 
 interface LicensePlateInputProps {
-  city: string;
   letters: string;
   numbers: string;
   isEv: boolean;
-  onCityChange: (value: string) => void;
   onLettersChange: (value: string) => void;
   onNumbersChange: (value: string) => void;
   onEvChange: (value: boolean) => void;
@@ -18,7 +16,6 @@ export function LicensePlateInput({
   letters,
   numbers,
   isEv,
-  onCityChange,
   onLettersChange,
   onNumbersChange,
   onEvChange,
@@ -85,14 +82,12 @@ export function LicensePlateInput({
 
       <div className="flex items-center gap-2">
         <div className="flex flex-col items-center">
-          <Input
-            maxLength={3}
-            placeholder="M"
-            value={city}
-            onChange={(e) => handleCityChange(e.target.value)}
-            className="w-14 h-14 text-xl font-mono font-bold uppercase text-center bg-white text-black border-2 border-black rounded-sm focus:border-primary focus:ring-1 focus:ring-primary"
-            data-testid="input-plate-city"
-          />
+          <div 
+            className="w-14 h-14 text-xl font-mono font-bold uppercase text-center bg-gray-100 text-black border-2 border-black rounded-sm flex items-center justify-center"
+            data-testid="display-plate-city"
+          >
+            M
+          </div>
           <span className="text-[10px] text-muted-foreground mt-1">City</span>
         </div>
 
@@ -144,12 +139,10 @@ export function LicensePlateInput({
   );
 }
 
-export function buildPlateFromParts(city: string, letters: string, numbers: string, isEv: boolean): string {
-  let plate = "";
-  if (city && letters) {
-    plate = `${city} - ${letters} ${numbers}`.trim();
-  } else if (city) {
-    plate = city;
+export function buildPlateFromParts(letters: string, numbers: string, isEv: boolean): string {
+  let plate = "M";
+  if (letters) {
+    plate = `M - ${letters} ${numbers}`.trim();
   }
   if (isEv && plate) {
     plate += "E";

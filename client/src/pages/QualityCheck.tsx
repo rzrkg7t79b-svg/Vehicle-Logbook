@@ -15,7 +15,6 @@ import type { QualityCheck as QualityCheckType, DriverTask, ModuleStatus } from 
 
 export default function QualityCheck() {
   const { user } = useUser();
-  const [plateCity, setPlateCity] = useState("");
   const [plateLetters, setPlateLetters] = useState("");
   const [plateNumbers, setPlateNumbers] = useState("");
   const [isEv, setIsEv] = useState(false);
@@ -23,8 +22,8 @@ export default function QualityCheck() {
   const [comment, setComment] = useState("");
   const todayDate = getGermanDateString();
   
-  const licensePlate = buildPlateFromParts(plateCity, plateLetters, plateNumbers, isEv);
-  const isValidPlate = plateCity && plateLetters && plateNumbers;
+  const licensePlate = buildPlateFromParts(plateLetters, plateNumbers, isEv);
+  const isValidPlate = plateLetters && plateNumbers;
 
   const isDriver = user?.roles?.includes("Driver");
 
@@ -90,7 +89,6 @@ export default function QualityCheck() {
   });
 
   const resetForm = () => {
-    setPlateCity("");
     setPlateLetters("");
     setPlateNumbers("");
     setIsEv(false);
@@ -153,14 +151,13 @@ export default function QualityCheck() {
           
           <div className="space-y-4">
             <LicensePlateInput
-              city={plateCity}
               letters={plateLetters}
               numbers={plateNumbers}
               isEv={isEv}
-              onCityChange={setPlateCity}
               onLettersChange={setPlateLetters}
               onNumbersChange={setPlateNumbers}
               onEvChange={setIsEv}
+              autoFocusLetters
             />
 
             <div>
