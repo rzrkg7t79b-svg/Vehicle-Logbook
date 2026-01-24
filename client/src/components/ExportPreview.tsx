@@ -1,11 +1,14 @@
 import { useState, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Download, Clock, Car, ClipboardCheck, CheckSquare, Workflow, CheckCircle, AlertCircle, Users } from "lucide-react";
+import { Download, Clock, Car, ClipboardCheck, CheckSquare, Workflow, CheckCircle, AlertCircle, Users, Timer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { getGermanDateString } from "@/lib/germanTime";
+import { addDays } from "date-fns";
 import html2canvas from "html2canvas";
-import type { Todo, FlowTask, Vehicle, TimedriverCalculation, User } from "@shared/schema";
+import type { Todo, FlowTask, Vehicle, TimedriverCalculation, User, Comment } from "@shared/schema";
+
+type VehicleWithComments = Vehicle & { comments: Comment[] };
 
 type DashboardStatus = {
   timedriver: { isDone: boolean; details?: string };
@@ -63,6 +66,21 @@ export function ExportPreview({ open, onOpenChange }: ExportPreviewProps) {
 
   const { data: vehicles = [] } = useQuery<Vehicle[]>({
     queryKey: ["/api/vehicles"],
+  });
+
+  const { data: vehiclesWithComments = [] } = useQuery<VehicleWithComments[]>({
+    queryKey: ["/api/vehicles-with-comments"],
+    queryFn: async () => {
+      const vehicleList = vehicles.filter(v => !v.isPast);
+      const results = await Promise.all(
+        vehicleList.map(async (v) => {
+          const res = await fetch(`/api/vehicles/${v.id}`);
+          return res.json();
+        })
+      );
+      return results;
+    },
+    enabled: vehicles.length > 0,
   });
 
   const { data: qualityChecks = [] } = useQuery<QualityCheck[]>({
@@ -125,6 +143,31 @@ export function ExportPreview({ open, onOpenChange }: ExportPreviewProps) {
     const h = Math.floor(hours);
     const m = Math.round((hours - h) * 60);
     return `${h}h ${m}m`;
+  };
+
+  const calculateCountdown = (startDate: Date | string): { days: number; hours: number; isExpired: boolean } => {
+    const start = new Date(startDate);
+    const end = addDays(start, 7);
+    const now = new Date();
+    const total = end.getTime() - now.getTime();
+    
+    if (total <= 0) {
+      return { days: 0, hours: 0, isExpired: true };
+    }
+    
+    return {
+      days: Math.floor(total / (1000 * 60 * 60 * 24)),
+      hours: Math.floor((total / (1000 * 60 * 60)) % 24),
+      isExpired: false,
+    };
+  };
+
+  const getLastComment = (vehicleId: number): Comment | null => {
+    const vehicle = vehiclesWithComments.find(v => v.id === vehicleId);
+    if (!vehicle || !vehicle.comments || vehicle.comments.length === 0) return null;
+    return vehicle.comments.sort((a, b) => 
+      new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime()
+    )[0];
   };
 
   const driversData: DriverData[] = timedriverCalc?.driversData 
@@ -347,18 +390,43 @@ export function ExportPreview({ open, onOpenChange }: ExportPreviewProps) {
                       <p style={{ margin: "0 0 8px 0", color: dashboardStatus?.bodyshop.isDone ? "#22c55e" : "#f97316" }}>
                         {activeVehicles.length} vehicle{activeVehicles.length !== 1 ? "s" : ""} tracked
                       </p>
-                      {activeVehicles.map(vehicle => (
-                        <div key={vehicle.id} style={{ 
-                          display: "flex", 
-                          alignItems: "center", 
-                          gap: "8px", 
-                          padding: "4px 0",
-                        }}>
-                          <span style={{ color: "#fff", fontSize: "13px" }}>{vehicle.licensePlate}</span>
-                          {vehicle.isEv && <span style={{ fontSize: "10px", backgroundColor: "#22c55e", color: "#000", padding: "2px 6px", borderRadius: "4px" }}>EV</span>}
-                          {vehicle.readyForCollection && <span style={{ fontSize: "10px", backgroundColor: "#3b82f6", color: "#fff", padding: "2px 6px", borderRadius: "4px" }}>Ready</span>}
-                        </div>
-                      ))}
+                      {activeVehicles.map(vehicle => {
+                        const countdown = calculateCountdown(vehicle.countdownStart);
+                        const lastComment = getLastComment(vehicle.id);
+                        const countdownColor = countdown.isExpired ? "#ef4444" : countdown.days <= 3 ? "#f97316" : "#22c55e";
+                        
+                        return (
+                          <div key={vehicle.id} style={{ 
+                            backgroundColor: "#333",
+                            borderRadius: "8px",
+                            padding: "8px 10px",
+                            marginBottom: "6px",
+                          }}>
+                            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "4px" }}>
+                              <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                                <span style={{ color: "#fff", fontSize: "13px", fontWeight: "bold" }}>{vehicle.licensePlate}</span>
+                                {vehicle.isEv && <span style={{ fontSize: "9px", backgroundColor: "#22c55e", color: "#000", padding: "1px 4px", borderRadius: "3px" }}>EV</span>}
+                              </div>
+                              {vehicle.readyForCollection ? (
+                                <span style={{ fontSize: "10px", backgroundColor: "#3b82f6", color: "#fff", padding: "2px 6px", borderRadius: "4px" }}>Ready for Collection</span>
+                              ) : (
+                                <span style={{ fontSize: "11px", color: countdownColor, fontWeight: "bold" }}>
+                                  {countdown.isExpired ? "EXPIRED" : `${countdown.days}d ${countdown.hours}h remaining`}
+                                </span>
+                              )}
+                            </div>
+                            {lastComment && (
+                              <div style={{ fontSize: "11px", color: "#888", marginTop: "4px" }}>
+                                <span style={{ color: "#666" }}>Last comment: </span>
+                                <span style={{ color: "#aaa" }}>
+                                  {lastComment.content.length > 50 ? lastComment.content.substring(0, 50) + "..." : lastComment.content}
+                                </span>
+                                <span style={{ color: "#666" }}> - {lastComment.userInitials}</span>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
                     </>
                   )}
                 </div>
