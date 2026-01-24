@@ -138,7 +138,9 @@ export default function MasterDashboard() {
           <p className="text-xs text-muted-foreground mt-2">
             {totalProgress === 100 ? 'All modules completed' : 'Complete all modules before 16:30'}
           </p>
-          {dashboardStatus?.hasPostponedTasks && totalProgress === 100 && (
+          {dashboardStatus?.hasPostponedTasks && 
+           dashboardStatus?.todo.completed === dashboardStatus?.todo.total && 
+           totalProgress < 100 && (
             <p className="text-xs text-orange-400 mt-1">
               Finish postponed tasks for 100%
             </p>
