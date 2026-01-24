@@ -18,13 +18,25 @@ export default function Users() {
   const [newRoles, setNewRoles] = useState<string[]>([]);
   const [pinError, setPinError] = useState("");
 
+  const adminPin = currentUser?.pin;
+  const adminHeaders = adminPin ? { "x-admin-pin": adminPin } : {};
+
   const { data: users = [], isLoading } = useQuery<User[]>({
     queryKey: ["/api/users"],
+    queryFn: async () => {
+      const res = await fetch("/api/users", {
+        headers: adminHeaders,
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error("Failed to fetch users");
+      return res.json();
+    },
+    enabled: !!currentUser?.isAdmin,
   });
 
   const createMutation = useMutation({
     mutationFn: async (data: { initials: string; pin: string; roles: string[] }) => {
-      const res = await apiRequest("POST", "/api/users", data);
+      const res = await apiRequest("POST", "/api/users", data, adminHeaders);
       return res.json();
     },
     onSuccess: () => {
@@ -38,7 +50,7 @@ export default function Users() {
 
   const updateMutation = useMutation({
     mutationFn: async ({ id, data }: { id: number; data: Partial<User> }) => {
-      const res = await apiRequest("PATCH", `/api/users/${id}`, data);
+      const res = await apiRequest("PATCH", `/api/users/${id}`, data, adminHeaders);
       return res.json();
     },
     onSuccess: () => {
@@ -52,7 +64,7 @@ export default function Users() {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: number) => {
-      await apiRequest("DELETE", `/api/users/${id}`);
+      await apiRequest("DELETE", `/api/users/${id}`, undefined, adminHeaders);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/users"] });

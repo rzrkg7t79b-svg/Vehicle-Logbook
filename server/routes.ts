@@ -102,6 +102,21 @@ export async function registerRoutes(
       res.json(comments);
   });
 
+  // Helper function to verify admin authorization
+  async function requireAdmin(req: any, res: any): Promise<boolean> {
+    const adminPin = req.headers['x-admin-pin'] as string;
+    if (!adminPin) {
+      res.status(403).json({ message: "Admin authorization required" });
+      return false;
+    }
+    const adminUser = await storage.getUserByPin(adminPin);
+    if (!adminUser || !adminUser.isAdmin) {
+      res.status(403).json({ message: "Only Branch Manager can perform this action" });
+      return false;
+    }
+    return true;
+  }
+
   // User routes
   app.post(api.users.authenticate.path, async (req, res) => {
     try {
@@ -120,11 +135,13 @@ export async function registerRoutes(
   });
 
   app.get(api.users.list.path, async (req, res) => {
+    if (!(await requireAdmin(req, res))) return;
     const users = await storage.getUsers();
     res.json(users);
   });
 
   app.get(api.users.get.path, async (req, res) => {
+    if (!(await requireAdmin(req, res))) return;
     const user = await storage.getUser(Number(req.params.id));
     if (!user) {
       return res.status(404).json({ message: "User not found" });
@@ -133,6 +150,7 @@ export async function registerRoutes(
   });
 
   app.post(api.users.create.path, async (req, res) => {
+    if (!(await requireAdmin(req, res))) return;
     try {
       const input = api.users.create.input.parse(req.body);
       
@@ -156,6 +174,7 @@ export async function registerRoutes(
   });
 
   app.patch(api.users.update.path, async (req, res) => {
+    if (!(await requireAdmin(req, res))) return;
     const id = Number(req.params.id);
     const existing = await storage.getUser(id);
     if (!existing) {
@@ -192,6 +211,7 @@ export async function registerRoutes(
   });
 
   app.delete(api.users.delete.path, async (req, res) => {
+    if (!(await requireAdmin(req, res))) return;
     const id = Number(req.params.id);
     const existing = await storage.getUser(id);
     if (!existing) {
@@ -208,6 +228,7 @@ export async function registerRoutes(
   });
 
   app.post(api.users.checkPin.path, async (req, res) => {
+    if (!(await requireAdmin(req, res))) return;
     try {
       const { pin, excludeId } = api.users.checkPin.input.parse(req.body);
       const available = await storage.isPinUnique(pin, excludeId);
