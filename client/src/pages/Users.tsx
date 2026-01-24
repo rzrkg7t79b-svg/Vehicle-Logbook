@@ -16,10 +16,11 @@ export default function Users() {
   const [newInitials, setNewInitials] = useState("");
   const [newPin, setNewPin] = useState("");
   const [newRoles, setNewRoles] = useState<string[]>([]);
+  const [newMaxDailyHours, setNewMaxDailyHours] = useState<string>("");
   const [pinError, setPinError] = useState("");
 
   const adminPin = currentUser?.pin;
-  const adminHeaders = adminPin ? { "x-admin-pin": adminPin } : {};
+  const adminHeaders: Record<string, string> = adminPin ? { "x-admin-pin": adminPin } : {};
 
   const { data: users = [], isLoading } = useQuery<User[]>({
     queryKey: ["/api/users"],
@@ -35,7 +36,7 @@ export default function Users() {
   });
 
   const createMutation = useMutation({
-    mutationFn: async (data: { initials: string; pin: string; roles: string[] }) => {
+    mutationFn: async (data: { initials: string; pin: string; roles: string[]; maxDailyHours: number | null }) => {
       const res = await apiRequest("POST", "/api/users", data, adminHeaders);
       return res.json();
     },
@@ -77,6 +78,7 @@ export default function Users() {
     setNewInitials("");
     setNewPin("");
     setNewRoles([]);
+    setNewMaxDailyHours("");
     setPinError("");
   };
 
@@ -85,18 +87,32 @@ export default function Users() {
       setPinError("Initials and 4-digit PIN required");
       return;
     }
+    const hasDriverRole = newRoles.includes("Driver");
+    const hours = newMaxDailyHours ? Number(newMaxDailyHours) : null;
+    if (hasDriverRole && !hours) {
+      setPinError("Max daily hours required for Driver role");
+      return;
+    }
     createMutation.mutate({
       initials: newInitials.toUpperCase(),
       pin: newPin,
       roles: newRoles,
+      maxDailyHours: hours,
     });
   };
 
   const handleUpdate = (id: number) => {
+    const hasDriverRole = newRoles.includes("Driver");
+    const hours = newMaxDailyHours ? Number(newMaxDailyHours) : null;
+    if (hasDriverRole && !hours) {
+      setPinError("Max daily hours required for Driver role");
+      return;
+    }
     const updateData: Partial<User> = {};
     if (newInitials) updateData.initials = newInitials.toUpperCase();
     if (newPin && newPin.length === 4) updateData.pin = newPin;
     if (newRoles.length > 0 || editingId) updateData.roles = newRoles;
+    updateData.maxDailyHours = hours;
     
     updateMutation.mutate({ id, data: updateData });
   };
@@ -106,6 +122,7 @@ export default function Users() {
     setNewInitials(user.initials);
     setNewPin("");
     setNewRoles(user.roles || []);
+    setNewMaxDailyHours(user.maxDailyHours ? String(user.maxDailyHours) : "");
     setPinError("");
   };
 
@@ -226,6 +243,22 @@ export default function Users() {
                     </button>
                   </div>
                 </div>
+                <div>
+                  <label className="text-xs text-muted-foreground mb-1 block">
+                    Max Daily Hours {newRoles.includes("Driver") ? "(required)" : "(optional)"}
+                  </label>
+                  <Input
+                    value={newMaxDailyHours}
+                    onChange={(e) => setNewMaxDailyHours(e.target.value.replace(/\D/g, "").slice(0, 2))}
+                    placeholder="e.g. 8"
+                    className="bg-background"
+                    maxLength={2}
+                    type="number"
+                    min={1}
+                    max={24}
+                    data-testid="input-max-daily-hours"
+                  />
+                </div>
                 {pinError && <p className="text-xs text-red-500">{pinError}</p>}
                 <div className="flex gap-2 pt-2">
                   <Button size="sm" onClick={handleCreate} disabled={createMutation.isPending} data-testid="button-save-user">
@@ -304,6 +337,22 @@ export default function Users() {
                         </button>
                       </div>
                     </div>
+                    <div>
+                      <label className="text-xs text-muted-foreground mb-1 block">
+                        Max Daily Hours {newRoles.includes("Driver") ? "(required)" : "(optional)"}
+                      </label>
+                      <Input
+                        value={newMaxDailyHours}
+                        onChange={(e) => setNewMaxDailyHours(e.target.value.replace(/\D/g, "").slice(0, 2))}
+                        placeholder="e.g. 8"
+                        className="bg-background"
+                        maxLength={2}
+                        type="number"
+                        min={1}
+                        max={24}
+                        data-testid="input-edit-max-daily-hours"
+                      />
+                    </div>
                     {pinError && <p className="text-xs text-red-500">{pinError}</p>}
                     <div className="flex gap-2">
                       <Button size="sm" onClick={() => handleUpdate(user.id)} disabled={updateMutation.isPending}>
@@ -333,7 +382,7 @@ export default function Users() {
                             </span>
                           )}
                         </div>
-                        <div className="flex gap-1 mt-1">
+                        <div className="flex gap-1 mt-1 flex-wrap">
                           {(user.roles || []).map((role) => (
                             <span
                               key={role}
@@ -342,6 +391,11 @@ export default function Users() {
                               {role}
                             </span>
                           ))}
+                          {user.maxDailyHours && (
+                            <span className="text-[10px] px-1.5 py-0.5 bg-blue-500/20 text-blue-400 rounded">
+                              {user.maxDailyHours}h/day
+                            </span>
+                          )}
                         </div>
                       </div>
                     </div>

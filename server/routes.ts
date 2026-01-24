@@ -145,6 +145,14 @@ export async function registerRoutes(
     res.json(users);
   });
 
+  app.get(api.users.drivers.path, async (req, res) => {
+    const users = await storage.getUsers();
+    const drivers = users
+      .filter(u => u.roles?.includes("Driver") && u.maxDailyHours)
+      .map(u => ({ id: u.id, initials: u.initials, maxDailyHours: u.maxDailyHours }));
+    res.json(drivers);
+  });
+
   app.get(api.users.get.path, async (req, res) => {
     if (!(await requireAdmin(req, res))) return;
     const user = await storage.getUser(Number(req.params.id));
@@ -499,6 +507,27 @@ export async function registerRoutes(
       await storage.reorderFlowTasks(input.taskIds);
       broadcastUpdate("flow-tasks");
       res.json({ success: true });
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ message: err.errors[0].message });
+      }
+      throw err;
+    }
+  });
+
+  app.get(api.settings.get.path, async (req, res) => {
+    const key = String(req.params.key);
+    const value = await storage.getSetting(key);
+    res.json({ value });
+  });
+
+  app.put(api.settings.set.path, async (req, res) => {
+    if (!(await requireAdmin(req, res))) return;
+    try {
+      const key = String(req.params.key);
+      const input = api.settings.set.input.parse(req.body);
+      const setting = await storage.setSetting(key, input.value);
+      res.json(setting);
     } catch (err) {
       if (err instanceof z.ZodError) {
         return res.status(400).json({ message: err.errors[0].message });

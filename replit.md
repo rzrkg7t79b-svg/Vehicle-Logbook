@@ -5,7 +5,7 @@
 A comprehensive mobile-first iOS web app for SIXT workshop management with four integrated modules:
 
 - **MasterSIXT** (Main Dashboard): Global progress bar, daily 16:30 deadline countdown, module status overview
-- **TimeDriverSIXT**: Morning driver checks with 08:00 countdown
+- **TimeDriverSIXT**: Labor planning budget tool with rentals input, driver selection, and fair working time distribution
 - **BodyshopSIXT**: Vehicle tracking with German license plates and 7-day timers
 - **ToDoSIXT**: Daily task management with admin CRUD and user completion
 - **QualitySIXT**: Quality checks with automatic driver task creation for failed checks
@@ -39,7 +39,8 @@ Preferred communication style: Simple, everyday language.
 - **Migrations**: Drizzle Kit with `db:push` command
 
 ### Core Data Models
-- **Users**: Staff members with initials, 4-digit PIN, roles array, and admin flag
+- **Users**: Staff members with initials, 4-digit PIN, roles array, admin flag, and maxDailyHours
+- **AppSettings**: Key-value store for configurable settings (e.g., budgetPerRental)
 - **Vehicles**: License plates, names, notes, EV status, collection status, countdown timers
 - **Comments**: Linked to vehicles with user initials and timestamps
 - **Todos**: Daily tasks with title, completion status, completedBy user
@@ -52,6 +53,7 @@ Preferred communication style: Simple, everyday language.
 - **Method**: PIN-based authentication (4-digit codes) via `/api/auth/login`
 - **Session**: Client-side session storage with 5-minute timeout
 - **Admin Access**: Server-side authorization via `x-admin-pin` header for user management routes
+- **Public API**: `/api/drivers` returns id, initials, maxDailyHours for drivers (no auth header required)
 - **Context**: React Context (`UserContext`) provides current user state
 - **Branch Manager**: Default admin user (initials: "BM", PIN: 4266) auto-seeded on startup
 - **Role-Based Access**: Users tab visible only to admin users; user CRUD protected server-side
@@ -82,7 +84,15 @@ Preferred communication style: Simple, everyday language.
 
 8. **Auto-Task Creation**: Failed quality checks automatically create driver tasks visible to users with Driver role.
 
-9. **FlowSIXT Features**:
+9. **TimeDriverSIXT Features**:
+   - Labor planning budget tool for calculating working time distribution
+   - Input: Rentals today (number), Labor minutes per rental (admin-editable, default 16.39 min)
+   - Driver selection: Multi-select buttons showing initials and max daily hours
+   - Fair distribution algorithm: Distributes labor based on each driver's max hours proportion
+   - Results: Shows hours:minutes per driver, percent bar (100% = max daily hours)
+   - Settings API: GET /api/settings/:key (public), PUT /api/settings/:key (admin-only)
+
+10. **FlowSIXT Features**:
    - Counter/Admin can create tasks with license plate, EV toggle, and task type
    - Task types: refuelling, cleaning, AdBlue, delivery, collection, water, fast cleaning, Bodyshop collection, Bodyshop delivery, LiveCheckin, only CheckIN & Parking (multi-select buttons)
    - Optional "Need at (time)" deadline with countdown display showing "Need in Xh Ymin" or "overdue/immediately"
@@ -92,13 +102,13 @@ Preferred communication style: Simple, everyday language.
    - Counter/Admin can mark completed sub-tasks as "undone" which sets needsRetry flag
    - Tasks with needsRetry show "Try again!" warning
 
-10. **License Plate Input**: Reusable LicensePlateInput component with auto-focus between fields (city → letters → numbers) for faster data entry. Used in FlowSIXT, BodyshopSIXT, and QualitySIXT.
+11. **License Plate Input**: Reusable LicensePlateInput component with auto-focus between fields (city → letters → numbers) for faster data entry. Used in FlowSIXT, BodyshopSIXT, and QualitySIXT.
 
-11. **ToDoSIXT Role Assignment**: Admin can assign todos to Counter and/or Driver roles. Non-admin users only see todos assigned to their role.
+12. **ToDoSIXT Role Assignment**: Admin can assign todos to Counter and/or Driver roles. Non-admin users only see todos assigned to their role.
 
-12. **DriverSIXT View**: Dedicated view for driver-only users (Driver role without Counter/Admin). Shows combined FlowSIXT and ToDoSIXT tasks on one screen with personal progress bar. Drivers are automatically redirected to /driver instead of MasterSIXT dashboard.
+13. **DriverSIXT View**: Dedicated view for driver-only users (Driver role without Counter/Admin). Shows combined FlowSIXT and ToDoSIXT tasks on one screen with personal progress bar. Drivers are automatically redirected to /driver instead of MasterSIXT dashboard.
 
-13. **Real-Time Updates**: WebSocket server broadcasts changes to all connected clients. When any user makes changes (creates/updates/deletes tasks, vehicles, etc.), all other users see the updates instantly without refreshing. Implemented using `ws` package on the server and a custom React hook (`useRealtimeUpdates`) on the client.
+14. **Real-Time Updates**: WebSocket server broadcasts changes to all connected clients. When any user makes changes (creates/updates/deletes tasks, vehicles, etc.), all other users see the updates instantly without refreshing. Implemented using `ws` package on the server and a custom React hook (`useRealtimeUpdates`) on the client.
 
 ## External Dependencies
 

@@ -1,6 +1,6 @@
 
 import { z } from 'zod';
-import { insertVehicleSchema, insertCommentSchema, insertUserSchema, insertTodoSchema, insertQualityCheckSchema, insertFlowTaskSchema, flowTaskTypes, vehicles, comments, users, todos, qualityChecks, driverTasks, flowTasks, moduleStatus } from './schema';
+import { insertVehicleSchema, insertCommentSchema, insertUserSchema, insertTodoSchema, insertQualityCheckSchema, insertFlowTaskSchema, flowTaskTypes, vehicles, comments, users, todos, qualityChecks, driverTasks, flowTasks, moduleStatus, appSettings } from './schema';
 
 export const errorSchemas = {
   validation: z.object({
@@ -93,6 +93,17 @@ export const api = {
         200: z.array(z.custom<typeof users.$inferSelect>()),
       },
     },
+    drivers: {
+      method: 'GET' as const,
+      path: '/api/drivers',
+      responses: {
+        200: z.array(z.object({
+          id: z.number(),
+          initials: z.string(),
+          maxDailyHours: z.number().nullable(),
+        })),
+      },
+    },
     get: {
       method: 'GET' as const,
       path: '/api/users/:id',
@@ -129,6 +140,7 @@ export const api = {
         initials: z.string().min(1).max(3).optional(),
         pin: z.string().length(4).regex(/^\d{4}$/).optional(),
         roles: z.array(z.enum(["Counter", "Driver"])).optional(),
+        maxDailyHours: z.number().min(1).max(24).optional().nullable(),
       }),
       responses: {
         200: z.custom<typeof users.$inferSelect>(),
@@ -316,6 +328,26 @@ export const api = {
       }),
       responses: {
         200: z.object({ success: z.boolean() }),
+        403: errorSchemas.forbidden,
+      },
+    },
+  },
+  settings: {
+    get: {
+      method: 'GET' as const,
+      path: '/api/settings/:key',
+      responses: {
+        200: z.object({ value: z.string().nullable() }),
+      },
+    },
+    set: {
+      method: 'PUT' as const,
+      path: '/api/settings/:key',
+      input: z.object({
+        value: z.string(),
+      }),
+      responses: {
+        200: z.custom<typeof appSettings.$inferSelect>(),
         403: errorSchemas.forbidden,
       },
     },

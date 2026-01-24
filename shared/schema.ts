@@ -10,7 +10,15 @@ export const users = pgTable("users", {
   pin: text("pin").notNull().unique(),
   roles: text("roles").array().notNull().default([]),
   isAdmin: boolean("is_admin").default(false).notNull(),
+  maxDailyHours: integer("max_daily_hours"),
   createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const appSettings = pgTable("app_settings", {
+  id: serial("id").primaryKey(),
+  key: text("key").notNull().unique(),
+  value: text("value").notNull(),
+  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 export const vehicles = pgTable("vehicles", {
@@ -105,7 +113,11 @@ export const insertUserSchema = createInsertSchema(users)
     pin: z.string().length(4).regex(/^\d{4}$/, "PIN must be exactly 4 digits"),
     roles: z.array(z.enum(["Counter", "Driver"])).default([]),
     isAdmin: z.boolean().default(false),
+    maxDailyHours: z.number().min(1).max(24).optional().nullable(),
   });
+
+export const insertAppSettingsSchema = createInsertSchema(appSettings)
+  .omit({ id: true, updatedAt: true });
 
 export const insertVehicleSchema = createInsertSchema(vehicles)
   .omit({ id: true, createdAt: true })
@@ -184,6 +196,9 @@ export type DriverTask = typeof driverTasks.$inferSelect;
 export type InsertDriverTask = z.infer<typeof insertDriverTaskSchema>;
 export type ModuleStatus = typeof moduleStatus.$inferSelect;
 export type InsertModuleStatus = z.infer<typeof insertModuleStatusSchema>;
+
+export type AppSettings = typeof appSettings.$inferSelect;
+export type InsertAppSettings = z.infer<typeof insertAppSettingsSchema>;
 
 export type CreateUserRequest = InsertUser;
 export type CreateVehicleRequest = InsertVehicle;

@@ -9,6 +9,7 @@ import {
   driverTasks,
   flowTasks,
   moduleStatus,
+  appSettings,
   type InsertVehicle,
   type InsertComment,
   type InsertUser,
@@ -24,7 +25,8 @@ import {
   type QualityCheck,
   type DriverTask,
   type FlowTask,
-  type ModuleStatus
+  type ModuleStatus,
+  type AppSettings,
 } from "@shared/schema";
 import { eq, desc, asc, lte, and, sql, ne } from "drizzle-orm";
 
@@ -71,6 +73,9 @@ export interface IStorage {
   updateFlowTask(id: number, data: Partial<FlowTask>): Promise<FlowTask | undefined>;
   deleteFlowTask(id: number): Promise<void>;
   reorderFlowTasks(taskIds: number[]): Promise<void>;
+
+  getSetting(key: string): Promise<string | null>;
+  setSetting(key: string, value: string): Promise<AppSettings>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -303,6 +308,29 @@ export class DatabaseStorage implements IStorage {
     for (let i = 0; i < taskIds.length; i++) {
       await db.update(flowTasks).set({ priority: i + 1 }).where(eq(flowTasks.id, taskIds[i]));
     }
+  }
+
+  async getSetting(key: string): Promise<string | null> {
+    const [setting] = await db.select().from(appSettings).where(eq(appSettings.key, key));
+    return setting?.value ?? null;
+  }
+
+  async setSetting(key: string, value: string): Promise<AppSettings> {
+    const existing = await db.select().from(appSettings).where(eq(appSettings.key, key));
+    
+    if (existing.length > 0) {
+      const [updated] = await db.update(appSettings)
+        .set({ value, updatedAt: new Date() })
+        .where(eq(appSettings.key, key))
+        .returning();
+      return updated;
+    }
+    
+    const [newSetting] = await db.insert(appSettings).values({
+      key,
+      value,
+    }).returning();
+    return newSetting;
   }
 }
 
