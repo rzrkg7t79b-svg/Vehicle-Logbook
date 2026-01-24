@@ -44,7 +44,7 @@ export default function Dashboard() {
         <div className="flex justify-between items-end mb-4">
           <div>
             <h1 className="text-3xl font-display font-bold text-white tracking-tight">
-              Workshop<span className="text-primary">DB</span>
+              Bodyshop<span className="text-primary">SIXT</span>
             </h1>
             <p className="text-sm text-muted-foreground mt-1">
               Active Vehicles: <span className="text-white font-mono">{vehicles?.length || 0}</span>
