@@ -14,7 +14,8 @@ import { useUser } from "@/contexts/UserContext";
 import { ExportPreview } from "@/components/ExportPreview";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import type { Todo, DriverTask, FlowTask, FuturePlanning } from "@shared/schema";
+import type { Todo, DriverTask, FlowTask, FuturePlanning, KpiMetric } from "@shared/schema";
+import { Pencil, DollarSign, Target } from "lucide-react";
 
 type PendingUpgradeVehicle = {
   id: number;
@@ -67,6 +68,10 @@ export default function MasterDashboard() {
     collectionsOpen: "",
   });
   const [futureValidationError, setFutureValidationError] = useState(false);
+  
+  const [editingKpi, setEditingKpi] = useState<"irpd" | "ses" | null>(null);
+  const [kpiEditValue, setKpiEditValue] = useState("");
+  const [kpiEditGoal, setKpiEditGoal] = useState("");
 
   const futureTapTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -128,6 +133,10 @@ export default function MasterDashboard() {
     queryKey: ["/api/flow-tasks"],
   });
 
+  const { data: kpiMetrics = [] } = useQuery<KpiMetric[]>({
+    queryKey: ["/api/kpi-metrics"],
+  });
+
   const { data: dashboardStatus } = useQuery<DashboardStatus>({
     queryKey: ["/api/dashboard/status", todayDate],
     queryFn: async () => {
@@ -187,6 +196,95 @@ export default function MasterDashboard() {
       setFutureValidationError(false);
     },
   });
+
+  const updateKpiMutation = useMutation({
+    mutationFn: async ({ key, value, goal }: { key: string; value: number; goal: number }) => {
+      return apiRequest("PUT", `/api/kpi-metrics/${key}`, { value, goal }, {
+        headers: { "x-admin-pin": user?.pin || "" },
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/kpi-metrics"] });
+      setEditingKpi(null);
+      setKpiEditValue("");
+      setKpiEditGoal("");
+      toast({ title: "KPI updated successfully" });
+    },
+    onError: (error: Error) => {
+      toast({ title: "Error updating KPI", description: error.message, variant: "destructive" });
+    },
+  });
+
+  const getKpiMetric = (key: "irpd" | "ses"): KpiMetric | undefined => {
+    return kpiMetrics.find(m => m.key === key);
+  };
+
+  const getKpiColor = (key: "irpd" | "ses", value: number | undefined): string => {
+    if (value === undefined) return "text-muted-foreground";
+    if (key === "irpd") {
+      if (value >= 8.0) return "text-green-500";
+      if (value >= 7.2) return "text-yellow-500";
+      return "text-red-500";
+    } else {
+      if (value >= 92.5) return "text-green-500";
+      if (value >= 90.0) return "text-yellow-500";
+      return "text-red-500";
+    }
+  };
+
+  const getKpiBgColor = (key: "irpd" | "ses", value: number | undefined): string => {
+    if (value === undefined) return "bg-muted/20";
+    if (key === "irpd") {
+      if (value >= 8.0) return "bg-green-500/20";
+      if (value >= 7.2) return "bg-yellow-500/20";
+      return "bg-red-500/20";
+    } else {
+      if (value >= 92.5) return "bg-green-500/20";
+      if (value >= 90.0) return "bg-yellow-500/20";
+      return "bg-red-500/20";
+    }
+  };
+
+  const isKpiStale = (updatedAt: Date | string | null): boolean => {
+    if (!updatedAt) return true;
+    const updated = new Date(updatedAt);
+    const now = new Date();
+    const diffDays = (now.getTime() - updated.getTime()) / (1000 * 60 * 60 * 24);
+    return diffDays >= 3;
+  };
+
+  const formatTimeSinceUpdate = (updatedAt: Date | string | null): string => {
+    if (!updatedAt) return "Never updated";
+    const updated = new Date(updatedAt);
+    const now = new Date();
+    const diffMs = now.getTime() - updated.getTime();
+    const diffMins = Math.floor(diffMs / (1000 * 60));
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    
+    if (diffDays > 0) return `${diffDays}d ago`;
+    if (diffHours > 0) return `${diffHours}h ago`;
+    if (diffMins > 0) return `${diffMins}m ago`;
+    return "Just now";
+  };
+
+  const handleKpiEdit = (key: "irpd" | "ses") => {
+    const metric = getKpiMetric(key);
+    setEditingKpi(key);
+    setKpiEditValue(metric?.value?.toString() || (key === "irpd" ? "8.00" : "92.5"));
+    setKpiEditGoal(metric?.goal?.toString() || (key === "irpd" ? "8.00" : "92.5"));
+  };
+
+  const handleKpiSave = () => {
+    if (!editingKpi) return;
+    const value = parseFloat(kpiEditValue);
+    const goal = parseFloat(kpiEditGoal);
+    if (isNaN(value) || isNaN(goal)) {
+      toast({ title: "Please enter valid numbers", variant: "destructive" });
+      return;
+    }
+    updateKpiMutation.mutate({ key: editingKpi, value, goal });
+  };
 
   const getModuleStatus = (moduleId: string): boolean => {
     if (!dashboardStatus) return false;
@@ -288,6 +386,60 @@ export default function MasterDashboard() {
       </div>
 
       <div className="p-4 space-y-4">
+        {/* KPI Indicators */}
+        <div className="grid grid-cols-2 gap-3">
+          {(["irpd", "ses"] as const).map((kpiKey) => {
+            const metric = getKpiMetric(kpiKey);
+            const value = metric?.value;
+            const goal = metric?.goal ?? (kpiKey === "irpd" ? 8.0 : 92.5);
+            const color = getKpiColor(kpiKey, value);
+            const bgColor = getKpiBgColor(kpiKey, value);
+            const stale = isKpiStale(metric?.updatedAt ?? null);
+            const timeSince = formatTimeSinceUpdate(metric?.updatedAt ?? null);
+            
+            return (
+              <Card 
+                key={kpiKey}
+                className={`p-3 ${stale ? 'opacity-50 border-orange-500/50' : ''} ${bgColor.replace('/20', '/10')}`}
+                data-testid={`kpi-card-${kpiKey}`}
+              >
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-xs font-medium text-muted-foreground uppercase">
+                    {kpiKey === "irpd" ? "IRPD" : "SES"} MTD
+                  </span>
+                  {user?.isAdmin && (
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="h-6 w-6"
+                      onClick={() => handleKpiEdit(kpiKey)}
+                      data-testid={`button-edit-kpi-${kpiKey}`}
+                    >
+                      <Pencil className="w-3 h-3" />
+                    </Button>
+                  )}
+                </div>
+                <div className="flex items-baseline gap-1">
+                  <span className={`text-xl font-bold ${color}`} data-testid={`kpi-value-${kpiKey}`}>
+                    {value !== undefined 
+                      ? (kpiKey === "irpd" ? `${value.toFixed(2)}` : `${value.toFixed(1)}%`)
+                      : "--"}
+                  </span>
+                  <span className="text-xs text-muted-foreground">
+                    / {kpiKey === "irpd" ? goal.toFixed(2) : `${goal.toFixed(1)}%`}
+                  </span>
+                </div>
+                <div className="flex items-center gap-1 mt-1">
+                  {stale && <AlertTriangle className="w-3 h-3 text-orange-500" />}
+                  <span className={`text-xs ${stale ? 'text-orange-400' : 'text-muted-foreground'}`}>
+                    {timeSince}
+                  </span>
+                </div>
+              </Card>
+            );
+          })}
+        </div>
+
         <Card className={`p-4 ${totalProgress === 100 ? 'border-green-500/50 bg-green-500/10' : ''}`}>
           <div className="flex items-center justify-between mb-3">
             <span className="text-sm font-medium text-muted-foreground">Daily Progress</span>
@@ -664,6 +816,62 @@ export default function MasterDashboard() {
                 data-testid="button-future-unlock-submit"
               >
                 Unlock
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={editingKpi !== null} onOpenChange={(open) => !open && setEditingKpi(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Update {editingKpi === "irpd" ? "IRPD" : "SES"}</DialogTitle>
+            <DialogDescription>
+              {editingKpi === "irpd" 
+                ? "Incremental Revenue Per Day (EUR)" 
+                : "Service Experience Score (%)"}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 pt-4">
+            <div>
+              <Label className="text-xs text-muted-foreground">Current Value</Label>
+              <Input
+                type="text"
+                inputMode="decimal"
+                value={kpiEditValue}
+                onChange={(e) => setKpiEditValue(e.target.value)}
+                placeholder={editingKpi === "irpd" ? "8.00" : "92.5"}
+                className="text-center text-lg"
+                data-testid="input-kpi-value"
+              />
+            </div>
+            <div>
+              <Label className="text-xs text-muted-foreground">Goal</Label>
+              <Input
+                type="text"
+                inputMode="decimal"
+                value={kpiEditGoal}
+                onChange={(e) => setKpiEditGoal(e.target.value)}
+                placeholder={editingKpi === "irpd" ? "8.00" : "92.5"}
+                className="text-center text-lg"
+                data-testid="input-kpi-goal"
+              />
+            </div>
+            <div className="flex gap-2">
+              <Button 
+                variant="outline" 
+                onClick={() => setEditingKpi(null)}
+                className="flex-1"
+              >
+                Cancel
+              </Button>
+              <Button 
+                onClick={handleKpiSave}
+                disabled={updateKpiMutation.isPending}
+                className="flex-1"
+                data-testid="button-kpi-save"
+              >
+                {updateKpiMutation.isPending ? "Saving..." : "Save"}
               </Button>
             </div>
           </div>
