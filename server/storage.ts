@@ -242,7 +242,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getTodos(): Promise<Todo[]> {
-    return await db.select().from(todos).orderBy(asc(todos.createdAt));
+    return await db.select().from(todos).orderBy(desc(todos.priority), asc(todos.createdAt));
   }
 
   async getTodo(id: number): Promise<Todo | undefined> {
@@ -547,11 +547,12 @@ export class DatabaseStorage implements IStorage {
   }
 
   async performMidnightReset(): Promise<void> {
+    // Only reset recurring todos, not one-time tasks
     await db.update(todos).set({
       completed: false,
       completedBy: null,
       completedAt: null,
-    });
+    }).where(eq(todos.isRecurring, true));
 
     await db.delete(moduleStatus);
 
