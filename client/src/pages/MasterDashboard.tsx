@@ -277,8 +277,9 @@ export default function MasterDashboard() {
 
   const handleKpiSave = () => {
     if (!editingKpi) return;
-    const value = parseFloat(kpiEditValue);
-    const goal = parseFloat(kpiEditGoal);
+    // Support both comma and period as decimal separator (German keyboards use comma)
+    const value = parseFloat(kpiEditValue.replace(',', '.'));
+    const goal = parseFloat(kpiEditGoal.replace(',', '.'));
     if (isNaN(value) || isNaN(goal)) {
       toast({ title: "Please enter valid numbers", variant: "destructive" });
       return;
