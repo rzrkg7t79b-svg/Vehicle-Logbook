@@ -2,10 +2,12 @@
 
 ## Overview
 
-A comprehensive mobile-first iOS web app for SIXT workshop management with four integrated modules:
+A comprehensive mobile-first iOS web app for SIXT workshop management with six integrated modules:
 
 - **MasterSIXT** (Main Dashboard): Global progress bar, daily 16:30 deadline countdown, module status overview
 - **TimeDriverSIXT**: Labor planning budget tool with rentals input, driver selection, and fair working time distribution
+- **UpgradeSIXT**: Daily UP vehicle management with 08:30 deadline, sold/pending tracking for upsell vehicles
+- **FlowSIXT**: Driver task management with priority ordering and completion tracking
 - **BodyshopSIXT**: Vehicle tracking with German license plates and 7-day timers
 - **ToDoSIXT**: Daily task management with admin CRUD and user completion
 - **QualitySIXT**: Quality checks with automatic driver task creation for failed checks
@@ -48,6 +50,7 @@ Preferred communication style: Simple, everyday language.
 - **DriverTasks**: Auto-created from failed quality checks, linked to qualityCheckId
 - **FlowTasks**: Driver tasks with license plate, EV status, task type, optional needAt deadline, completion tracking
 - **ModuleStatus**: Tracks daily completion status per module (timedriver, todo, quality)
+- **UpgradeVehicles**: UP vehicles for upselling with license plate, model, reason, sold status, date tracking
 
 ### Authentication & Authorization
 - **Method**: PIN-based authentication (4-digit codes) via `/api/auth/login`
@@ -77,6 +80,7 @@ Preferred communication style: Simple, everyday language.
 7. **Module Routes**: 
    - `/` - MasterSIXT dashboard (main home)
    - `/timedriver` - TimeDriverSIXT morning checks
+   - `/upgrade` - UpgradeSIXT daily UP vehicle management
    - `/flow` - FlowSIXT driver task management
    - `/bodyshop` - BodyshopSIXT vehicle tracking
    - `/todo` - ToDoSIXT task management
