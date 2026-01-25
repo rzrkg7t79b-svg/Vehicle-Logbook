@@ -109,21 +109,39 @@ export function ExportPreview({ open, onOpenChange }: ExportPreviewProps) {
     setIsExporting(true);
     
     try {
-      const element = exportRef.current;
+      // Clone the element and remove transform for accurate capture
+      const originalElement = exportRef.current;
+      const container = document.createElement("div");
+      container.style.position = "fixed";
+      container.style.left = "-10000px";
+      container.style.top = "0";
+      container.style.width = "1200px";
+      container.style.zIndex = "-9999";
+      document.body.appendChild(container);
       
-      const sourceCanvas = await html2canvas(element, {
+      // Clone and reset styles
+      const clone = originalElement.cloneNode(true) as HTMLElement;
+      clone.style.transform = "none";
+      clone.style.transformOrigin = "top left";
+      clone.style.width = "1200px";
+      container.appendChild(clone);
+      
+      // Wait for layout to stabilize
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      const sourceCanvas = await html2canvas(clone, {
         scale: 4,
         backgroundColor: "#1a1a1a",
         width: 1200,
-        height: element.scrollHeight,
+        height: clone.scrollHeight,
         windowWidth: 1200,
-        windowHeight: element.scrollHeight,
+        windowHeight: clone.scrollHeight,
         useCORS: true,
-        onclone: (clonedDoc, clonedElement) => {
-          clonedElement.style.transform = "none";
-          clonedElement.style.transformOrigin = "top left";
-        },
+        logging: false,
       });
+      
+      // Cleanup
+      document.body.removeChild(container);
       
       const fileName = `MasterSIXT-Export-${todayDate}.jpg`;
       
