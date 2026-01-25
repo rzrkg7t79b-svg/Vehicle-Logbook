@@ -377,11 +377,13 @@ export function ExportPreview({ open, onOpenChange }: ExportPreviewProps) {
                           alignItems: "center", 
                           gap: "8px", 
                           padding: "4px 0",
-                          color: task.completed ? "#888" : "#fff",
-                          textDecoration: task.completed ? "line-through" : "none",
                         }}>
                           {task.completed ? <CheckCircle style={{ width: "14px", height: "14px", color: "#22c55e", flexShrink: 0 }} /> : <AlertCircle style={{ width: "14px", height: "14px", color: "#f97316", flexShrink: 0 }} />}
-                          <span style={{ fontSize: "13px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1 }}>{task.licensePlate} - {task.taskType}</span>
+                          <span style={{ 
+                            fontSize: "13px", 
+                            color: task.completed ? "#888" : "#fff",
+                            textDecoration: task.completed ? "line-through" : "none",
+                          }}>{task.licensePlate} - {task.taskType}</span>
                         </div>
                       ))}
                     </>
@@ -504,11 +506,13 @@ export function ExportPreview({ open, onOpenChange }: ExportPreviewProps) {
                       alignItems: "center", 
                       gap: "8px", 
                       padding: "4px 0",
-                      color: todo.completed ? "#888" : "#fff",
-                      textDecoration: todo.completed ? "line-through" : "none",
                     }}>
                       {todo.completed ? <CheckCircle style={{ width: "14px", height: "14px", color: "#22c55e", flexShrink: 0 }} /> : <AlertCircle style={{ width: "14px", height: "14px", color: "#f97316", flexShrink: 0 }} />}
-                      <span style={{ fontSize: "13px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1 }}>{todo.title}</span>
+                      <span style={{ 
+                        fontSize: "13px", 
+                        color: todo.completed ? "#888" : "#fff",
+                        textDecoration: todo.completed ? "line-through" : "none",
+                      }}>{todo.title}</span>
                     </div>
                   ))}
                   {postponedTodos.length > 0 && (
@@ -520,10 +524,9 @@ export function ExportPreview({ open, onOpenChange }: ExportPreviewProps) {
                           alignItems: "center", 
                           gap: "8px", 
                           padding: "4px 0",
-                          color: "#f97316",
                         }}>
                           <AlertCircle style={{ width: "14px", height: "14px", color: "#f97316", flexShrink: 0 }} />
-                          <span style={{ fontSize: "13px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1 }}>{todo.title}</span>
+                          <span style={{ fontSize: "13px", color: "#f97316" }}>{todo.title}</span>
                         </div>
                       ))}
                     </>
@@ -645,7 +648,7 @@ export function ExportPreview({ open, onOpenChange }: ExportPreviewProps) {
         </div>
 
         <p className="text-xs text-muted-foreground text-center mt-2">
-          Preview scaled to 40% - Export will be 1920px wide (16:9 Full HD)
+          Preview scaled to 50% - Export at 4800px wide (high resolution)
         </p>
       </DialogContent>
     </Dialog>
