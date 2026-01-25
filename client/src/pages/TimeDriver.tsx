@@ -222,7 +222,7 @@ export default function TimeDriver() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-white mb-1">
-              TimeDriver<span className={isCalculated ? "text-green-400" : "text-blue-400"}>SIXT</span>
+              TimeDriver<span className="text-green-500">SIXT</span>
             </h1>
             <p className="text-sm text-muted-foreground">
               {isCalculated ? "Calculation Complete" : "Labor Planning Budget Tool"}

@@ -142,7 +142,7 @@ export default function UpgradeSIXT() {
           </Link>
           <div>
             <h1 className="text-xl font-bold text-white">
-              Upgrade<span className="text-primary">SIXT</span>
+              Upgrade<span className="text-blue-500">SIXT</span>
             </h1>
             <p className="text-xs text-muted-foreground">Daily UP Vehicle Management</p>
           </div>

@@ -36,12 +36,12 @@ type DashboardStatus = {
 };
 
 const MODULES = [
-  { id: "timedriver", name: "TimeDriverSIXT", icon: Clock, path: "/timedriver", targetHour: 8, targetMinute: 0 },
-  { id: "upgrade", name: "UpgradeSIXT", icon: TrendingUp, path: "/upgrade", targetHour: 8, targetMinute: 30 },
-  { id: "flow", name: "FlowSIXT", icon: Workflow, path: "/flow", targetHour: null, targetMinute: null },
-  { id: "bodyshop", name: "BodyshopSIXT", icon: Car, path: "/bodyshop", targetHour: null, targetMinute: null },
-  { id: "todo", name: "ToDoSIXT", icon: CheckSquare, path: "/todo", targetHour: null, targetMinute: null },
-  { id: "quality", name: "QualitySIXT", icon: ClipboardCheck, path: "/quality", targetHour: null, targetMinute: null },
+  { id: "timedriver", name: "TimeDriver", icon: Clock, path: "/timedriver", targetHour: 8, targetMinute: 0, color: "text-green-500", detailColor: "text-green-400" },
+  { id: "upgrade", name: "Upgrade", icon: TrendingUp, path: "/upgrade", targetHour: 8, targetMinute: 30, color: "text-blue-500", detailColor: "text-blue-400" },
+  { id: "flow", name: "Flow", icon: Workflow, path: "/flow", targetHour: null, targetMinute: null, color: "text-yellow-500", detailColor: "text-yellow-400" },
+  { id: "bodyshop", name: "Bodyshop", icon: Car, path: "/bodyshop", targetHour: null, targetMinute: null, color: "text-red-500", detailColor: "text-red-400" },
+  { id: "todo", name: "ToDo", icon: CheckSquare, path: "/todo", targetHour: null, targetMinute: null, color: "text-purple-500", detailColor: "text-purple-400" },
+  { id: "quality", name: "Quality", icon: ClipboardCheck, path: "/quality", targetHour: null, targetMinute: null, color: "text-cyan-500", detailColor: "text-cyan-400" },
 ];
 
 export default function MasterDashboard() {
@@ -55,6 +55,7 @@ export default function MasterDashboard() {
   const [futureTapCount, setFutureTapCount] = useState(0);
   const [showFutureUnlockDialog, setShowFutureUnlockDialog] = useState(false);
   const [futureUnlockPin, setFutureUnlockPin] = useState("");
+  const futureColor = "text-orange-500";
   const todayDate = getGermanDateString();
 
   const [futureForm, setFutureForm] = useState({
@@ -281,7 +282,7 @@ export default function MasterDashboard() {
     <div className="pb-24">
       <div className="bg-gradient-to-b from-primary/20 to-transparent p-6">
         <h1 className="text-2xl font-bold text-white mb-1">
-          Master<span className="text-primary">SIXT</span>
+          Master<span className="text-[#f97316]">SIXT</span>
         </h1>
         <p className="text-sm text-muted-foreground">Daily Task Overview</p>
       </div>
@@ -386,12 +387,12 @@ export default function MasterDashboard() {
                         <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
                           isDone ? 'bg-green-500/20' : 'bg-primary/10'
                         }`}>
-                          <Icon className={`w-5 h-5 ${isDone ? 'text-green-500' : 'text-primary'}`} />
+                          <Icon className={`w-5 h-5 ${isDone ? 'text-green-500' : module.color}`} />
                         </div>
                         <div>
-                          <p className="font-medium text-white">{module.name}</p>
+                          <p className="font-medium text-white">{module.name}<span className={module.color}>SIXT</span></p>
                           {details && (
-                            <p className={`text-xs ${isDone ? 'text-green-400' : 'text-muted-foreground'}`}>
+                            <p className={`text-xs ${isDone ? 'text-green-400' : module.detailColor}`}>
                               {details}
                             </p>
                           )}
@@ -442,7 +443,7 @@ export default function MasterDashboard() {
                   )}
                 </div>
                 <div>
-                  <p className="font-medium text-white">Future<span className="text-primary">SIXT</span></p>
+                  <p className="font-medium text-white">Future<span className={futureColor}>SIXT</span></p>
                   <p className={`text-xs ${futureIsDone ? 'text-green-400' : futureAdminUnlocked ? 'text-primary' : 'text-muted-foreground'}`}>
                     {!(futureUnlocked || futureAdminUnlocked)
                       ? "Available after 15:00" 
