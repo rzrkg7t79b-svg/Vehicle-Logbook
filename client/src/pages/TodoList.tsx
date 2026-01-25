@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { ArrowLeft, Plus, Trash2, Check, Square, CheckSquare, Users, CalendarClock } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Check, Square, CheckSquare, Users, CalendarClock, RotateCcw, CircleDot } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,11 +15,27 @@ import { useUser } from "@/contexts/UserContext";
 import { getGermanDateString } from "@/lib/germanTime";
 import type { Todo, ModuleStatus } from "@shared/schema";
 
+const PRIORITY_LABELS: Record<number, string> = {
+  3: "!!!",
+  2: "!!",
+  1: "!",
+  0: "",
+};
+
+const PRIORITY_COLORS: Record<number, string> = {
+  3: "bg-red-500/20 text-red-400",
+  2: "bg-orange-500/20 text-orange-400",
+  1: "bg-yellow-500/20 text-yellow-400",
+  0: "",
+};
+
 export default function TodoList() {
   const { user } = useUser();
   const [newTodoTitle, setNewTodoTitle] = useState("");
   const [assignCounter, setAssignCounter] = useState(false);
   const [assignDriver, setAssignDriver] = useState(false);
+  const [isRecurring, setIsRecurring] = useState(true);
+  const [priority, setPriority] = useState(0);
   const todayDate = getGermanDateString();
 
   const adminPin = user?.pin;
@@ -41,7 +57,7 @@ export default function TodoList() {
   const isDone = moduleStatuses.find(s => s.moduleName === "todo")?.isDone || false;
 
   const createMutation = useMutation({
-    mutationFn: async (data: { title: string; assignedTo: string[] }) => {
+    mutationFn: async (data: { title: string; assignedTo: string[]; isRecurring: boolean; priority: number }) => {
       await apiRequest("POST", "/api/todos", data, adminHeaders);
     },
     onSuccess: () => {
@@ -49,6 +65,8 @@ export default function TodoList() {
       setNewTodoTitle("");
       setAssignCounter(false);
       setAssignDriver(false);
+      setIsRecurring(true);
+      setPriority(0);
     },
   });
 
@@ -57,7 +75,7 @@ export default function TodoList() {
     const assignedTo: string[] = [];
     if (assignCounter) assignedTo.push("Counter");
     if (assignDriver) assignedTo.push("Driver");
-    createMutation.mutate({ title: newTodoTitle.trim(), assignedTo });
+    createMutation.mutate({ title: newTodoTitle.trim(), assignedTo, isRecurring, priority });
   };
 
   const toggleMutation = useMutation({
@@ -184,7 +202,7 @@ export default function TodoList() {
                 <Plus className="w-4 h-4" />
               </Button>
             </div>
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-4 flex-wrap">
               <span className="text-xs text-muted-foreground">Assign to:</span>
               <div className="flex items-center gap-2">
                 <Checkbox 
@@ -203,6 +221,48 @@ export default function TodoList() {
                   data-testid="checkbox-assign-driver"
                 />
                 <Label htmlFor="assign-driver" className="text-sm">Driver</Label>
+              </div>
+            </div>
+            <div className="flex items-center gap-4 flex-wrap">
+              <span className="text-xs text-muted-foreground">Type:</span>
+              <div className="flex gap-1">
+                <Button
+                  size="sm"
+                  variant={isRecurring ? "default" : "outline"}
+                  onClick={() => setIsRecurring(true)}
+                  className="h-7 text-xs gap-1"
+                  data-testid="button-type-recurring"
+                >
+                  <RotateCcw className="w-3 h-3" />
+                  Recurring
+                </Button>
+                <Button
+                  size="sm"
+                  variant={!isRecurring ? "default" : "outline"}
+                  onClick={() => setIsRecurring(false)}
+                  className="h-7 text-xs gap-1"
+                  data-testid="button-type-onetime"
+                >
+                  <CircleDot className="w-3 h-3" />
+                  One-Time
+                </Button>
+              </div>
+            </div>
+            <div className="flex items-center gap-4 flex-wrap">
+              <span className="text-xs text-muted-foreground">Priority:</span>
+              <div className="flex gap-1">
+                {[0, 1, 2, 3].map((p) => (
+                  <Button
+                    key={p}
+                    size="sm"
+                    variant={priority === p ? "default" : "outline"}
+                    onClick={() => setPriority(p)}
+                    className={`h-7 text-xs min-w-[40px] ${priority === p && p > 0 ? PRIORITY_COLORS[p] : ""}`}
+                    data-testid={`button-priority-${p}`}
+                  >
+                    {p === 0 ? "None" : PRIORITY_LABELS[p]}
+                  </Button>
+                ))}
               </div>
             </div>
           </Card>
@@ -244,9 +304,20 @@ export default function TodoList() {
                         )}
                       </button>
                       <div className="flex-1 min-w-0">
-                        <p className={`text-sm ${todo.completed ? 'line-through text-muted-foreground' : 'text-white'}`}>
-                          {todo.title}
-                        </p>
+                        <div className="flex items-center gap-2">
+                          {(todo.priority ?? 0) > 0 && (
+                            <span className={`text-xs font-bold ${
+                              todo.priority === 3 ? "text-red-400" : 
+                              todo.priority === 2 ? "text-orange-400" : 
+                              "text-yellow-400"
+                            }`}>
+                              {PRIORITY_LABELS[todo.priority ?? 0]}
+                            </span>
+                          )}
+                          <p className={`text-sm ${todo.completed ? 'line-through text-muted-foreground' : 'text-white'}`}>
+                            {todo.title}
+                          </p>
+                        </div>
                         <div className="flex items-center gap-2 mt-1 flex-wrap">
                           {todo.assignedTo && todo.assignedTo.length > 0 && (
                             <div className="flex gap-1">
@@ -256,6 +327,11 @@ export default function TodoList() {
                                 </Badge>
                               ))}
                             </div>
+                          )}
+                          {!todo.isRecurring && (
+                            <Badge variant="secondary" className="text-xs py-0 bg-cyan-500/20 text-cyan-400">
+                              One-Time
+                            </Badge>
                           )}
                           {todo.isSystemGenerated && (
                             <Badge variant="secondary" className="text-xs py-0 bg-blue-500/20 text-blue-400">
@@ -324,8 +400,24 @@ export default function TodoList() {
                         <Square className="w-5 h-5 text-orange-400/50" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm text-orange-200">{todo.title}</p>
+                        <div className="flex items-center gap-2">
+                          {(todo.priority ?? 0) > 0 && (
+                            <span className={`text-xs font-bold ${
+                              todo.priority === 3 ? "text-red-400" : 
+                              todo.priority === 2 ? "text-orange-400" : 
+                              "text-yellow-400"
+                            }`}>
+                              {PRIORITY_LABELS[todo.priority ?? 0]}
+                            </span>
+                          )}
+                          <p className="text-sm text-orange-200">{todo.title}</p>
+                        </div>
                         <div className="flex items-center gap-2 mt-1 flex-wrap">
+                          {!todo.isRecurring && (
+                            <Badge variant="secondary" className="text-xs py-0 bg-cyan-500/20 text-cyan-400">
+                              One-Time
+                            </Badge>
+                          )}
                           {todo.isSystemGenerated && (
                             <Badge variant="secondary" className="text-xs py-0 bg-blue-500/20 text-blue-400">
                               Collection
