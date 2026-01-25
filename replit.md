@@ -9,7 +9,7 @@ A comprehensive mobile-first iOS web app for SIXT workshop management with seven
 - **UpgradeSIXT**: Daily UP vehicle management with 08:30 deadline, sold/pending tracking for upsell vehicles, max 2 pending vehicles, car/van type selection
 - **FlowSIXT**: Driver task management with priority ordering and completion tracking
 - **BodyshopSIXT**: Vehicle tracking with German license plates and 7-day timers
-- **ToDoSIXT**: Daily task management with admin CRUD and user completion
+- **ToDoSIXT**: Daily task management with admin CRUD, task types (Recurring/One-Time), priority system (!!!/!!/!/none), and user completion
 - **QualitySIXT**: Quality checks with automatic driver task creation for failed checks
 - **FutureSIXT**: Tomorrow's planning with reservation tracking (Car/Van/TAS split), deliveries, and collections
 
@@ -46,7 +46,7 @@ Preferred communication style: Simple, everyday language.
 - **AppSettings**: Key-value store for configurable settings (e.g., budgetPerRental)
 - **Vehicles**: License plates, names, notes, EV status, collection status, countdown timers
 - **Comments**: Linked to vehicles with user initials and timestamps
-- **Todos**: Daily tasks with title, completion status, completedBy user
+- **Todos**: Daily tasks with title, completion status, completedBy user, isRecurring flag, priority (0-3)
 - **QualityChecks**: License plate, passed status, comment, createdBy, date
 - **DriverTasks**: Auto-created from failed quality checks, linked to qualityCheckId
 - **FlowTasks**: Driver tasks with license plate, EV status, task type, optional needAt deadline, completion tracking
@@ -111,7 +111,7 @@ Preferred communication style: Simple, everyday language.
 
 11. **License Plate Input**: Reusable LicensePlateInput component with auto-focus between fields (city → letters → numbers) for faster data entry. Used in FlowSIXT, BodyshopSIXT, and QualitySIXT.
 
-12. **ToDoSIXT Role Assignment**: Admin can assign todos to Counter and/or Driver roles. Non-admin users only see todos assigned to their role.
+12. **ToDoSIXT Features**: Admin can assign todos to Counter and/or Driver roles. Non-admin users only see todos assigned to their role. Task types: Recurring (reset at midnight) and One-Time (persist until completed/deleted). Priority levels: 3=!!! (red), 2=!! (orange), 1=! (yellow), 0=none. Tasks sorted by priority (highest first).
 
 13. **DriverSIXT View**: Dedicated view for driver-only users (Driver role without Counter/Admin). Shows combined FlowSIXT and ToDoSIXT tasks on one screen with personal progress bar. Drivers are automatically redirected to /driver instead of MasterSIXT dashboard.
 
@@ -126,7 +126,7 @@ Preferred communication style: Simple, everyday language.
    - `overallProgress`: 0-100 percentage (calculated based on 7 completed modules)
 
 16. **Midnight Reset Scheduler**: Automatically resets daily data at midnight Berlin time:
-   - Todos: Marked as not completed
+   - Recurring Todos: Marked as not completed (One-Time tasks persist)
    - Module status: Deleted for fresh day
    - Quality checks and driver tasks: Deleted
    - TimeDriver calculations: Deleted

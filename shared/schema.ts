@@ -199,6 +199,8 @@ export const insertTodoSchema = createInsertSchema(todos)
     assignedTo: z.array(z.enum(["Counter", "Driver"])).default([]),
     completed: z.boolean().default(false),
     completedBy: z.string().optional(),
+    isRecurring: z.boolean().default(true),
+    priority: z.number().int().min(0).max(3).default(0),
   });
 
 export const insertQualityCheckSchema = createInsertSchema(qualityChecks)

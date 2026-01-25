@@ -230,7 +230,7 @@ export default function TodoList() {
                   size="sm"
                   variant={isRecurring ? "default" : "outline"}
                   onClick={() => setIsRecurring(true)}
-                  className="h-7 text-xs gap-1"
+                  className="text-xs gap-1"
                   data-testid="button-type-recurring"
                 >
                   <RotateCcw className="w-3 h-3" />
@@ -240,7 +240,7 @@ export default function TodoList() {
                   size="sm"
                   variant={!isRecurring ? "default" : "outline"}
                   onClick={() => setIsRecurring(false)}
-                  className="h-7 text-xs gap-1"
+                  className="text-xs gap-1"
                   data-testid="button-type-onetime"
                 >
                   <CircleDot className="w-3 h-3" />
@@ -257,7 +257,7 @@ export default function TodoList() {
                     size="sm"
                     variant={priority === p ? "default" : "outline"}
                     onClick={() => setPriority(p)}
-                    className={`h-7 text-xs min-w-[40px] ${priority === p && p > 0 ? PRIORITY_COLORS[p] : ""}`}
+                    className="text-xs"
                     data-testid={`button-priority-${p}`}
                   >
                     {p === 0 ? "None" : PRIORITY_LABELS[p]}

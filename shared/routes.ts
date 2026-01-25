@@ -197,6 +197,8 @@ export const api = {
         title: z.string().optional(),
         completed: z.boolean().optional(),
         completedBy: z.string().optional(),
+        isRecurring: z.boolean().optional(),
+        priority: z.number().int().min(0).max(3).optional(),
       }),
       responses: {
         200: z.custom<typeof todos.$inferSelect>(),
