@@ -109,43 +109,31 @@ export function ExportPreview({ open, onOpenChange }: ExportPreviewProps) {
     setIsExporting(true);
     
     try {
-      // Clone the element and remove transform for accurate capture
-      const originalElement = exportRef.current;
-      const container = document.createElement("div");
-      container.style.position = "fixed";
-      container.style.left = "-10000px";
-      container.style.top = "0";
-      container.style.width = "1200px";
-      container.style.zIndex = "-9999";
-      document.body.appendChild(container);
+      const element = exportRef.current;
       
-      // Clone and reset styles
-      const clone = originalElement.cloneNode(true) as HTMLElement;
-      clone.style.transform = "none";
-      clone.style.transformOrigin = "top left";
-      clone.style.width = "1200px";
-      container.appendChild(clone);
+      // Temporarily remove transform to capture at full size
+      const originalTransform = element.style.transform;
+      element.style.transform = "none";
       
-      // Wait for layout to stabilize
-      await new Promise(resolve => setTimeout(resolve, 100));
+      // Wait for reflow
+      await new Promise(resolve => setTimeout(resolve, 50));
       
-      const sourceCanvas = await html2canvas(clone, {
-        scale: 4,
+      // Capture exactly what's rendered
+      const canvas = await html2canvas(element, {
+        scale: 2,
         backgroundColor: "#1a1a1a",
-        width: 1200,
-        height: clone.scrollHeight,
-        windowWidth: 1200,
-        windowHeight: clone.scrollHeight,
         useCORS: true,
         logging: false,
+        imageTimeout: 0,
+        removeContainer: true,
       });
       
-      // Cleanup
-      document.body.removeChild(container);
+      // Restore transform
+      element.style.transform = originalTransform;
       
       const fileName = `MasterSIXT-Export-${todayDate}.jpg`;
       
-      sourceCanvas.toBlob(async (blob) => {
+      canvas.toBlob(async (blob) => {
         if (!blob) return;
         
         const file = new File([blob], fileName, { type: "image/jpeg" });
