@@ -159,6 +159,15 @@ export const futurePlanning = pgTable("future_planning", {
   savedAt: timestamp("saved_at").defaultNow(),
 });
 
+export const kpiMetrics = pgTable("kpi_metrics", {
+  id: serial("id").primaryKey(),
+  key: text("key").notNull().unique(),
+  value: real("value").notNull(),
+  goal: real("goal").notNull(),
+  updatedBy: text("updated_by"),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 export const insertUserSchema = createInsertSchema(users)
   .omit({ id: true, createdAt: true })
   .extend({
@@ -266,6 +275,15 @@ export const insertFuturePlanningSchema = createInsertSchema(futurePlanning)
     savedBy: z.string().optional(),
   });
 
+export const insertKpiMetricSchema = createInsertSchema(kpiMetrics)
+  .omit({ id: true, updatedAt: true })
+  .extend({
+    key: z.enum(["irpd", "ses"]),
+    value: z.number().min(0),
+    goal: z.number().min(0),
+    updatedBy: z.string().optional(),
+  });
+
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type Vehicle = typeof vehicles.$inferSelect;
@@ -290,6 +308,9 @@ export type UpgradeVehicle = typeof upgradeVehicles.$inferSelect;
 export type InsertUpgradeVehicle = z.infer<typeof insertUpgradeVehicleSchema>;
 export type FuturePlanning = typeof futurePlanning.$inferSelect;
 export type InsertFuturePlanning = z.infer<typeof insertFuturePlanningSchema>;
+
+export type KpiMetric = typeof kpiMetrics.$inferSelect;
+export type InsertKpiMetric = z.infer<typeof insertKpiMetricSchema>;
 
 export type AppSettings = typeof appSettings.$inferSelect;
 export type InsertAppSettings = z.infer<typeof insertAppSettingsSchema>;

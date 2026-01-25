@@ -1,0 +1,29 @@
+Extend the existing app by adding two new KPI status indicators to the MasterSIXT dashboard and to the export view: IRPD (Incremental Revenue) MTD and SES (Service Experience Score) MTD.
+
+These two status indicators must be displayed at the very top of the MasterSIXT overview. They must also appear in the export. Each indicator shows the current value, the goal, and a color-coded status.
+
+For IRPD (Incremental Revenue) MTD:
+	•	The value is shown in EUR format (for example: 7.45 EUR).
+	•	The default goal value is 8.00 EUR.
+	•	Only the admin user (Branch Manager / BM) is allowed to edit both the goal value and the current actual IRPD value.
+	•	Color logic:
+	•	Green if the value is greater than or equal to 8.00 EUR
+	•	Yellow if the value is greater than or equal to 7.20 EUR but below 8.00 EUR
+	•	Red if the value is below 7.20 EUR
+
+For SES (Service Experience Score) MTD:
+	•	The value is shown as a percentage (for example: 91.3%).
+	•	The default goal value is 92.5%.
+	•	Only the admin user (Branch Manager / BM) is allowed to edit both the goal value and the current actual SES value.
+	•	Color logic:
+	•	Green if the value is greater than or equal to 92.5%
+	•	Yellow if the value is greater than or equal to 90% but below 92.5%
+	•	Red if the value is below 90%
+
+There must be no automatic reset for these values. Instead, the system must track and display how much time has passed since the last update (for example: “updated 15 minutes ago”, “updated 3 hours ago”, “updated 2 days ago”). This information must be shown in small text inside the KPI status area on the MasterSIXT dashboard.
+
+If the admin has not updated these values for more than 3 days, the last saved values must be shown in a greyed-out, inactive style, and a small warning message must be displayed indicating that the data may be outdated.
+
+Both KPI status indicators must be shown at the very top of the MasterSIXT overview. They must also be included in the export exactly as displayed in the app, including their values, color states, and outdated warning state if applicable.
+
+These features must be integrated into the existing app without breaking any current functionality and must respect the existing user and role system, with editing rights restricted to the Branch Manager (BM) only.

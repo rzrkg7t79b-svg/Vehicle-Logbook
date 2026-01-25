@@ -14,6 +14,7 @@ import {
   vehicleComments,
   upgradeVehicles,
   futurePlanning,
+  kpiMetrics,
   type InsertVehicle,
   type InsertComment,
   type InsertUser,
@@ -25,6 +26,7 @@ import {
   type InsertTimedriverCalculation,
   type InsertUpgradeVehicle,
   type InsertFuturePlanning,
+  type InsertKpiMetric,
   type Vehicle,
   type Comment,
   type User,
@@ -38,6 +40,7 @@ import {
   type VehicleDailyComment,
   type UpgradeVehicle,
   type FuturePlanning,
+  type KpiMetric,
 } from "@shared/schema";
 import { eq, desc, asc, lte, and, sql, ne, inArray, gte } from "drizzle-orm";
 
@@ -112,6 +115,10 @@ export interface IStorage {
   getFuturePlanning(date: string): Promise<FuturePlanning | undefined>;
   saveFuturePlanning(data: InsertFuturePlanning): Promise<FuturePlanning>;
   deleteFuturePlanning(date: string): Promise<void>;
+
+  getKpiMetrics(): Promise<KpiMetric[]>;
+  getKpiMetric(key: string): Promise<KpiMetric | undefined>;
+  upsertKpiMetric(data: InsertKpiMetric): Promise<KpiMetric>;
 
   performMidnightReset(): Promise<void>;
 }
@@ -510,6 +517,33 @@ export class DatabaseStorage implements IStorage {
 
   async deleteFuturePlanning(date: string): Promise<void> {
     await db.delete(futurePlanning).where(eq(futurePlanning.date, date));
+  }
+
+  async getKpiMetrics(): Promise<KpiMetric[]> {
+    return db.select().from(kpiMetrics);
+  }
+
+  async getKpiMetric(key: string): Promise<KpiMetric | undefined> {
+    const [metric] = await db.select().from(kpiMetrics).where(eq(kpiMetrics.key, key));
+    return metric;
+  }
+
+  async upsertKpiMetric(data: InsertKpiMetric): Promise<KpiMetric> {
+    const existing = await this.getKpiMetric(data.key);
+    if (existing) {
+      const [updated] = await db.update(kpiMetrics)
+        .set({ 
+          value: data.value, 
+          goal: data.goal, 
+          updatedBy: data.updatedBy, 
+          updatedAt: new Date() 
+        })
+        .where(eq(kpiMetrics.key, data.key))
+        .returning();
+      return updated;
+    }
+    const [newMetric] = await db.insert(kpiMetrics).values(data).returning();
+    return newMetric;
   }
 
   async performMidnightReset(): Promise<void> {
