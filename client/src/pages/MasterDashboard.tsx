@@ -200,7 +200,7 @@ export default function MasterDashboard() {
   const updateKpiMutation = useMutation({
     mutationFn: async ({ key, value, goal }: { key: string; value: number; goal: number }) => {
       return apiRequest("PUT", `/api/kpi-metrics/${key}`, { value, goal }, {
-        headers: { "x-admin-pin": user?.pin || "" },
+        "x-admin-pin": user?.pin || "",
       });
     },
     onSuccess: () => {
