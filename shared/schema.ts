@@ -132,6 +132,19 @@ export const vehicleComments = pgTable("vehicle_daily_comments", {
   commentId: integer("comment_id"),
 });
 
+export const upgradeVehicles = pgTable("upgrade_vehicles", {
+  id: serial("id").primaryKey(),
+  licensePlate: text("license_plate").notNull(),
+  model: text("model").notNull(),
+  reason: text("reason").notNull(),
+  isSold: boolean("is_sold").default(false).notNull(),
+  soldAt: timestamp("sold_at"),
+  soldBy: text("sold_by"),
+  date: text("date").notNull(),
+  createdBy: text("created_by"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 export const insertUserSchema = createInsertSchema(users)
   .omit({ id: true, createdAt: true })
   .extend({
@@ -213,6 +226,18 @@ export const insertTimedriverCalculationSchema = createInsertSchema(timedriverCa
 export const insertVehicleDailyCommentSchema = createInsertSchema(vehicleComments)
   .omit({ id: true });
 
+export const insertUpgradeVehicleSchema = createInsertSchema(upgradeVehicles)
+  .omit({ id: true, createdAt: true, soldAt: true })
+  .extend({
+    licensePlate: z.string().min(1, "License plate is required"),
+    model: z.string().min(1, "Model is required"),
+    reason: z.string().min(1, "Reason is required"),
+    date: z.string(),
+    isSold: z.boolean().default(false),
+    soldBy: z.string().optional(),
+    createdBy: z.string().optional(),
+  });
+
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type Vehicle = typeof vehicles.$inferSelect;
@@ -233,6 +258,8 @@ export type TimedriverCalculation = typeof timedriverCalculations.$inferSelect;
 export type InsertTimedriverCalculation = z.infer<typeof insertTimedriverCalculationSchema>;
 export type VehicleDailyComment = typeof vehicleComments.$inferSelect;
 export type InsertVehicleDailyComment = z.infer<typeof insertVehicleDailyCommentSchema>;
+export type UpgradeVehicle = typeof upgradeVehicles.$inferSelect;
+export type InsertUpgradeVehicle = z.infer<typeof insertUpgradeVehicleSchema>;
 
 export type AppSettings = typeof appSettings.$inferSelect;
 export type InsertAppSettings = z.infer<typeof insertAppSettingsSchema>;
