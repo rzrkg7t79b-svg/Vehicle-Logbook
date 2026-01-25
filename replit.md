@@ -137,6 +137,7 @@ Preferred communication style: Simple, everyday language.
 17. **FutureSIXT Features**:
    - Tomorrow's planning module for anticipating next day's workload
    - Locked until 15:00 Berlin time each day (shows lock icon before unlock)
+   - Admin early unlock: Tap the FutureSIXT card 3 times quickly, then enter admin PIN to unlock before 15:00
    - Input fields: Total reservations, Car/Van/TAS split, Deliveries Tomorrow, Collections Open
    - Validation: Car + Van + TAS must equal Total reservations (red border on error)
    - After save: Read-only mode with saved values displayed, "New" button to reset and start fresh

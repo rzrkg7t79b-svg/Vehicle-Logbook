@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { motion } from "framer-motion";
@@ -8,6 +8,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { getSecondsUntilGermanTime, formatCountdown, isOverdue, getGermanDateString, isAfterGermanTime } from "@/lib/germanTime";
 import { useUser } from "@/contexts/UserContext";
 import { ExportPreview } from "@/components/ExportPreview";
@@ -50,6 +51,10 @@ export default function MasterDashboard() {
   const [masterOverdue, setMasterOverdue] = useState(isOverdue(16, 30));
   const [showExportPreview, setShowExportPreview] = useState(false);
   const [futureUnlocked, setFutureUnlocked] = useState(isAfterGermanTime(15, 0));
+  const [futureAdminUnlocked, setFutureAdminUnlocked] = useState(false);
+  const [futureTapCount, setFutureTapCount] = useState(0);
+  const [showFutureUnlockDialog, setShowFutureUnlockDialog] = useState(false);
+  const [futureUnlockPin, setFutureUnlockPin] = useState("");
   const todayDate = getGermanDateString();
 
   const [futureForm, setFutureForm] = useState({
@@ -61,6 +66,54 @@ export default function MasterDashboard() {
     collectionsOpen: "",
   });
   const [futureValidationError, setFutureValidationError] = useState(false);
+
+  const futureTapTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const handleFutureCardTap = () => {
+    if (futureUnlocked || futureAdminUnlocked || futureIsDone) return;
+    
+    if (futureTapTimeoutRef.current) {
+      clearTimeout(futureTapTimeoutRef.current);
+    }
+    
+    const newCount = futureTapCount + 1;
+    setFutureTapCount(newCount);
+    
+    if (newCount >= 3) {
+      setShowFutureUnlockDialog(true);
+      setFutureTapCount(0);
+    } else {
+      futureTapTimeoutRef.current = setTimeout(() => {
+        setFutureTapCount(0);
+      }, 1500);
+    }
+  };
+
+  const handleFutureUnlockSubmit = async () => {
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ pin: futureUnlockPin }),
+      });
+      
+      if (res.ok) {
+        const userData = await res.json();
+        if (userData.isAdmin) {
+          setFutureAdminUnlocked(true);
+          setShowFutureUnlockDialog(false);
+          setFutureUnlockPin("");
+          toast({ title: "FutureSIXT unlocked by admin" });
+        } else {
+          toast({ title: "Admin access required", variant: "destructive" });
+        }
+      } else {
+        toast({ title: "Invalid PIN", variant: "destructive" });
+      }
+    } catch {
+      toast({ title: "Error verifying PIN", variant: "destructive" });
+    }
+  };
 
   const { data: todos = [] } = useQuery<Todo[]>({
     queryKey: ["/api/todos"],
@@ -371,15 +424,16 @@ export default function MasterDashboard() {
           <h2 className="text-sm font-medium text-muted-foreground px-1">Tomorrow's Planning</h2>
           
           <Card 
-            className={`p-4 ${!futureUnlocked ? 'border-muted opacity-60' : futureIsDone ? 'border-green-500/30 bg-green-500/5' : ''}`}
+            className={`p-4 ${!(futureUnlocked || futureAdminUnlocked) ? 'border-muted opacity-60 cursor-pointer' : futureIsDone ? 'border-green-500/30 bg-green-500/5' : ''}`}
             data-testid="future-sixt-card"
+            onClick={handleFutureCardTap}
           >
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
                 <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                  futureIsDone ? 'bg-green-500/20' : !futureUnlocked ? 'bg-muted/20' : 'bg-primary/10'
+                  futureIsDone ? 'bg-green-500/20' : !(futureUnlocked || futureAdminUnlocked) ? 'bg-muted/20' : 'bg-primary/10'
                 }`}>
-                  {!futureUnlocked ? (
+                  {!(futureUnlocked || futureAdminUnlocked) ? (
                     <Lock className="w-5 h-5 text-muted-foreground" />
                   ) : futureIsDone ? (
                     <CheckCircle className="w-5 h-5 text-green-500" />
@@ -389,12 +443,14 @@ export default function MasterDashboard() {
                 </div>
                 <div>
                   <p className="font-medium text-white">Future<span className="text-primary">SIXT</span></p>
-                  <p className={`text-xs ${futureIsDone ? 'text-green-400' : 'text-muted-foreground'}`}>
-                    {!futureUnlocked 
+                  <p className={`text-xs ${futureIsDone ? 'text-green-400' : futureAdminUnlocked ? 'text-primary' : 'text-muted-foreground'}`}>
+                    {!(futureUnlocked || futureAdminUnlocked)
                       ? "Available after 15:00" 
                       : futureIsDone 
                         ? "Planning saved" 
-                        : "Enter tomorrow's numbers"
+                        : futureAdminUnlocked 
+                          ? "Unlocked by admin"
+                          : "Enter tomorrow's numbers"
                     }
                   </p>
                 </div>
@@ -403,7 +459,7 @@ export default function MasterDashboard() {
                 <Button 
                   variant="outline" 
                   size="sm" 
-                  onClick={() => deleteFutureMutation.mutate()}
+                  onClick={(e) => { e.stopPropagation(); deleteFutureMutation.mutate(); }}
                   disabled={deleteFutureMutation.isPending}
                   data-testid="button-future-new"
                 >
@@ -413,7 +469,7 @@ export default function MasterDashboard() {
               )}
             </div>
 
-            {futureUnlocked && !futureIsDone && (
+            {(futureUnlocked || futureAdminUnlocked) && !futureIsDone && (
               <div className="space-y-4">
                 <div className="space-y-2">
                   <Label className="text-sm text-muted-foreground">Overall Reservations</Label>
@@ -571,6 +627,47 @@ export default function MasterDashboard() {
       </div>
 
       <ExportPreview open={showExportPreview} onOpenChange={setShowExportPreview} />
+
+      <Dialog open={showFutureUnlockDialog} onOpenChange={setShowFutureUnlockDialog}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Admin Unlock</DialogTitle>
+            <DialogDescription>
+              Enter admin PIN to unlock FutureSIXT before 15:00
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 pt-4">
+            <Input
+              type="password"
+              inputMode="numeric"
+              maxLength={4}
+              placeholder="Enter 4-digit admin PIN"
+              value={futureUnlockPin}
+              onChange={(e) => setFutureUnlockPin(e.target.value.replace(/\D/g, "").slice(0, 4))}
+              className="text-center text-2xl tracking-widest"
+              autoFocus
+              data-testid="input-future-unlock-pin"
+            />
+            <div className="flex gap-2">
+              <Button 
+                variant="outline" 
+                onClick={() => { setShowFutureUnlockDialog(false); setFutureUnlockPin(""); }}
+                className="flex-1"
+              >
+                Cancel
+              </Button>
+              <Button 
+                onClick={handleFutureUnlockSubmit}
+                disabled={futureUnlockPin.length !== 4}
+                className="flex-1"
+                data-testid="button-future-unlock-submit"
+              >
+                Unlock
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
