@@ -1,0 +1,11 @@
+The frontend build on Vercel is still failing because the Vite build process is still pulling in /shared/schema.ts, which contains backend-only database code (drizzle-orm). Even if the frontend no longer directly imports it, the build configuration or TypeScript scope is still including or resolving backend folders. I want you to fix only the build isolation and configuration so that the frontend build is 100% isolated from the backend and never touches the /shared or /server folders.
+
+Do not change any application logic, do not change any UI or UX, do not remove or modify any features, do not change any workflows, and do not change any API endpoints. This must be a pure build and configuration isolation fix only.
+
+The goal is that the Vite build inside the client folder only sees and builds client code and never traverses or resolves any backend or database files. The frontend build must not even attempt to read or resolve /shared/schema.ts.
+
+Check and fix client/vite.config.ts so that the build root is strictly the client folder, there are no aliases or resolve paths pointing to ../shared or ../server, and the build output goes only to client/dist. Check and fix client/tsconfig.json and any tsconfig files it extends so that the include section only includes client files and the exclude section explicitly excludes ../shared and ../server, and there are no TypeScript path aliases pointing to backend folders. Also check and fix any other Vite, TypeScript, or tooling configuration that might still reference or include /shared or /server.
+
+The backend folders (shared and server) must remain completely untouched and continue to work exactly as before. The frontend code must remain functionally and visually identical. This is only a build scope and configuration isolation change.
+
+After this change, running cd client && npm run build must not touch or reference any backend file at all, and the Vercel build must no longer show any reference to /shared/schema.ts or drizzle-orm. Proceed carefully and only change configuration and build scoping, not application behavior.

@@ -1,6 +1,6 @@
 {
-  "include": ["src/**/*", "../shared/**/*"],
-  "exclude": ["node_modules", "dist"],
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist", "../shared", "../server"],
   "compilerOptions": {
     "target": "ES2020",
     "useDefineForClassFields": true,
@@ -19,8 +19,7 @@
     "noFallthroughCasesInSwitch": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"],
-      "@shared/*": ["../shared/*"]
+      "@/*": ["./src/*"]
     }
   }
 }
