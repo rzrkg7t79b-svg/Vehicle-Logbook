@@ -1,0 +1,39 @@
+Adjust the project structure and configuration so that the repository can be deployed on Vercel and displayed correctly on GitHub, but do not change, refactor, or touch any application logic, UI, features, business rules, or behavior. The app must behave exactly the same as before.
+
+Do not change any functionality. Do not change any UI. Do not change any flows. Do not change any logic. Do not rename components. Do not rewrite code. Only fix build and packaging structure.
+
+Keep the existing root project fully intact. Do not remove or replace the root package.json. Do not change the existing custom build script or backend setup. Replit must continue to work exactly as before.
+
+Only do the following minimal structural changes:
+
+Create a new, separate package.json inside the /client folder so that the frontend can be built independently as a standard Vite app. This client/package.json must only contain frontend-related dependencies and scripts and must include at least:
+	•	“dev”: “vite”
+	•	“build”: “vite build”
+	•	“preview”: “vite preview”
+
+Copy or move only the frontend-related dependencies (for example react, react-dom, vite, and related plugins) from the root package.json into client/package.json. Do not remove them from the root if they are still needed there. Do not break the root setup.
+
+Ensure that running the following commands inside /client works:
+	•	npm install
+	•	npm run build
+
+Ensure that this produces a valid build output in:
+	•	/client/dist
+
+Do not modify anything inside /server. Do not modify application code inside /client/src except if absolutely required to make the build work (and only minimal path/config fixes, no logic changes).
+
+Do not change how the app works. The only goal is:
+	•	GitHub shows a clean repo
+	•	Vercel can deploy the frontend using:
+	•	Root Directory: client
+	•	Framework: Vite
+	•	Build Command: npm run build
+	•	Output Directory: dist
+
+The result must be:
+	•	Replit still runs the app exactly as before
+	•	The app looks and behaves 100% identical
+	•	Only the build/deployment structure is fixed
+	•	No feature, UI, or logic changes are allowed
+
+If any change would affect app behavior, do not make that change.
