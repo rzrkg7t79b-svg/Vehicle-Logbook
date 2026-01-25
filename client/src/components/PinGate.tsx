@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { Lock, Timer, AlertTriangle, LogOut } from "lucide-react";
 import { UserContext } from "@/contexts/UserContext";
-import type { User } from "@shared/schema";
+import type { User } from "@/types";
 import { apiRequest } from "@/lib/queryClient";
 import { useLocation } from "wouter";
 

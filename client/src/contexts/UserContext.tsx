@@ -1,5 +1,5 @@
 import { createContext, useContext } from "react";
-import type { User } from "@shared/schema";
+import type { User } from "@/types";
 
 interface UserContextType {
   user: User | null;

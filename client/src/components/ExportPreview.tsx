@@ -6,7 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { getGermanDateString } from "@/lib/germanTime";
 import { addDays } from "date-fns";
 import { toJpeg } from "html-to-image";
-import type { Todo, FlowTask, Vehicle, TimedriverCalculation, User, Comment, FuturePlanning, KpiMetric } from "@shared/schema";
+import type { Todo, FlowTask, Vehicle, TimedriverCalculation, User, Comment, FuturePlanning, KpiMetric } from "@/types";
 
 type VehicleWithComments = Vehicle & { comments: Comment[] };
 

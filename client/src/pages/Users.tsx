@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { motion, AnimatePresence } from "framer-motion";
 import { queryClient, apiRequest } from "@/lib/queryClient";
-import type { User } from "@shared/schema";
+import type { User } from "@/types";
 
 export default function Users() {
   const { user: currentUser } = useUser();

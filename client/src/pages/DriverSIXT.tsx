@@ -8,7 +8,7 @@ import { Check, Clock, AlertTriangle, Zap, CheckSquare, Workflow } from "lucide-
 import { GermanPlate } from "@/components/GermanPlate";
 import { useUser } from "@/contexts/UserContext";
 import { getGermanTime } from "@/lib/germanTime";
-import type { FlowTask, Todo, DriverTask } from "@shared/schema";
+import type { FlowTask, Todo, DriverTask } from "@/types";
 import { motion, AnimatePresence } from "framer-motion";
 
 function getCountdownStatus(needAt: Date | null | undefined, now: Date): { text: string; isOverdue: boolean } | null {

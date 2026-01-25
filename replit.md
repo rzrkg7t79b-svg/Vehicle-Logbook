@@ -66,7 +66,13 @@ Preferred communication style: Simple, everyday language.
 
 ### Key Design Decisions
 
-1. **Shared Route Definitions**: API routes are defined once in `shared/routes.ts` with Zod schemas, ensuring type-safe API contracts between frontend and backend.
+1. **Frontend/Backend Separation**: The frontend and backend are architecturally separated for Vercel deployment:
+   - Frontend types: `client/src/types.ts` (plain TypeScript interfaces, no drizzle/zod)
+   - Frontend constants: `client/src/constants/index.ts` (flowTaskTypes, etc.)
+   - Frontend API utilities: `client/src/api.ts` (API_PATHS, buildUrl)
+   - Backend schemas: `shared/schema.ts` (Drizzle ORM + Zod validation)
+   - Backend routes: `shared/routes.ts` (API contracts with Zod schemas)
+   - The client folder has its own vite.config.ts and package.json for standalone Vercel builds
 
 2. **Mobile-First UI**: The app is constrained to `max-w-md` width with bottom navigation, optimized for phone use in a workshop environment.
 

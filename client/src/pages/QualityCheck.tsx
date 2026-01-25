@@ -11,7 +11,7 @@ import { useUser } from "@/contexts/UserContext";
 import { getGermanDateString } from "@/lib/germanTime";
 import { GermanPlate } from "@/components/GermanPlate";
 import { LicensePlateInput, buildPlateFromParts } from "@/components/LicensePlateInput";
-import type { QualityCheck as QualityCheckType, DriverTask, ModuleStatus } from "@shared/schema";
+import type { QualityCheck as QualityCheckType, DriverTask, ModuleStatus } from "@/types";
 
 export default function QualityCheck() {
   const { user } = useUser();

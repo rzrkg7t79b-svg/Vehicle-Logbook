@@ -14,7 +14,7 @@ import { useUser } from "@/contexts/UserContext";
 import { ExportPreview } from "@/components/ExportPreview";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import type { Todo, DriverTask, FlowTask, FuturePlanning, KpiMetric } from "@shared/schema";
+import type { Todo, DriverTask, FlowTask, FuturePlanning, KpiMetric } from "@/types";
 import { Pencil, DollarSign, Target } from "lucide-react";
 
 type PendingUpgradeVehicle = {

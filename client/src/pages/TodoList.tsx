@@ -13,7 +13,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useUser } from "@/contexts/UserContext";
 import { getGermanDateString } from "@/lib/germanTime";
-import type { Todo, ModuleStatus } from "@shared/schema";
+import type { Todo, ModuleStatus } from "@/types";
 
 const PRIORITY_LABELS: Record<number, string> = {
   3: "!!!",

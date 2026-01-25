@@ -10,8 +10,8 @@ import { GermanPlate } from "@/components/GermanPlate";
 import { LicensePlateInput, buildPlateFromParts } from "@/components/LicensePlateInput";
 import { useUser } from "@/contexts/UserContext";
 import { getGermanTime } from "@/lib/germanTime";
-import type { FlowTask } from "@shared/schema";
-import { flowTaskTypes } from "@shared/schema";
+import type { FlowTask } from "@/types";
+import { flowTaskTypes } from "@/constants";
 import { motion, AnimatePresence, Reorder } from "framer-motion";
 
 interface VehicleGroup {
