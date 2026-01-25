@@ -6,7 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { getGermanDateString } from "@/lib/germanTime";
 import { addDays } from "date-fns";
 import { toJpeg } from "html-to-image";
-import type { Todo, FlowTask, Vehicle, TimedriverCalculation, User, Comment, FuturePlanning } from "@shared/schema";
+import type { Todo, FlowTask, Vehicle, TimedriverCalculation, User, Comment, FuturePlanning, KpiMetric } from "@shared/schema";
 
 type VehicleWithComments = Vehicle & { comments: Comment[] };
 
@@ -126,6 +126,35 @@ export function ExportPreview({ open, onOpenChange }: ExportPreviewProps) {
       return res.json();
     },
   });
+
+  const { data: kpiMetrics = [] } = useQuery<KpiMetric[]>({
+    queryKey: ["/api/kpi-metrics"],
+  });
+
+  const getKpiMetric = (key: "irpd" | "ses"): KpiMetric | undefined => {
+    return kpiMetrics.find(m => m.key === key);
+  };
+
+  const getKpiColor = (key: "irpd" | "ses", value: number | undefined): string => {
+    if (value === undefined) return "#888";
+    if (key === "irpd") {
+      if (value >= 8.0) return "#22c55e";
+      if (value >= 7.2) return "#eab308";
+      return "#ef4444";
+    } else {
+      if (value >= 92.5) return "#22c55e";
+      if (value >= 90.0) return "#eab308";
+      return "#ef4444";
+    }
+  };
+
+  const isKpiStale = (updatedAt: Date | string | null): boolean => {
+    if (!updatedAt) return true;
+    const updated = new Date(updatedAt);
+    const now = new Date();
+    const diffDays = (now.getTime() - updated.getTime()) / (1000 * 60 * 60 * 24);
+    return diffDays >= 3;
+  };
 
   const handleExport = async () => {
     if (!exportRef.current) return;
@@ -284,6 +313,59 @@ export function ExportPreview({ open, onOpenChange }: ExportPreviewProps) {
                 <span style={{ fontSize: "20px", color: "#888" }}>Daily<br/>Progress</span>
               </div>
             </div>
+
+            {/* KPI Indicators */}
+            {(getKpiMetric("irpd") || getKpiMetric("ses")) && (
+              <div style={{ 
+                display: "grid", 
+                gridTemplateColumns: "1fr 1fr", 
+                gap: "20px", 
+                marginBottom: "20px" 
+              }}>
+                {(["irpd", "ses"] as const).map((kpiKey) => {
+                  const metric = getKpiMetric(kpiKey);
+                  if (!metric) return null;
+                  const value = metric.value;
+                  const goal = metric.goal ?? (kpiKey === "irpd" ? 8.0 : 92.5);
+                  const color = getKpiColor(kpiKey, value);
+                  const stale = isKpiStale(metric.updatedAt);
+                  
+                  return (
+                    <div key={kpiKey} style={{ 
+                      backgroundColor: stale ? "rgba(100, 100, 100, 0.2)" : `${color}20`,
+                      borderRadius: "12px",
+                      padding: "16px",
+                      border: stale ? "2px solid #f97316" : `2px solid ${color}`,
+                      opacity: stale ? 0.6 : 1,
+                    }}>
+                      <div style={{ 
+                        display: "flex", 
+                        alignItems: "center", 
+                        justifyContent: "space-between",
+                        marginBottom: "8px",
+                      }}>
+                        <span style={{ fontSize: "14px", fontWeight: "600", color: "#888", textTransform: "uppercase" }}>
+                          {kpiKey === "irpd" ? "IRPD MTD" : "SES MTD"}
+                        </span>
+                        {stale && (
+                          <span style={{ fontSize: "12px", color: "#f97316" }}>Stale</span>
+                        )}
+                      </div>
+                      <div style={{ display: "flex", alignItems: "baseline", gap: "8px" }}>
+                        <span style={{ fontSize: "32px", fontWeight: "bold", color: stale ? "#888" : color }}>
+                          {value !== undefined 
+                            ? (kpiKey === "irpd" ? `${value.toFixed(2)}` : `${value.toFixed(1)}%`)
+                            : "--"}
+                        </span>
+                        <span style={{ fontSize: "16px", color: "#888" }}>
+                          / {kpiKey === "irpd" ? goal.toFixed(2) : `${goal.toFixed(1)}%`}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
 
             {/* FutureSIXT Section - At the very top */}
             {dashboardStatus?.future?.data && (
