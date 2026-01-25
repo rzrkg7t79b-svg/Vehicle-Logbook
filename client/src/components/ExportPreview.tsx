@@ -1,6 +1,6 @@
 import { useState, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Download, Clock, Car, ClipboardCheck, CheckSquare, Workflow, CheckCircle, AlertCircle, Users, Timer } from "lucide-react";
+import { Download, Clock, Car, ClipboardCheck, CheckSquare, Workflow, CheckCircle, AlertCircle, Users, Timer, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { getGermanDateString } from "@/lib/germanTime";
@@ -12,12 +12,26 @@ type VehicleWithComments = Vehicle & { comments: Comment[] };
 
 type DashboardStatus = {
   timedriver: { isDone: boolean; details?: string };
+  upgrade: { isDone: boolean; hasPending: boolean; isOverdue: boolean; pendingVehicle?: any };
   flow: { isDone: boolean; pending: number; total: number };
   todo: { isDone: boolean; completed: number; total: number; postponed?: number };
   quality: { isDone: boolean; passedChecks: number; incompleteTasks: number };
   bodyshop: { isDone: boolean; vehiclesWithoutComment: number; total: number };
   overallProgress: number;
   hasPostponedTasks?: boolean;
+};
+
+type UpgradeVehicle = {
+  id: number;
+  licensePlate: string;
+  model: string;
+  reason: string;
+  isSold: boolean;
+  soldBy: string | null;
+  soldAt: string | null;
+  createdAt: string;
+  createdBy: string | null;
+  date: string;
 };
 
 type QualityCheck = {
@@ -102,6 +116,14 @@ export function ExportPreview({ open, onOpenChange }: ExportPreviewProps) {
 
   const { data: users = [] } = useQuery<User[]>({
     queryKey: ["/api/users"],
+  });
+
+  const { data: upgradeVehicles = [] } = useQuery<UpgradeVehicle[]>({
+    queryKey: ["/api/upgrade-vehicles/date", todayDate],
+    queryFn: async () => {
+      const res = await fetch(`/api/upgrade-vehicles/date/${todayDate}`);
+      return res.json();
+    },
   });
 
   const handleExport = async () => {
@@ -334,6 +356,76 @@ export function ExportPreview({ open, onOpenChange }: ExportPreviewProps) {
                     </>
                   ) : (
                     <p style={{ margin: 0, color: "#f97316" }}>Not calculated yet</p>
+                  )}
+                </div>
+              </div>
+
+              {/* UpgradeSIXT */}
+              <div style={{ 
+                backgroundColor: "#262626", 
+                borderRadius: "16px", 
+                padding: "24px",
+                border: dashboardStatus?.upgrade?.isDone ? "2px solid #22c55e" : dashboardStatus?.upgrade?.isOverdue ? "2px solid #ef4444" : "2px solid #333",
+              }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "16px" }}>
+                  <div style={{ 
+                    width: "48px", 
+                    height: "48px", 
+                    borderRadius: "12px", 
+                    backgroundColor: dashboardStatus?.upgrade?.isDone ? "rgba(34, 197, 94, 0.2)" : dashboardStatus?.upgrade?.isOverdue ? "rgba(239, 68, 68, 0.2)" : "rgba(249, 115, 22, 0.2)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}>
+                    <TrendingUp style={{ width: "24px", height: "24px", color: dashboardStatus?.upgrade?.isDone ? "#22c55e" : dashboardStatus?.upgrade?.isOverdue ? "#ef4444" : "#f97316" }} />
+                  </div>
+                  <div>
+                    <h3 style={{ fontSize: "20px", fontWeight: "bold", color: "white", margin: 0 }}>UpgradeSIXT</h3>
+                    <p style={{ fontSize: "14px", color: "#888", margin: 0 }}>Daily UP Vehicles</p>
+                  </div>
+                  {dashboardStatus?.upgrade?.isDone && (
+                    <CheckCircle style={{ width: "24px", height: "24px", color: "#22c55e", marginLeft: "auto" }} />
+                  )}
+                  {dashboardStatus?.upgrade?.isOverdue && !dashboardStatus?.upgrade?.hasPending && (
+                    <AlertCircle style={{ width: "24px", height: "24px", color: "#ef4444", marginLeft: "auto" }} />
+                  )}
+                </div>
+                <div style={{ fontSize: "14px", color: "#ccc" }}>
+                  {upgradeVehicles.length === 0 ? (
+                    <p style={{ margin: 0, color: dashboardStatus?.upgrade?.isOverdue ? "#ef4444" : "#888" }}>
+                      {dashboardStatus?.upgrade?.isOverdue ? "No UP vehicle defined (overdue)" : "No UP vehicle defined yet"}
+                    </p>
+                  ) : (
+                    <>
+                      {upgradeVehicles.filter(v => v.isSold).length > 0 && (
+                        <p style={{ margin: "0 0 8px 0", color: "#22c55e" }}>
+                          {upgradeVehicles.filter(v => v.isSold).length} sale(s) completed
+                        </p>
+                      )}
+                      {upgradeVehicles.filter(v => !v.isSold).length > 0 && (
+                        <p style={{ margin: "0 0 8px 0", color: "#f97316" }}>
+                          {upgradeVehicles.filter(v => !v.isSold).length} pending sale(s)
+                        </p>
+                      )}
+                      {upgradeVehicles.map(vehicle => (
+                        <div key={vehicle.id} style={{ 
+                          display: "flex", 
+                          alignItems: "center", 
+                          gap: "8px", 
+                          padding: "6px 8px",
+                          backgroundColor: "#333",
+                          borderRadius: "4px",
+                          marginBottom: "4px",
+                        }}>
+                          {vehicle.isSold ? <CheckCircle style={{ width: "14px", height: "14px", color: "#22c55e", flexShrink: 0 }} /> : <AlertCircle style={{ width: "14px", height: "14px", color: "#f97316", flexShrink: 0 }} />}
+                          <span style={{ 
+                            fontSize: "13px", 
+                            color: vehicle.isSold ? "#888" : "#fff",
+                          }}>{vehicle.licensePlate} - {vehicle.model}</span>
+                          {vehicle.isSold && <span style={{ fontSize: "11px", color: "#22c55e", marginLeft: "auto" }}>Sold by {vehicle.soldBy}</span>}
+                        </div>
+                      ))}
+                    </>
                   )}
                 </div>
               </div>

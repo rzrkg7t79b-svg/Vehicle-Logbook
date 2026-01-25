@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { motion } from "framer-motion";
-import { Clock, Car, ClipboardCheck, CheckSquare, AlertTriangle, CheckCircle, Workflow, Share2 } from "lucide-react";
+import { Clock, Car, ClipboardCheck, CheckSquare, AlertTriangle, CheckCircle, Workflow, Share2, TrendingUp } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,7 @@ import type { Todo, DriverTask, FlowTask } from "@shared/schema";
 
 type DashboardStatus = {
   timedriver: { isDone: boolean; details?: string };
+  upgrade: { isDone: boolean; hasPending: boolean; isOverdue: boolean; pendingVehicle?: any };
   flow: { isDone: boolean; pending: number; total: number };
   todo: { isDone: boolean; completed: number; total: number; postponed?: number };
   quality: { isDone: boolean; passedChecks: number; incompleteTasks: number };
@@ -23,6 +24,7 @@ type DashboardStatus = {
 
 const MODULES = [
   { id: "timedriver", name: "TimeDriverSIXT", icon: Clock, path: "/timedriver", targetHour: 8, targetMinute: 0 },
+  { id: "upgrade", name: "UpgradeSIXT", icon: TrendingUp, path: "/upgrade", targetHour: 8, targetMinute: 30 },
   { id: "flow", name: "FlowSIXT", icon: Workflow, path: "/flow", targetHour: null, targetMinute: null },
   { id: "bodyshop", name: "BodyshopSIXT", icon: Car, path: "/bodyshop", targetHour: null, targetMinute: null },
   { id: "todo", name: "ToDoSIXT", icon: CheckSquare, path: "/todo", targetHour: null, targetMinute: null },
@@ -69,6 +71,7 @@ export default function MasterDashboard() {
     if (!dashboardStatus) return false;
     switch (moduleId) {
       case "timedriver": return dashboardStatus.timedriver.isDone;
+      case "upgrade": return dashboardStatus.upgrade.isDone;
       case "flow": return dashboardStatus.flow.isDone;
       case "todo": return dashboardStatus.todo.isDone;
       case "quality": return dashboardStatus.quality.isDone;
@@ -82,6 +85,11 @@ export default function MasterDashboard() {
     switch (moduleId) {
       case "timedriver": 
         return dashboardStatus.timedriver.isDone ? "Calculation saved" : "Due before 8:00";
+      case "upgrade":
+        if (dashboardStatus.upgrade.isDone) return "Sale completed";
+        if (dashboardStatus.upgrade.hasPending) return "Pending sale";
+        if (dashboardStatus.upgrade.isOverdue) return "Overdue!";
+        return "Define UP by 08:30";
       case "flow":
         if (dashboardStatus.flow.total === 0) return "No tasks";
         return dashboardStatus.flow.isDone 
