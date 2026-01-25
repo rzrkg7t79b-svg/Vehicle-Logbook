@@ -12,6 +12,7 @@ import {
   appSettings,
   timedriverCalculations,
   vehicleComments,
+  upgradeVehicles,
   type InsertVehicle,
   type InsertComment,
   type InsertUser,
@@ -21,6 +22,7 @@ import {
   type InsertFlowTask,
   type InsertModuleStatus,
   type InsertTimedriverCalculation,
+  type InsertUpgradeVehicle,
   type Vehicle,
   type Comment,
   type User,
@@ -32,6 +34,7 @@ import {
   type AppSettings,
   type TimedriverCalculation,
   type VehicleDailyComment,
+  type UpgradeVehicle,
 } from "@shared/schema";
 import { eq, desc, asc, lte, and, sql, ne, inArray, gte } from "drizzle-orm";
 
@@ -93,6 +96,14 @@ export interface IStorage {
   getQualityChecksForDate(date: string): Promise<QualityCheck[]>;
   getIncompleteDriverTasks(): Promise<DriverTask[]>;
   getTodosForCounter(): Promise<Todo[]>;
+
+  getUpgradeVehicles(): Promise<UpgradeVehicle[]>;
+  getUpgradeVehiclesForDate(date: string): Promise<UpgradeVehicle[]>;
+  getUpgradeVehicle(id: number): Promise<UpgradeVehicle | undefined>;
+  createUpgradeVehicle(vehicle: InsertUpgradeVehicle): Promise<UpgradeVehicle>;
+  updateUpgradeVehicle(id: number, data: Partial<UpgradeVehicle>): Promise<UpgradeVehicle | undefined>;
+  deleteUpgradeVehicle(id: number): Promise<void>;
+  getPendingUpgradeVehicle(date: string): Promise<UpgradeVehicle | undefined>;
 
   performMidnightReset(): Promise<void>;
 }
@@ -428,6 +439,41 @@ export class DatabaseStorage implements IStorage {
   async getTodosForCounter(): Promise<Todo[]> {
     const allTodos = await this.getTodos();
     return allTodos.filter(todo => todo.assignedTo.includes('Counter'));
+  }
+
+  async getUpgradeVehicles(): Promise<UpgradeVehicle[]> {
+    return db.select().from(upgradeVehicles).orderBy(desc(upgradeVehicles.createdAt));
+  }
+
+  async getUpgradeVehiclesForDate(date: string): Promise<UpgradeVehicle[]> {
+    return db.select().from(upgradeVehicles).where(eq(upgradeVehicles.date, date)).orderBy(desc(upgradeVehicles.createdAt));
+  }
+
+  async getUpgradeVehicle(id: number): Promise<UpgradeVehicle | undefined> {
+    const [vehicle] = await db.select().from(upgradeVehicles).where(eq(upgradeVehicles.id, id));
+    return vehicle;
+  }
+
+  async createUpgradeVehicle(vehicle: InsertUpgradeVehicle): Promise<UpgradeVehicle> {
+    const [newVehicle] = await db.insert(upgradeVehicles).values(vehicle).returning();
+    return newVehicle;
+  }
+
+  async updateUpgradeVehicle(id: number, data: Partial<UpgradeVehicle>): Promise<UpgradeVehicle | undefined> {
+    const [updated] = await db.update(upgradeVehicles).set(data).where(eq(upgradeVehicles.id, id)).returning();
+    return updated;
+  }
+
+  async deleteUpgradeVehicle(id: number): Promise<void> {
+    await db.delete(upgradeVehicles).where(eq(upgradeVehicles.id, id));
+  }
+
+  async getPendingUpgradeVehicle(date: string): Promise<UpgradeVehicle | undefined> {
+    const [vehicle] = await db.select().from(upgradeVehicles)
+      .where(and(eq(upgradeVehicles.date, date), eq(upgradeVehicles.isSold, false)))
+      .orderBy(desc(upgradeVehicles.createdAt))
+      .limit(1);
+    return vehicle;
   }
 
   async performMidnightReset(): Promise<void> {

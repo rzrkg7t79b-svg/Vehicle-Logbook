@@ -1,6 +1,6 @@
 
 import { z } from 'zod';
-import { insertVehicleSchema, insertCommentSchema, insertUserSchema, insertTodoSchema, insertQualityCheckSchema, insertFlowTaskSchema, flowTaskTypes, vehicles, comments, users, todos, qualityChecks, driverTasks, flowTasks, moduleStatus, appSettings, timedriverCalculations } from './schema';
+import { insertVehicleSchema, insertCommentSchema, insertUserSchema, insertTodoSchema, insertQualityCheckSchema, insertFlowTaskSchema, insertUpgradeVehicleSchema, flowTaskTypes, vehicles, comments, users, todos, qualityChecks, driverTasks, flowTasks, moduleStatus, appSettings, timedriverCalculations, upgradeVehicles } from './schema';
 
 export const errorSchemas = {
   validation: z.object({
@@ -394,6 +394,66 @@ export const api = {
       },
     },
   },
+  upgradeVehicles: {
+    list: {
+      method: 'GET' as const,
+      path: '/api/upgrade-vehicles',
+      responses: {
+        200: z.array(z.custom<typeof upgradeVehicles.$inferSelect>()),
+      },
+    },
+    listForDate: {
+      method: 'GET' as const,
+      path: '/api/upgrade-vehicles/date/:date',
+      responses: {
+        200: z.array(z.custom<typeof upgradeVehicles.$inferSelect>()),
+      },
+    },
+    get: {
+      method: 'GET' as const,
+      path: '/api/upgrade-vehicles/:id',
+      responses: {
+        200: z.custom<typeof upgradeVehicles.$inferSelect>(),
+        404: errorSchemas.notFound,
+      },
+    },
+    create: {
+      method: 'POST' as const,
+      path: '/api/upgrade-vehicles',
+      input: insertUpgradeVehicleSchema,
+      responses: {
+        201: z.custom<typeof upgradeVehicles.$inferSelect>(),
+        400: errorSchemas.validation,
+      },
+    },
+    update: {
+      method: 'PATCH' as const,
+      path: '/api/upgrade-vehicles/:id',
+      input: z.object({
+        isSold: z.boolean().optional(),
+        soldBy: z.string().optional(),
+      }),
+      responses: {
+        200: z.custom<typeof upgradeVehicles.$inferSelect>(),
+        404: errorSchemas.notFound,
+      },
+    },
+    delete: {
+      method: 'DELETE' as const,
+      path: '/api/upgrade-vehicles/:id',
+      responses: {
+        204: z.void(),
+        404: errorSchemas.notFound,
+      },
+    },
+    pending: {
+      method: 'GET' as const,
+      path: '/api/upgrade-vehicles/pending/:date',
+      responses: {
+        200: z.custom<typeof upgradeVehicles.$inferSelect>().nullable(),
+      },
+    },
+  },
   dashboard: {
     status: {
       method: 'GET' as const,
@@ -404,6 +464,7 @@ export const api = {
       responses: {
         200: z.object({
           timedriver: z.object({ isDone: z.boolean(), details: z.string().optional() }),
+          upgrade: z.object({ isDone: z.boolean(), hasPending: z.boolean(), isOverdue: z.boolean(), pendingVehicle: z.any().optional() }),
           todo: z.object({ isDone: z.boolean(), completed: z.number(), total: z.number() }),
           quality: z.object({ isDone: z.boolean(), passedChecks: z.number(), incompleteTasks: z.number() }),
           bodyshop: z.object({ isDone: z.boolean(), vehiclesWithoutComment: z.number(), total: z.number() }),

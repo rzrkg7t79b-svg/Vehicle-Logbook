@@ -528,6 +528,19 @@ export async function registerRoutes(
     const timedriverModuleStatus = timedriverStatus.find(s => s.moduleName === "timedriver");
     const timedriverIsDone = timedriverModuleStatus?.isDone || timedriverCalc !== undefined;
     
+    // Upgrade status - check if there's a pending UP vehicle for today
+    const pendingUpgrade = await storage.getPendingUpgradeVehicle(date);
+    const todayUpgrades = await storage.getUpgradeVehiclesForDate(date);
+    // Check if it's past 08:30 German time and no UP vehicle defined
+    const now = new Date();
+    const berlinTime = new Date(now.toLocaleString("en-US", { timeZone: "Europe/Berlin" }));
+    const deadline = new Date(berlinTime);
+    deadline.setHours(8, 30, 0, 0);
+    const isOverdue = berlinTime > deadline && todayUpgrades.length === 0;
+    // Upgrade is done if there's at least one sold vehicle today, or if a vehicle is defined (pending sale is still progress)
+    const hasSoldToday = todayUpgrades.some(v => v.isSold);
+    const upgradeIsDone = hasSoldToday;
+    
     // Todo status - filter out postponed todos that are for future dates
     const allTodos = await storage.getTodos();
     const todaysTodos = allTodos.filter(t => !t.postponedToDate || t.postponedToDate <= date);
@@ -557,18 +570,20 @@ export async function registerRoutes(
     const pendingFlowTasks = allFlowTasks.filter(t => !t.completed);
     const flowIsDone = allFlowTasks.length === 0 || pendingFlowTasks.length === 0;
     
-    // Calculate overall progress (5 modules, each worth 20%)
+    // Calculate overall progress (6 modules, each worth ~16.67%)
     let completedModules = 0;
     if (timedriverIsDone) completedModules++;
+    if (upgradeIsDone) completedModules++;
     if (flowIsDone) completedModules++;
     if (todoIsDone) completedModules++;
     if (qualityIsDone) completedModules++;
     if (bodyshopIsDone) completedModules++;
     
-    const overallProgress = Math.round((completedModules / 5) * 100);
+    const overallProgress = Math.round((completedModules / 6) * 100);
     
     res.json({
       timedriver: { isDone: timedriverIsDone, details: timedriverCalc ? "Calculated" : undefined },
+      upgrade: { isDone: upgradeIsDone, hasPending: !!pendingUpgrade, isOverdue, pendingVehicle: pendingUpgrade },
       flow: { isDone: flowIsDone, pending: pendingFlowTasks.length, total: allFlowTasks.length },
       todo: { isDone: todoIsDone, completed, total: todaysTodos.length, postponed: totalPostponed },
       quality: { isDone: qualityIsDone, passedChecks, incompleteTasks: incompleteTasks.length },
@@ -714,6 +729,8 @@ export async function registerRoutes(
     }
   });
 
+  registerUpgradeRoutes(app);
+  
   await seedDatabase();
   await storage.seedBranchManager();
 
@@ -767,4 +784,84 @@ async function seedDatabase() {
         });
         await storage.createComment({ vehicleId: v3.id, content: "Overdue for pickup." });
     }
+}
+
+// Upgrade vehicle routes
+export function registerUpgradeRoutes(app: Express) {
+  app.get(api.upgradeVehicles.list.path, async (req, res) => {
+    const vehicles = await storage.getUpgradeVehicles();
+    res.json(vehicles);
+  });
+
+  app.get(api.upgradeVehicles.listForDate.path, async (req, res) => {
+    const date = req.params.date;
+    const vehicles = await storage.getUpgradeVehiclesForDate(date);
+    res.json(vehicles);
+  });
+
+  app.get(api.upgradeVehicles.pending.path, async (req, res) => {
+    const date = req.params.date;
+    const vehicle = await storage.getPendingUpgradeVehicle(date);
+    res.json(vehicle || null);
+  });
+
+  app.get(api.upgradeVehicles.get.path, async (req, res) => {
+    const id = Number(req.params.id);
+    const vehicle = await storage.getUpgradeVehicle(id);
+    if (!vehicle) {
+      return res.status(404).json({ message: "Upgrade vehicle not found" });
+    }
+    res.json(vehicle);
+  });
+
+  app.post(api.upgradeVehicles.create.path, async (req, res) => {
+    try {
+      const input = api.upgradeVehicles.create.input.parse(req.body);
+      const vehicle = await storage.createUpgradeVehicle(input);
+      broadcastUpdate("upgrade-vehicles");
+      broadcastUpdate("module-status");
+      res.status(201).json(vehicle);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ message: err.errors[0].message });
+      }
+      throw err;
+    }
+  });
+
+  app.patch(api.upgradeVehicles.update.path, async (req, res) => {
+    const id = Number(req.params.id);
+    const existing = await storage.getUpgradeVehicle(id);
+    if (!existing) {
+      return res.status(404).json({ message: "Upgrade vehicle not found" });
+    }
+    try {
+      const input = api.upgradeVehicles.update.input.parse(req.body);
+      const updateData: any = { ...input };
+      if (input.isSold) {
+        updateData.soldAt = new Date();
+      }
+      const updated = await storage.updateUpgradeVehicle(id, updateData);
+      broadcastUpdate("upgrade-vehicles");
+      broadcastUpdate("module-status");
+      res.json(updated);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ message: err.errors[0].message });
+      }
+      throw err;
+    }
+  });
+
+  app.delete(api.upgradeVehicles.delete.path, async (req, res) => {
+    const id = Number(req.params.id);
+    const existing = await storage.getUpgradeVehicle(id);
+    if (!existing) {
+      return res.status(404).json({ message: "Upgrade vehicle not found" });
+    }
+    await storage.deleteUpgradeVehicle(id);
+    broadcastUpdate("upgrade-vehicles");
+    broadcastUpdate("module-status");
+    res.status(204).send();
+  });
 }
