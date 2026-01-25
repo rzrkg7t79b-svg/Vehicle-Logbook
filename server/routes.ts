@@ -570,7 +570,15 @@ export async function registerRoutes(
     const pendingFlowTasks = allFlowTasks.filter(t => !t.completed);
     const flowIsDone = allFlowTasks.length === 0 || pendingFlowTasks.length === 0;
     
-    // Calculate overall progress (6 modules, each worth ~16.67%)
+    // Future status - check if planning is saved AND if we're past 15:00 German time
+    const futurePlanning = await storage.getFuturePlanning(date);
+    const futureModuleStatus = timedriverStatus.find(s => s.moduleName === "future");
+    const futureIsDone = futureModuleStatus?.isDone || futurePlanning !== undefined;
+    // Check if it's past 15:00 German time (feature is locked before 15:00)
+    const berlinHour = berlinTime.getHours();
+    const futureIsLocked = berlinHour < 15;
+    
+    // Calculate overall progress (7 modules now, each worth ~14.3%)
     let completedModules = 0;
     if (timedriverIsDone) completedModules++;
     if (upgradeIsDone) completedModules++;
@@ -578,8 +586,9 @@ export async function registerRoutes(
     if (todoIsDone) completedModules++;
     if (qualityIsDone) completedModules++;
     if (bodyshopIsDone) completedModules++;
+    if (futureIsDone) completedModules++;
     
-    const overallProgress = Math.round((completedModules / 6) * 100);
+    const overallProgress = Math.round((completedModules / 7) * 100);
     
     res.json({
       timedriver: { isDone: timedriverIsDone, details: timedriverCalc ? "Calculated" : undefined },
@@ -588,6 +597,7 @@ export async function registerRoutes(
       todo: { isDone: todoIsDone, completed, total: todaysTodos.length, postponed: totalPostponed },
       quality: { isDone: qualityIsDone, passedChecks, incompleteTasks: incompleteTasks.length },
       bodyshop: { isDone: bodyshopIsDone, vehiclesWithoutComment: vehiclesWithoutComment.length, total: activeVehicles.length },
+      future: { isDone: futureIsDone, isLocked: futureIsLocked, data: futurePlanning },
       overallProgress,
       hasPostponedTasks: totalPostponed > 0,
     });
@@ -730,6 +740,7 @@ export async function registerRoutes(
   });
 
   registerUpgradeRoutes(app);
+  registerFuturePlanningRoutes(app);
   
   await seedDatabase();
   await storage.seedBranchManager();
@@ -861,6 +872,57 @@ export function registerUpgradeRoutes(app: Express) {
     }
     await storage.deleteUpgradeVehicle(id);
     broadcastUpdate("upgrade-vehicles");
+    broadcastUpdate("module-status");
+    res.status(204).send();
+  });
+}
+
+export function registerFuturePlanningRoutes(app: Express) {
+  app.get(api.futurePlanning.get.path, async (req, res) => {
+    const date = String(req.params.date);
+    const planning = await storage.getFuturePlanning(date);
+    res.json(planning || null);
+  });
+
+  app.post(api.futurePlanning.save.path, async (req, res) => {
+    try {
+      const input = api.futurePlanning.save.input.parse(req.body);
+      
+      // Validate that Car + Van + TAS = Total
+      const sum = input.reservationsCar + input.reservationsVan + input.reservationsTas;
+      if (sum !== input.reservationsTotal) {
+        return res.status(400).json({ 
+          message: "Car + Van + TAS must equal Total reservations",
+          field: "reservationsTotal"
+        });
+      }
+      
+      const planning = await storage.saveFuturePlanning(input);
+      
+      // Mark module as done
+      const userPin = req.headers['x-admin-pin'] as string;
+      const user = userPin ? await storage.getUserByPin(userPin) : null;
+      await storage.setModuleStatus("future", input.date, true, user?.initials);
+      
+      broadcastUpdate("future-planning");
+      broadcastUpdate("module-status");
+      res.status(201).json(planning);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ message: err.errors[0].message });
+      }
+      throw err;
+    }
+  });
+
+  app.delete(api.futurePlanning.delete.path, async (req, res) => {
+    const date = String(req.params.date);
+    await storage.deleteFuturePlanning(date);
+    
+    // Also reset the module status
+    await storage.setModuleStatus("future", date, false);
+    
+    broadcastUpdate("future-planning");
     broadcastUpdate("module-status");
     res.status(204).send();
   });

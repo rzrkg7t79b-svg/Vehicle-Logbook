@@ -146,6 +146,19 @@ export const upgradeVehicles = pgTable("upgrade_vehicles", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+export const futurePlanning = pgTable("future_planning", {
+  id: serial("id").primaryKey(),
+  date: text("date").notNull().unique(),
+  reservationsTotal: integer("reservations_total").notNull(),
+  reservationsCar: integer("reservations_car").notNull(),
+  reservationsVan: integer("reservations_van").notNull(),
+  reservationsTas: integer("reservations_tas").notNull(),
+  deliveriesTomorrow: integer("deliveries_tomorrow").notNull(),
+  collectionsOpen: integer("collections_open").notNull(),
+  savedBy: text("saved_by"),
+  savedAt: timestamp("saved_at").defaultNow(),
+});
+
 export const insertUserSchema = createInsertSchema(users)
   .omit({ id: true, createdAt: true })
   .extend({
@@ -240,6 +253,19 @@ export const insertUpgradeVehicleSchema = createInsertSchema(upgradeVehicles)
     createdBy: z.string().optional(),
   });
 
+export const insertFuturePlanningSchema = createInsertSchema(futurePlanning)
+  .omit({ id: true, savedAt: true })
+  .extend({
+    date: z.string(),
+    reservationsTotal: z.number().min(0).max(99),
+    reservationsCar: z.number().min(0).max(99),
+    reservationsVan: z.number().min(0).max(99),
+    reservationsTas: z.number().min(0).max(99),
+    deliveriesTomorrow: z.number().min(0).max(99),
+    collectionsOpen: z.number().min(0).max(99),
+    savedBy: z.string().optional(),
+  });
+
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type Vehicle = typeof vehicles.$inferSelect;
@@ -262,6 +288,8 @@ export type VehicleDailyComment = typeof vehicleComments.$inferSelect;
 export type InsertVehicleDailyComment = z.infer<typeof insertVehicleDailyCommentSchema>;
 export type UpgradeVehicle = typeof upgradeVehicles.$inferSelect;
 export type InsertUpgradeVehicle = z.infer<typeof insertUpgradeVehicleSchema>;
+export type FuturePlanning = typeof futurePlanning.$inferSelect;
+export type InsertFuturePlanning = z.infer<typeof insertFuturePlanningSchema>;
 
 export type AppSettings = typeof appSettings.$inferSelect;
 export type InsertAppSettings = z.infer<typeof insertAppSettingsSchema>;

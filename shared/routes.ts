@@ -1,6 +1,6 @@
 
 import { z } from 'zod';
-import { insertVehicleSchema, insertCommentSchema, insertUserSchema, insertTodoSchema, insertQualityCheckSchema, insertFlowTaskSchema, insertUpgradeVehicleSchema, flowTaskTypes, vehicles, comments, users, todos, qualityChecks, driverTasks, flowTasks, moduleStatus, appSettings, timedriverCalculations, upgradeVehicles } from './schema';
+import { insertVehicleSchema, insertCommentSchema, insertUserSchema, insertTodoSchema, insertQualityCheckSchema, insertFlowTaskSchema, insertUpgradeVehicleSchema, insertFuturePlanningSchema, flowTaskTypes, vehicles, comments, users, todos, qualityChecks, driverTasks, flowTasks, moduleStatus, appSettings, timedriverCalculations, upgradeVehicles, futurePlanning } from './schema';
 
 export const errorSchemas = {
   validation: z.object({
@@ -468,8 +468,34 @@ export const api = {
           todo: z.object({ isDone: z.boolean(), completed: z.number(), total: z.number() }),
           quality: z.object({ isDone: z.boolean(), passedChecks: z.number(), incompleteTasks: z.number() }),
           bodyshop: z.object({ isDone: z.boolean(), vehiclesWithoutComment: z.number(), total: z.number() }),
+          future: z.object({ isDone: z.boolean(), isLocked: z.boolean() }).optional(),
           overallProgress: z.number(),
         }),
+      },
+    },
+  },
+  futurePlanning: {
+    get: {
+      method: 'GET' as const,
+      path: '/api/future-planning/:date',
+      responses: {
+        200: z.custom<typeof futurePlanning.$inferSelect>().nullable(),
+      },
+    },
+    save: {
+      method: 'POST' as const,
+      path: '/api/future-planning',
+      input: insertFuturePlanningSchema,
+      responses: {
+        201: z.custom<typeof futurePlanning.$inferSelect>(),
+        400: errorSchemas.validation,
+      },
+    },
+    delete: {
+      method: 'DELETE' as const,
+      path: '/api/future-planning/:date',
+      responses: {
+        204: z.void(),
       },
     },
   },

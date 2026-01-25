@@ -39,3 +39,13 @@ export function isOverdue(targetHour: number, targetMinute: number): boolean {
   
   return germanNow >= target;
 }
+
+export function isAfterGermanTime(hour: number, minute: number = 0): boolean {
+  const now = new Date();
+  const germanNow = new Date(now.toLocaleString("en-US", { timeZone: "Europe/Berlin" }));
+  
+  const target = new Date(germanNow);
+  target.setHours(hour, minute, 0, 0);
+  
+  return germanNow >= target;
+}

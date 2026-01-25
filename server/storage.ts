@@ -13,6 +13,7 @@ import {
   timedriverCalculations,
   vehicleComments,
   upgradeVehicles,
+  futurePlanning,
   type InsertVehicle,
   type InsertComment,
   type InsertUser,
@@ -23,6 +24,7 @@ import {
   type InsertModuleStatus,
   type InsertTimedriverCalculation,
   type InsertUpgradeVehicle,
+  type InsertFuturePlanning,
   type Vehicle,
   type Comment,
   type User,
@@ -35,6 +37,7 @@ import {
   type TimedriverCalculation,
   type VehicleDailyComment,
   type UpgradeVehicle,
+  type FuturePlanning,
 } from "@shared/schema";
 import { eq, desc, asc, lte, and, sql, ne, inArray, gte } from "drizzle-orm";
 
@@ -105,6 +108,10 @@ export interface IStorage {
   deleteUpgradeVehicle(id: number): Promise<void>;
   getPendingUpgradeVehicle(date: string): Promise<UpgradeVehicle | undefined>;
   getPendingUpgradeVehicles(date: string): Promise<UpgradeVehicle[]>;
+
+  getFuturePlanning(date: string): Promise<FuturePlanning | undefined>;
+  saveFuturePlanning(data: InsertFuturePlanning): Promise<FuturePlanning>;
+  deleteFuturePlanning(date: string): Promise<void>;
 
   performMidnightReset(): Promise<void>;
 }
@@ -483,6 +490,28 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(upgradeVehicles.createdAt));
   }
 
+  async getFuturePlanning(date: string): Promise<FuturePlanning | undefined> {
+    const [planning] = await db.select().from(futurePlanning).where(eq(futurePlanning.date, date));
+    return planning;
+  }
+
+  async saveFuturePlanning(data: InsertFuturePlanning): Promise<FuturePlanning> {
+    const existing = await this.getFuturePlanning(data.date);
+    if (existing) {
+      const [updated] = await db.update(futurePlanning)
+        .set({ ...data, savedAt: new Date() })
+        .where(eq(futurePlanning.date, data.date))
+        .returning();
+      return updated;
+    }
+    const [newPlanning] = await db.insert(futurePlanning).values(data).returning();
+    return newPlanning;
+  }
+
+  async deleteFuturePlanning(date: string): Promise<void> {
+    await db.delete(futurePlanning).where(eq(futurePlanning.date, date));
+  }
+
   async performMidnightReset(): Promise<void> {
     await db.update(todos).set({
       completed: false,
@@ -496,6 +525,10 @@ export class DatabaseStorage implements IStorage {
     await db.delete(driverTasks);
 
     await db.delete(timedriverCalculations);
+    
+    await db.delete(futurePlanning);
+    
+    await db.delete(upgradeVehicles);
   }
 }
 

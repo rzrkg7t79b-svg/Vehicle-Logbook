@@ -1,0 +1,29 @@
+Extend the existing app by adding a new feature called “FutureSIXT”. This feature is part of the MasterSIXT dashboard and must be placed at the very bottom of the dashboard. The FutureSIXT feature is only available each day after 15:00 (3:00 PM) German local time. Before 15:00, the feature must be locked and visually indicated as locked (for example with a lock icon 🔒) because the data is not yet considered up to date.
+
+FutureSIXT must reset automatically every day at midnight (00:00). The same midnight reset logic must also be added to the existing UpgradeSIXT feature.
+
+FutureSIXT is used to enter and store the planning numbers for tomorrow. The following input fields must be provided and saved:
+
+Overall reservations:
+	•	Reservations TOTAL: a two-digit number input (number box, random numbers allowed)
+
+This total is split into:
+	•	Reservations Car (with a car icon): two-digit number input
+	•	Reservations Van (with a van icon): two-digit number input
+	•	Reservations TAS (with an airplane icon): two-digit number input
+
+Delivery / Collection section:
+	•	Deliveries tomorrow: two-digit number input
+	•	Collections open: two-digit number input
+
+All number inputs allow any two-digit numbers.
+
+The feature must validate the input before saving: the sum of Car + Van + TAS must be exactly equal to TOTAL. If this condition is not met, saving is not allowed and the related number input boxes must be highlighted with a red border to indicate an error.
+
+If the values are valid and successfully saved, the FutureSIXT task must be marked as “done” on the MasterSIXT main dashboard. After saving, all number input boxes become inactive (read-only) to prevent accidental changes.
+
+There must be a “New” button that allows resetting the stored values and starting a new input process for FutureSIXT.
+
+In the export view, the FutureSIXT section must appear at the very top, above all other tiles and sections, to provide a clear overall overview for tomorrow during handover or reporting. The export must show the saved values exactly as entered.
+
+This new feature must be integrated into the existing MasterSIXT logic (dashboard status, done state, daily reset, export) without breaking any existing functionality.

@@ -1,12 +1,12 @@
 import { useState, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Download, Clock, Car, ClipboardCheck, CheckSquare, Workflow, CheckCircle, AlertCircle, Users, Timer, TrendingUp } from "lucide-react";
+import { Download, Clock, Car, ClipboardCheck, CheckSquare, Workflow, CheckCircle, AlertCircle, Users, Timer, TrendingUp, Truck, Plane } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { getGermanDateString } from "@/lib/germanTime";
 import { addDays } from "date-fns";
 import { toJpeg } from "html-to-image";
-import type { Todo, FlowTask, Vehicle, TimedriverCalculation, User, Comment } from "@shared/schema";
+import type { Todo, FlowTask, Vehicle, TimedriverCalculation, User, Comment, FuturePlanning } from "@shared/schema";
 
 type VehicleWithComments = Vehicle & { comments: Comment[] };
 
@@ -17,6 +17,7 @@ type DashboardStatus = {
   todo: { isDone: boolean; completed: number; total: number; postponed?: number };
   quality: { isDone: boolean; passedChecks: number; incompleteTasks: number };
   bodyshop: { isDone: boolean; vehiclesWithoutComment: number; total: number };
+  future: { isDone: boolean; isLocked: boolean; data?: FuturePlanning };
   overallProgress: number;
   hasPostponedTasks?: boolean;
 };
@@ -283,6 +284,75 @@ export function ExportPreview({ open, onOpenChange }: ExportPreviewProps) {
                 <span style={{ fontSize: "20px", color: "#888" }}>Daily<br/>Progress</span>
               </div>
             </div>
+
+            {/* FutureSIXT Section - At the very top */}
+            {dashboardStatus?.future?.data && (
+              <div style={{ 
+                backgroundColor: "#262626", 
+                borderRadius: "16px", 
+                padding: "24px",
+                marginBottom: "20px",
+                border: "2px solid #22c55e",
+              }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "16px" }}>
+                  <div style={{ 
+                    width: "48px", 
+                    height: "48px", 
+                    borderRadius: "12px", 
+                    backgroundColor: "rgba(34, 197, 94, 0.2)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}>
+                    <Clock style={{ width: "24px", height: "24px", color: "#22c55e" }} />
+                  </div>
+                  <div>
+                    <h3 style={{ fontSize: "24px", fontWeight: "bold", color: "white", margin: 0 }}>
+                      Future<span style={{ color: "#f97316" }}>SIXT</span> - Tomorrow's Planning
+                    </h3>
+                  </div>
+                  <CheckCircle style={{ width: "24px", height: "24px", color: "#22c55e", marginLeft: "auto" }} />
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: "16px" }}>
+                  <div style={{ textAlign: "center", padding: "16px", backgroundColor: "#333", borderRadius: "12px" }}>
+                    <p style={{ margin: 0, color: "#888", fontSize: "12px", marginBottom: "4px" }}>TOTAL</p>
+                    <p style={{ margin: 0, color: "#fff", fontSize: "32px", fontWeight: "bold" }}>{dashboardStatus.future.data.reservationsTotal}</p>
+                    <p style={{ margin: 0, color: "#888", fontSize: "10px" }}>Reservations</p>
+                  </div>
+                  <div style={{ textAlign: "center", padding: "16px", backgroundColor: "#333", borderRadius: "12px" }}>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "4px", marginBottom: "4px" }}>
+                      <Car style={{ width: "14px", height: "14px", color: "#888" }} />
+                      <p style={{ margin: 0, color: "#888", fontSize: "12px" }}>Car</p>
+                    </div>
+                    <p style={{ margin: 0, color: "#fff", fontSize: "32px", fontWeight: "bold" }}>{dashboardStatus.future.data.reservationsCar}</p>
+                  </div>
+                  <div style={{ textAlign: "center", padding: "16px", backgroundColor: "#333", borderRadius: "12px" }}>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "4px", marginBottom: "4px" }}>
+                      <Truck style={{ width: "14px", height: "14px", color: "#888" }} />
+                      <p style={{ margin: 0, color: "#888", fontSize: "12px" }}>Van</p>
+                    </div>
+                    <p style={{ margin: 0, color: "#fff", fontSize: "32px", fontWeight: "bold" }}>{dashboardStatus.future.data.reservationsVan}</p>
+                  </div>
+                  <div style={{ textAlign: "center", padding: "16px", backgroundColor: "#333", borderRadius: "12px" }}>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "4px", marginBottom: "4px" }}>
+                      <Plane style={{ width: "14px", height: "14px", color: "#888" }} />
+                      <p style={{ margin: 0, color: "#888", fontSize: "12px" }}>TAS</p>
+                    </div>
+                    <p style={{ margin: 0, color: "#fff", fontSize: "32px", fontWeight: "bold" }}>{dashboardStatus.future.data.reservationsTas}</p>
+                  </div>
+                  <div style={{ textAlign: "center", padding: "16px", backgroundColor: "#333", borderRadius: "12px" }}>
+                    <p style={{ margin: 0, color: "#888", fontSize: "12px", marginBottom: "4px" }}>Deliveries</p>
+                    <p style={{ margin: 0, color: "#f97316", fontSize: "32px", fontWeight: "bold" }}>{dashboardStatus.future.data.deliveriesTomorrow}</p>
+                    <p style={{ margin: 0, color: "#888", fontSize: "10px" }}>Tomorrow</p>
+                  </div>
+                  <div style={{ textAlign: "center", padding: "16px", backgroundColor: "#333", borderRadius: "12px" }}>
+                    <p style={{ margin: 0, color: "#888", fontSize: "12px", marginBottom: "4px" }}>Collections</p>
+                    <p style={{ margin: 0, color: "#f97316", fontSize: "32px", fontWeight: "bold" }}>{dashboardStatus.future.data.collectionsOpen}</p>
+                    <p style={{ margin: 0, color: "#888", fontSize: "10px" }}>Open</p>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Module Cards Grid */}
             <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "20px" }}>

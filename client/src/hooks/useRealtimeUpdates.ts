@@ -10,7 +10,8 @@ type UpdateType =
   | "module-status"
   | "users"
   | "timedriver-checks"
-  | "upgrade-vehicles";
+  | "upgrade-vehicles"
+  | "future-planning";
 
 const resourceToQueryKeys: Record<UpdateType, string[]> = {
   "flow-tasks": ["/api/flow-tasks"],
@@ -22,6 +23,7 @@ const resourceToQueryKeys: Record<UpdateType, string[]> = {
   "users": ["/api/users"],
   "timedriver-checks": ["/api/timedriver-checks"],
   "upgrade-vehicles": ["/api/upgrade-vehicles", "/api/upgrade-vehicles/date", "/api/dashboard/status"],
+  "future-planning": ["/api/future-planning", "/api/dashboard/status"],
 };
 
 export function useRealtimeUpdates() {
