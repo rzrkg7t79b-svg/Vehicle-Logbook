@@ -62,7 +62,7 @@ export default function UpgradeSIXT() {
   }, []);
   
   const createMutation = useMutation({
-    mutationFn: async (data: { licensePlate: string; model: string; reason: string; createdBy?: string }) => {
+    mutationFn: async (data: { licensePlate: string; model: string; reason: string; date: string; createdBy?: string }) => {
       return await apiRequest("POST", "/api/upgrade-vehicles", data, adminHeaders);
     },
     onSuccess: () => {
@@ -109,6 +109,7 @@ export default function UpgradeSIXT() {
       licensePlate,
       model: model.trim(),
       reason: reason.trim(),
+      date: todayDate,
       createdBy: user?.initials,
     });
   };
