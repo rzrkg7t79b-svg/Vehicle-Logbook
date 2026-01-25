@@ -111,24 +111,30 @@ export function ExportPreview({ open, onOpenChange }: ExportPreviewProps) {
     try {
       const element = exportRef.current;
       
-      const originalTransform = element.style.transform;
-      element.style.transform = "none";
+      const clone = element.cloneNode(true) as HTMLElement;
+      clone.style.transform = "none";
+      clone.style.position = "absolute";
+      clone.style.left = "-9999px";
+      clone.style.top = "0";
+      clone.style.width = "1200px";
+      document.body.appendChild(clone);
       
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise(resolve => setTimeout(resolve, 150));
       
-      const contentWidth = element.offsetWidth;
-      const contentHeight = element.scrollHeight;
+      const contentWidth = 1200;
+      const contentHeight = clone.scrollHeight;
       
-      const sourceCanvas = await html2canvas(element, {
+      const sourceCanvas = await html2canvas(clone, {
         scale: 2,
         backgroundColor: "#1a1a1a",
         width: contentWidth,
         height: contentHeight,
         windowWidth: contentWidth,
         windowHeight: contentHeight,
+        useCORS: true,
       });
       
-      element.style.transform = originalTransform;
+      document.body.removeChild(clone);
       
       const srcWidth = sourceCanvas.width;
       const srcHeight = sourceCanvas.height;
