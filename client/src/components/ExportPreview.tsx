@@ -111,62 +111,23 @@ export function ExportPreview({ open, onOpenChange }: ExportPreviewProps) {
     try {
       const element = exportRef.current;
       
-      const clone = element.cloneNode(true) as HTMLElement;
-      clone.style.transform = "none";
-      clone.style.position = "absolute";
-      clone.style.left = "-9999px";
-      clone.style.top = "0";
-      clone.style.width = "1200px";
-      document.body.appendChild(clone);
-      
-      await new Promise(resolve => setTimeout(resolve, 150));
-      
-      const contentWidth = 1200;
-      const contentHeight = clone.scrollHeight;
-      
-      const sourceCanvas = await html2canvas(clone, {
-        scale: 2,
+      const sourceCanvas = await html2canvas(element, {
+        scale: 4,
         backgroundColor: "#1a1a1a",
-        width: contentWidth,
-        height: contentHeight,
-        windowWidth: contentWidth,
-        windowHeight: contentHeight,
+        width: 1200,
+        height: element.scrollHeight,
+        windowWidth: 1200,
+        windowHeight: element.scrollHeight,
         useCORS: true,
+        onclone: (clonedDoc, clonedElement) => {
+          clonedElement.style.transform = "none";
+          clonedElement.style.transformOrigin = "top left";
+        },
       });
-      
-      document.body.removeChild(clone);
-      
-      const srcWidth = sourceCanvas.width;
-      const srcHeight = sourceCanvas.height;
-      const contentAspect = srcWidth / srcHeight;
-      const hdAspect = 1920 / 1080;
-      
-      let finalWidth: number;
-      let finalHeight: number;
-      
-      if (contentAspect > hdAspect) {
-        finalWidth = 1920;
-        finalHeight = Math.round(1920 / contentAspect);
-      } else {
-        finalHeight = 1080;
-        finalWidth = Math.round(1080 * contentAspect);
-      }
-      
-      const finalCanvas = document.createElement("canvas");
-      finalCanvas.width = finalWidth;
-      finalCanvas.height = finalHeight;
-      const ctx = finalCanvas.getContext("2d");
-      if (ctx) {
-        ctx.fillStyle = "#1a1a1a";
-        ctx.fillRect(0, 0, finalWidth, finalHeight);
-        ctx.imageSmoothingEnabled = true;
-        ctx.imageSmoothingQuality = "high";
-        ctx.drawImage(sourceCanvas, 0, 0, srcWidth, srcHeight, 0, 0, finalWidth, finalHeight);
-      }
       
       const fileName = `MasterSIXT-Export-${todayDate}.jpg`;
       
-      finalCanvas.toBlob(async (blob) => {
+      sourceCanvas.toBlob(async (blob) => {
         if (!blob) return;
         
         const file = new File([blob], fileName, { type: "image/jpeg" });
@@ -195,7 +156,7 @@ export function ExportPreview({ open, onOpenChange }: ExportPreviewProps) {
           link.click();
           URL.revokeObjectURL(url);
         }
-      }, "image/jpeg", 0.98);
+      }, "image/jpeg", 1.0);
     } catch (error) {
       console.error("Export failed:", error);
     } finally {
