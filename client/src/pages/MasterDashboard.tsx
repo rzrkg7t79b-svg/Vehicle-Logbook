@@ -499,6 +499,15 @@ export default function MasterDashboard() {
           Export for Teams
         </Button>
 
+        <footer className="mt-8 pt-8 pb-4 border-t border-white/10 text-center space-y-1">
+          <p className="text-xs text-muted-foreground">
+            Version v2.0.5
+          </p>
+          <p className="text-xs text-muted-foreground">
+            &copy; 2026 by Nathanael Prem
+          </p>
+        </footer>
+
         {isDriver && pendingDriverTasks.length > 0 && (
           <Card className="p-4 border-orange-500/50 bg-orange-500/10">
             <div className="flex items-center gap-3">

@@ -2,7 +2,7 @@
 
 ## Overview
 
-A comprehensive mobile-first iOS web app for SIXT workshop management with seven integrated modules:
+A comprehensive mobile-first iOS web app for SIXT workshop management with seven integrated modules (v2.0.5):
 
 - **MasterSIXT** (Main Dashboard): Global progress bar, daily 16:30 deadline countdown, module status overview
 - **TimeDriverSIXT**: Labor planning budget tool with rentals input, driver selection, and fair working time distribution
