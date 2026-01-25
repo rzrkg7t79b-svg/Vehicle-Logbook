@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { getGermanDateString } from "@/lib/germanTime";
 import { addDays } from "date-fns";
-import html2canvas from "html2canvas";
+import { toJpeg } from "html-to-image";
 import type { Todo, FlowTask, Vehicle, TimedriverCalculation, User, Comment } from "@shared/schema";
 
 type VehicleWithComments = Vehicle & { comments: Comment[] };
@@ -115,17 +115,18 @@ export function ExportPreview({ open, onOpenChange }: ExportPreviewProps) {
       const originalTransform = element.style.transform;
       element.style.transform = "none";
       
-      // Wait for reflow
-      await new Promise(resolve => setTimeout(resolve, 50));
+      // Force browser reflow
+      element.offsetHeight;
+      await new Promise(resolve => setTimeout(resolve, 100));
       
-      // Capture exactly what's rendered
-      const canvas = await html2canvas(element, {
-        scale: 2,
+      // Use html-to-image for pixel-perfect capture
+      const dataUrl = await toJpeg(element, {
+        quality: 1.0,
+        pixelRatio: 2,
         backgroundColor: "#1a1a1a",
-        useCORS: true,
-        logging: false,
-        imageTimeout: 0,
-        removeContainer: true,
+        style: {
+          transform: "none",
+        },
       });
       
       // Restore transform
@@ -133,36 +134,31 @@ export function ExportPreview({ open, onOpenChange }: ExportPreviewProps) {
       
       const fileName = `MasterSIXT-Export-${todayDate}.jpg`;
       
-      canvas.toBlob(async (blob) => {
-        if (!blob) return;
-        
-        const file = new File([blob], fileName, { type: "image/jpeg" });
-        
-        if (navigator.share && navigator.canShare?.({ files: [file] })) {
-          try {
-            await navigator.share({
-              files: [file],
-              title: "MasterSIXT Export",
-            });
-          } catch (err) {
-            if ((err as Error).name !== "AbortError") {
-              const url = URL.createObjectURL(blob);
-              const link = document.createElement("a");
-              link.download = fileName;
-              link.href = url;
-              link.click();
-              URL.revokeObjectURL(url);
-            }
+      // Convert data URL to blob
+      const response = await fetch(dataUrl);
+      const blob = await response.blob();
+      const file = new File([blob], fileName, { type: "image/jpeg" });
+      
+      if (navigator.share && navigator.canShare?.({ files: [file] })) {
+        try {
+          await navigator.share({
+            files: [file],
+            title: "MasterSIXT Export",
+          });
+        } catch (err) {
+          if ((err as Error).name !== "AbortError") {
+            const link = document.createElement("a");
+            link.download = fileName;
+            link.href = dataUrl;
+            link.click();
           }
-        } else {
-          const url = URL.createObjectURL(blob);
-          const link = document.createElement("a");
-          link.download = fileName;
-          link.href = url;
-          link.click();
-          URL.revokeObjectURL(url);
         }
-      }, "image/jpeg", 1.0);
+      } else {
+        const link = document.createElement("a");
+        link.download = fileName;
+        link.href = dataUrl;
+        link.click();
+      }
     } catch (error) {
       console.error("Export failed:", error);
     } finally {
