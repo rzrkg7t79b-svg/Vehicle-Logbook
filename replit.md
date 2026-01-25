@@ -2,7 +2,7 @@
 
 ## Overview
 
-A comprehensive mobile-first iOS web app for SIXT workshop management with six integrated modules:
+A comprehensive mobile-first iOS web app for SIXT workshop management with seven integrated modules:
 
 - **MasterSIXT** (Main Dashboard): Global progress bar, daily 16:30 deadline countdown, module status overview
 - **TimeDriverSIXT**: Labor planning budget tool with rentals input, driver selection, and fair working time distribution
@@ -11,6 +11,7 @@ A comprehensive mobile-first iOS web app for SIXT workshop management with six i
 - **BodyshopSIXT**: Vehicle tracking with German license plates and 7-day timers
 - **ToDoSIXT**: Daily task management with admin CRUD and user completion
 - **QualitySIXT**: Quality checks with automatic driver task creation for failed checks
+- **FutureSIXT**: Tomorrow's planning with reservation tracking (Car/Van/TAS split), deliveries, and collections
 
 The system includes PIN-based authentication, role-based access (Branch Manager, Counter, Driver), German timezone support (Europe/Berlin), and module completion tracking.
 
@@ -121,14 +122,26 @@ Preferred communication style: Simple, everyday language.
    - `todo`: { isDone, completed, total } - done if all todos completed
    - `quality`: { isDone, passedChecks, incompleteTasks } - done if 5+ passed checks AND no incomplete driver tasks
    - `bodyshop`: { isDone, vehiclesWithoutComment, total } - done if all active vehicles have daily comment (or no vehicles)
-   - `overallProgress`: 0-100 percentage (25% per completed module)
+   - `future`: { isDone, isLocked, data } - locked before 15:00 Berlin time, done if planning saved
+   - `overallProgress`: 0-100 percentage (calculated based on 7 completed modules)
 
 16. **Midnight Reset Scheduler**: Automatically resets daily data at midnight Berlin time:
    - Todos: Marked as not completed
    - Module status: Deleted for fresh day
    - Quality checks and driver tasks: Deleted
    - TimeDriver calculations: Deleted
+   - UpgradeSIXT vehicles: Deleted for fresh day
+   - FutureSIXT planning: Deleted for fresh day
    - Implemented in `server/scheduler.ts` using setTimeout with Berlin timezone calculation
+
+17. **FutureSIXT Features**:
+   - Tomorrow's planning module for anticipating next day's workload
+   - Locked until 15:00 Berlin time each day (shows lock icon before unlock)
+   - Input fields: Total reservations, Car/Van/TAS split, Deliveries Tomorrow, Collections Open
+   - Validation: Car + Van + TAS must equal Total reservations (red border on error)
+   - After save: Read-only mode with saved values displayed, "New" button to reset and start fresh
+   - Displayed at bottom of MasterSIXT dashboard and at top of Export Preview when saved
+   - API: POST /api/future-planning, GET /api/future-planning/:date, DELETE /api/future-planning/:date
 
 ## External Dependencies
 
