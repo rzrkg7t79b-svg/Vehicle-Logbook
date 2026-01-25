@@ -32,7 +32,8 @@ export type UpdateType =
   | "users"
   | "timedriver-checks"
   | "timedriver-calculation"
-  | "dashboard";
+  | "dashboard"
+  | "upgrade-vehicles";
 
 export function broadcastUpdate(type: UpdateType) {
   if (!wss) return;

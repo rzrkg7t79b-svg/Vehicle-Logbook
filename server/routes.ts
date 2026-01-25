@@ -528,8 +528,8 @@ export async function registerRoutes(
     const timedriverModuleStatus = timedriverStatus.find(s => s.moduleName === "timedriver");
     const timedriverIsDone = timedriverModuleStatus?.isDone || timedriverCalc !== undefined;
     
-    // Upgrade status - check if there's a pending UP vehicle for today
-    const pendingUpgrade = await storage.getPendingUpgradeVehicle(date);
+    // Upgrade status - check if there's pending UP vehicles for today
+    const pendingUpgrades = await storage.getPendingUpgradeVehicles(date);
     const todayUpgrades = await storage.getUpgradeVehiclesForDate(date);
     // Check if it's past 08:30 German time and no UP vehicle defined
     const now = new Date();
@@ -583,7 +583,7 @@ export async function registerRoutes(
     
     res.json({
       timedriver: { isDone: timedriverIsDone, details: timedriverCalc ? "Calculated" : undefined },
-      upgrade: { isDone: upgradeIsDone, hasPending: !!pendingUpgrade, isOverdue, pendingVehicle: pendingUpgrade },
+      upgrade: { isDone: upgradeIsDone, hasPending: pendingUpgrades.length > 0, isOverdue, pendingVehicles: pendingUpgrades },
       flow: { isDone: flowIsDone, pending: pendingFlowTasks.length, total: allFlowTasks.length },
       todo: { isDone: todoIsDone, completed, total: todaysTodos.length, postponed: totalPostponed },
       quality: { isDone: qualityIsDone, passedChecks, incompleteTasks: incompleteTasks.length },
@@ -794,13 +794,13 @@ export function registerUpgradeRoutes(app: Express) {
   });
 
   app.get(api.upgradeVehicles.listForDate.path, async (req, res) => {
-    const date = req.params.date;
+    const date = req.params.date as string;
     const vehicles = await storage.getUpgradeVehiclesForDate(date);
     res.json(vehicles);
   });
 
   app.get(api.upgradeVehicles.pending.path, async (req, res) => {
-    const date = req.params.date;
+    const date = req.params.date as string;
     const vehicle = await storage.getPendingUpgradeVehicle(date);
     res.json(vehicle || null);
   });

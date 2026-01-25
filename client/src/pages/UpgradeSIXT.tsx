@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "wouter";
-import { ArrowLeft, TrendingUp, Clock, AlertTriangle, CheckCircle, Plus, Loader2 } from "lucide-react";
+import { ArrowLeft, TrendingUp, Clock, AlertTriangle, CheckCircle, Plus, Loader2, Car, Truck } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,6 +17,7 @@ type UpgradeVehicle = {
   licensePlate: string;
   model: string;
   reason: string;
+  isVan: boolean;
   isSold: boolean;
   soldBy: string | null;
   soldAt: string | null;
@@ -40,6 +41,7 @@ export default function UpgradeSIXT() {
   const [letters, setLetters] = useState("");
   const [numbers, setNumbers] = useState("");
   const [isEv, setIsEv] = useState(false);
+  const [isVan, setIsVan] = useState(false);
   const [model, setModel] = useState("");
   const [reason, setReason] = useState("");
   
@@ -62,7 +64,7 @@ export default function UpgradeSIXT() {
   }, []);
   
   const createMutation = useMutation({
-    mutationFn: async (data: { licensePlate: string; model: string; reason: string; date: string; createdBy?: string }) => {
+    mutationFn: async (data: { licensePlate: string; model: string; reason: string; date: string; isVan: boolean; createdBy?: string }) => {
       return await apiRequest("POST", "/api/upgrade-vehicles", data, adminHeaders);
     },
     onSuccess: () => {
@@ -96,6 +98,7 @@ export default function UpgradeSIXT() {
     setLetters("");
     setNumbers("");
     setIsEv(false);
+    setIsVan(false);
     setModel("");
     setReason("");
     setShowAddForm(false);
@@ -110,6 +113,7 @@ export default function UpgradeSIXT() {
       model: model.trim(),
       reason: reason.trim(),
       date: todayDate,
+      isVan,
       createdBy: user?.initials,
     });
   };
@@ -181,7 +185,7 @@ export default function UpgradeSIXT() {
           </div>
         </Card>
 
-        {canAdd && !showAddForm && !hasPending && (
+        {canAdd && !showAddForm && pendingVehicles.length < 2 && (
           <Button
             onClick={() => setShowAddForm(true)}
             className="w-full"
@@ -189,7 +193,7 @@ export default function UpgradeSIXT() {
             data-testid="button-add-upgrade"
           >
             <Plus className="w-4 h-4 mr-2" />
-            Add UP Vehicle
+            Add UP Vehicle {pendingVehicles.length > 0 ? `(${pendingVehicles.length}/2)` : ''}
           </Button>
         )}
 
@@ -206,6 +210,32 @@ export default function UpgradeSIXT() {
               onEvChange={setIsEv}
               autoFocusLetters
             />
+            
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-muted-foreground">Vehicle Type *</label>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant={!isVan ? "default" : "outline"}
+                  onClick={() => setIsVan(false)}
+                  className="flex-1"
+                  data-testid="button-car"
+                >
+                  <Car className="w-4 h-4 mr-2" />
+                  Car
+                </Button>
+                <Button
+                  type="button"
+                  variant={isVan ? "default" : "outline"}
+                  onClick={() => setIsVan(true)}
+                  className="flex-1"
+                  data-testid="button-van"
+                >
+                  <Truck className="w-4 h-4 mr-2" />
+                  Van
+                </Button>
+              </div>
+            </div>
             
             <div className="space-y-2">
               <label className="text-sm font-medium text-muted-foreground">Model *</label>
@@ -262,6 +292,11 @@ export default function UpgradeSIXT() {
                   <div className="flex-1 space-y-2">
                     <div className="flex items-center gap-2">
                       <GermanPlate plate={vehicle.licensePlate} size="sm" />
+                      {vehicle.isVan ? (
+                        <Truck className="w-4 h-4 text-orange-400" data-testid={`icon-van-${vehicle.id}`} />
+                      ) : (
+                        <Car className="w-4 h-4 text-orange-400" data-testid={`icon-car-${vehicle.id}`} />
+                      )}
                     </div>
                     <p className="font-medium text-white">{vehicle.model}</p>
                     <p className="text-sm text-muted-foreground">{vehicle.reason}</p>
@@ -311,6 +346,11 @@ export default function UpgradeSIXT() {
                   <div className="flex-1 space-y-2">
                     <div className="flex items-center gap-2">
                       <GermanPlate plate={vehicle.licensePlate} size="sm" />
+                      {vehicle.isVan ? (
+                        <Truck className="w-4 h-4 text-green-400" />
+                      ) : (
+                        <Car className="w-4 h-4 text-green-400" />
+                      )}
                       <CheckCircle className="w-4 h-4 text-green-500" />
                     </div>
                     <p className="font-medium text-white">{vehicle.model}</p>

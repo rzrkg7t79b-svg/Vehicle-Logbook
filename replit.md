@@ -6,7 +6,7 @@ A comprehensive mobile-first iOS web app for SIXT workshop management with six i
 
 - **MasterSIXT** (Main Dashboard): Global progress bar, daily 16:30 deadline countdown, module status overview
 - **TimeDriverSIXT**: Labor planning budget tool with rentals input, driver selection, and fair working time distribution
-- **UpgradeSIXT**: Daily UP vehicle management with 08:30 deadline, sold/pending tracking for upsell vehicles
+- **UpgradeSIXT**: Daily UP vehicle management with 08:30 deadline, sold/pending tracking for upsell vehicles, max 2 pending vehicles, car/van type selection
 - **FlowSIXT**: Driver task management with priority ordering and completion tracking
 - **BodyshopSIXT**: Vehicle tracking with German license plates and 7-day timers
 - **ToDoSIXT**: Daily task management with admin CRUD and user completion

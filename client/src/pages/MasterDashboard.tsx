@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { motion } from "framer-motion";
-import { Clock, Car, ClipboardCheck, CheckSquare, AlertTriangle, CheckCircle, Workflow, Share2, TrendingUp } from "lucide-react";
+import { Clock, Car, ClipboardCheck, CheckSquare, AlertTriangle, CheckCircle, Workflow, Share2, TrendingUp, Truck } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,9 +11,16 @@ import { useUser } from "@/contexts/UserContext";
 import { ExportPreview } from "@/components/ExportPreview";
 import type { Todo, DriverTask, FlowTask } from "@shared/schema";
 
+type PendingUpgradeVehicle = {
+  id: number;
+  licensePlate: string;
+  model: string;
+  isVan: boolean;
+};
+
 type DashboardStatus = {
   timedriver: { isDone: boolean; details?: string };
-  upgrade: { isDone: boolean; hasPending: boolean; isOverdue: boolean; pendingVehicle?: any };
+  upgrade: { isDone: boolean; hasPending: boolean; isOverdue: boolean; pendingVehicles?: PendingUpgradeVehicle[] };
   flow: { isDone: boolean; pending: number; total: number };
   todo: { isDone: boolean; completed: number; total: number; postponed?: number };
   quality: { isDone: boolean; passedChecks: number; incompleteTasks: number };
@@ -238,6 +245,16 @@ export default function MasterDashboard() {
                             <p className={`text-xs ${isDone ? 'text-green-400' : 'text-muted-foreground'}`}>
                               {details}
                             </p>
+                          )}
+                          {module.id === "upgrade" && dashboardStatus?.upgrade.pendingVehicles && dashboardStatus.upgrade.pendingVehicles.length > 0 && (
+                            <div className="flex flex-wrap gap-2 mt-2">
+                              {dashboardStatus.upgrade.pendingVehicles.map((v) => (
+                                <div key={v.id} className="flex items-center gap-1 text-xs bg-orange-500/20 text-orange-400 px-2 py-1 rounded" data-testid={`pending-upgrade-${v.id}`}>
+                                  {v.isVan ? <Truck className="w-3 h-3" /> : <Car className="w-3 h-3" />}
+                                  <span>{v.licensePlate}</span>
+                                </div>
+                              ))}
+                            </div>
                           )}
                         </div>
                       </div>

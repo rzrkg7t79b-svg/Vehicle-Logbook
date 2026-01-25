@@ -104,6 +104,7 @@ export interface IStorage {
   updateUpgradeVehicle(id: number, data: Partial<UpgradeVehicle>): Promise<UpgradeVehicle | undefined>;
   deleteUpgradeVehicle(id: number): Promise<void>;
   getPendingUpgradeVehicle(date: string): Promise<UpgradeVehicle | undefined>;
+  getPendingUpgradeVehicles(date: string): Promise<UpgradeVehicle[]>;
 
   performMidnightReset(): Promise<void>;
 }
@@ -474,6 +475,12 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(upgradeVehicles.createdAt))
       .limit(1);
     return vehicle;
+  }
+
+  async getPendingUpgradeVehicles(date: string): Promise<UpgradeVehicle[]> {
+    return db.select().from(upgradeVehicles)
+      .where(and(eq(upgradeVehicles.date, date), eq(upgradeVehicles.isSold, false)))
+      .orderBy(desc(upgradeVehicles.createdAt));
   }
 
   async performMidnightReset(): Promise<void> {
