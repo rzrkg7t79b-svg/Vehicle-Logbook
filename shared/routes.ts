@@ -1,6 +1,6 @@
 
 import { z } from 'zod';
-import { insertVehicleSchema, insertCommentSchema, insertUserSchema, insertTodoSchema, insertQualityCheckSchema, insertFlowTaskSchema, insertUpgradeVehicleSchema, insertFuturePlanningSchema, flowTaskTypes, vehicles, comments, users, todos, qualityChecks, driverTasks, flowTasks, moduleStatus, appSettings, timedriverCalculations, upgradeVehicles, futurePlanning } from './schema';
+import { insertVehicleSchema, insertCommentSchema, insertUserSchema, insertTodoSchema, insertQualityCheckSchema, insertFlowTaskSchema, insertUpgradeVehicleSchema, insertFuturePlanningSchema, insertKpiMetricSchema, flowTaskTypes, vehicles, comments, users, todos, qualityChecks, driverTasks, flowTasks, moduleStatus, appSettings, timedriverCalculations, upgradeVehicles, futurePlanning, kpiMetrics } from './schema';
 
 export const errorSchemas = {
   validation: z.object({
@@ -496,6 +496,34 @@ export const api = {
       path: '/api/future-planning/:date',
       responses: {
         204: z.void(),
+      },
+    },
+  },
+  kpiMetrics: {
+    list: {
+      method: 'GET' as const,
+      path: '/api/kpi-metrics',
+      responses: {
+        200: z.array(z.custom<typeof kpiMetrics.$inferSelect>()),
+      },
+    },
+    get: {
+      method: 'GET' as const,
+      path: '/api/kpi-metrics/:key',
+      responses: {
+        200: z.custom<typeof kpiMetrics.$inferSelect>().nullable(),
+      },
+    },
+    update: {
+      method: 'PUT' as const,
+      path: '/api/kpi-metrics/:key',
+      input: z.object({
+        value: z.number().min(0),
+        goal: z.number().min(0),
+      }),
+      responses: {
+        200: z.custom<typeof kpiMetrics.$inferSelect>(),
+        403: errorSchemas.forbidden,
       },
     },
   },

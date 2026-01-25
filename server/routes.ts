@@ -741,11 +741,67 @@ export async function registerRoutes(
 
   registerUpgradeRoutes(app);
   registerFuturePlanningRoutes(app);
+  registerKpiMetricsRoutes(app);
   
   await seedDatabase();
   await storage.seedBranchManager();
 
   return httpServer;
+}
+
+async function registerKpiMetricsRoutes(app: Express) {
+  // Helper function to verify admin authorization
+  async function requireAdmin(req: any, res: any): Promise<boolean> {
+    const adminPin = req.headers['x-admin-pin'] as string;
+    if (!adminPin) {
+      res.status(403).json({ message: "Admin authorization required" });
+      return false;
+    }
+    const adminUser = await storage.getUserByPin(adminPin);
+    if (!adminUser || !adminUser.isAdmin) {
+      res.status(403).json({ message: "Only Branch Manager can perform this action" });
+      return false;
+    }
+    return true;
+  }
+
+  app.get(api.kpiMetrics.list.path, async (_req, res) => {
+    const metrics = await storage.getKpiMetrics();
+    res.json(metrics);
+  });
+
+  app.get(api.kpiMetrics.get.path, async (req, res) => {
+    const key = String(req.params.key);
+    const metric = await storage.getKpiMetric(key);
+    res.json(metric || null);
+  });
+
+  app.put(api.kpiMetrics.update.path, async (req, res) => {
+    if (!(await requireAdmin(req, res))) return;
+    try {
+      const key = String(req.params.key);
+      if (key !== "irpd" && key !== "ses") {
+        return res.status(400).json({ message: "Invalid KPI key. Must be 'irpd' or 'ses'" });
+      }
+      const input = api.kpiMetrics.update.input.parse(req.body);
+      const adminPin = req.headers['x-admin-pin'] as string;
+      const adminUser = await storage.getUserByPin(adminPin);
+      
+      const metric = await storage.upsertKpiMetric({
+        key: key as "irpd" | "ses",
+        value: input.value,
+        goal: input.goal,
+        updatedBy: adminUser?.initials,
+      });
+      broadcastUpdate("kpi-metrics");
+      res.json(metric);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ message: err.errors[0].message });
+      }
+      throw err;
+    }
+  });
 }
 
 async function seedDatabase() {
