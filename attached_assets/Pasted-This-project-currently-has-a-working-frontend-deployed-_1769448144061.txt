@@ -1,0 +1,19 @@
+This project currently has a working frontend deployed on Vercel, but the backend still exists as a traditional Node/Express server inside the repository. I want you to migrate the backend to Vercel Serverless Functions so that the entire application (frontend and backend) runs fully on Vercel and no Replit hosting is required anymore. This must be a pure deployment-architecture refactor only.
+
+Do not change any business logic, do not change any UI, do not change any features, do not change any workflows, do not change any API behavior, do not change any database schema, and do not simplify or rewrite any functionality. The application must behave 100% identically to how it behaves now.
+
+Refactor the existing Express backend so that each API route is exposed as a Vercel Serverless Function under the /api directory. All existing endpoints (such as /api/auth/login, /api/vehicles, /api/users, /api/todos, /api/flow-tasks, /api/upgrade-vehicles, /api/future-planning, /api/kpi-metrics, etc.) must continue to exist with exactly the same paths, request formats, and response formats.
+
+Reuse the existing route logic and handlers; do not reimplement business logic. Only adapt the wiring so that instead of a single Express server, the routes are exported as serverless functions compatible with Vercel. The database layer (Drizzle, schema, queries, storage) must remain exactly as it is and must continue to be used by the backend code. Only the server entrypoint and routing architecture should change.
+
+Make sure the serverless functions correctly initialize the database connection and reuse it safely in a serverless environment. Add any minimal required glue code for Vercel compatibility, but do not change how the app works.
+
+The frontend must not be changed except, if necessary, to keep using the same /api/... endpoints on the same domain. Ideally, no frontend code changes should be required at all.
+
+After this change, the project must support:
+	•	Frontend build on Vercel
+	•	Backend running fully on Vercel via /api/* serverless functions
+	•	Login, database access, and all features working exactly as before
+	•	No dependency on Replit for hosting
+
+This is a deployment architecture migration only. The app’s behavior must remain identical.

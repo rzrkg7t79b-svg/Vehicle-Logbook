@@ -173,3 +173,37 @@ Preferred communication style: Simple, everyday language.
 
 ### Development Tools
 - Replit-specific Vite plugins (error overlay, cartographer, dev banner)
+
+## Deployment Architecture
+
+### Dual Deployment Support
+The application supports two deployment modes:
+
+1. **Replit Development/Production** (Current)
+   - Express server with WebSocket for real-time updates
+   - Entry point: `server/index.ts`
+   - Full WebSocket support via `broadcastUpdate()`
+   - Scheduler for midnight resets
+
+2. **Vercel Serverless** (Optional)
+   - Express wrapped in serverless functions
+   - Entry point: `api/index.ts`
+   - API folder structure:
+     - `api/index.ts` - Serverless Express wrapper
+     - `api/routes.ts` - All API route handlers (identical logic)
+     - `api/storage.ts` - Database storage layer
+     - `api/db.ts` - Serverless-compatible database connection
+   - Note: WebSocket not supported in serverless (no real-time updates)
+   - Note: Midnight scheduler won't run (use Vercel Cron Jobs instead)
+
+### Vercel Configuration
+`vercel.json` configures:
+- Frontend build: `cd client && npm run build`
+- Output: `client/dist`
+- API routes: `/api/*` → serverless function
+- SPA fallback: All other routes → `index.html`
+
+### Environment Variables for Vercel
+Required for deployment:
+- `DATABASE_URL` - PostgreSQL connection string
+- `SESSION_SECRET` - Session encryption key
