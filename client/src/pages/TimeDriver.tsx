@@ -8,7 +8,6 @@ import { useUser } from "@/contexts/UserContext";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { getGermanDateString } from "@/lib/germanTime";
-import { getDrivers } from "@/stores/userStore";
 
 const DEFAULT_BUDGET_PER_RENTAL = "16.39";
 
@@ -69,7 +68,13 @@ export default function TimeDriver() {
 
   const budgetPerRental = budgetSetting?.value || DEFAULT_BUDGET_PER_RENTAL;
   
-  const driverUsers = getDrivers();
+  const { data: driverUsers = [] } = useQuery<{ id: number; initials: string; maxDailyHours: number | null; hourlyRate: number | null }[]>({
+    queryKey: ["/api/drivers"],
+    queryFn: async () => {
+      const res = await fetch("/api/drivers");
+      return res.json();
+    },
+  });
 
   useEffect(() => {
     if (savedCalculation && driverUsers.length > 0) {

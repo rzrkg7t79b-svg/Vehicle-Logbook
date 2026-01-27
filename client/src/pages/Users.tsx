@@ -1,23 +1,16 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState } from "react";
 import { useUser } from "@/contexts/UserContext";
 import { Link } from "wouter";
-import { ArrowLeft, Plus, Edit2, Trash2, Shield, User as UserIcon, Check, X } from "lucide-react";
+import { ArrowLeft, Plus, Edit2, Trash2, Shield, User as UserIcon, Check, X, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { motion, AnimatePresence } from "framer-motion";
 import type { User } from "@/types";
-import {
-  getUsers,
-  createUser,
-  updateUser,
-  deleteUser,
-  localUserToUser,
-  type LocalUser,
-} from "@/stores/userStore";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { queryClient, apiRequest } from "@/lib/queryClient";
 
 export default function Users() {
   const { user: currentUser } = useUser();
-  const [users, setUsers] = useState<User[]>([]);
   const [isCreating, setIsCreating] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [newInitials, setNewInitials] = useState("");
@@ -27,16 +20,64 @@ export default function Users() {
   const [newHourlyRate, setNewHourlyRate] = useState<string>("");
   const [pinError, setPinError] = useState("");
 
-  const loadUsers = useCallback(() => {
-    const localUsers = getUsers();
-    setUsers(localUsers.map(localUserToUser));
-  }, []);
+  const adminHeaders: Record<string, string> = currentUser?.pin ? { "x-admin-pin": currentUser.pin } : {};
 
-  useEffect(() => {
-    if (currentUser?.isAdmin) {
-      loadUsers();
-    }
-  }, [currentUser?.isAdmin, loadUsers]);
+  const { data: users = [], isLoading } = useQuery<User[]>({
+    queryKey: ["/api/users"],
+    queryFn: async () => {
+      const res = await fetch("/api/users", { headers: adminHeaders });
+      if (!res.ok) throw new Error("Failed to fetch users");
+      return res.json();
+    },
+    enabled: !!currentUser?.isAdmin,
+  });
+
+  const createUserMutation = useMutation({
+    mutationFn: async (data: {
+      initials: string;
+      pin: string;
+      roles: string[];
+      maxDailyHours: number | null;
+      hourlyRate: number | null;
+    }) => {
+      return apiRequest("POST", "/api/users", data, adminHeaders);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/users"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/drivers"] });
+      resetForm();
+    },
+    onError: (err: Error) => {
+      setPinError(err.message || "Failed to create user");
+    },
+  });
+
+  const updateUserMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: number; data: Partial<User> }) => {
+      return apiRequest("PATCH", `/api/users/${id}`, data, adminHeaders);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/users"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/drivers"] });
+      resetForm();
+    },
+    onError: (err: Error) => {
+      setPinError(err.message || "Failed to update user");
+    },
+  });
+
+  const deleteUserMutation = useMutation({
+    mutationFn: async (id: number) => {
+      return apiRequest("DELETE", `/api/users/${id}`, undefined, adminHeaders);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/users"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/drivers"] });
+    },
+    onError: (err: Error) => {
+      setPinError(err.message || "Failed to delete user");
+    },
+  });
 
   const resetForm = () => {
     setIsCreating(false);
@@ -66,19 +107,13 @@ export default function Users() {
       return;
     }
     
-    try {
-      createUser({
-        initials: newInitials.toUpperCase(),
-        pin: newPin,
-        roles: newRoles,
-        maxDailyHours: hours,
-        hourlyRate: rate,
-      });
-      loadUsers();
-      resetForm();
-    } catch (err) {
-      setPinError(err instanceof Error ? err.message : "Failed to create user");
-    }
+    createUserMutation.mutate({
+      initials: newInitials.toUpperCase(),
+      pin: newPin,
+      roles: newRoles,
+      maxDailyHours: hours,
+      hourlyRate: rate,
+    });
   };
 
   const handleUpdate = (id: number) => {
@@ -94,31 +129,20 @@ export default function Users() {
       return;
     }
     
-    try {
-      const updateData: Partial<LocalUser> = {
-        roles: newRoles,
-        maxDailyHours: hours,
-        hourlyRate: rate,
-      };
-      if (newInitials) updateData.initials = newInitials.toUpperCase();
-      if (newPin && newPin.length === 4) updateData.pin = newPin;
-      
-      updateUser(id, updateData);
-      loadUsers();
-      resetForm();
-    } catch (err) {
-      setPinError(err instanceof Error ? err.message : "Failed to update user");
-    }
+    const updateData: Partial<User> = {
+      roles: newRoles,
+      maxDailyHours: hours,
+      hourlyRate: rate,
+    };
+    if (newInitials) updateData.initials = newInitials.toUpperCase();
+    if (newPin && newPin.length === 4) updateData.pin = newPin;
+    
+    updateUserMutation.mutate({ id, data: updateData });
   };
 
   const handleDelete = (id: number) => {
     if (confirm("Delete this user?")) {
-      try {
-        deleteUser(id);
-        loadUsers();
-      } catch (err) {
-        setPinError(err instanceof Error ? err.message : "Failed to delete user");
-      }
+      deleteUserMutation.mutate(id);
     }
   };
 
@@ -151,6 +175,14 @@ export default function Users() {
             <Button variant="outline">Return to Dashboard</Button>
           </Link>
         </div>
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
       </div>
     );
   }
@@ -287,8 +319,17 @@ export default function Users() {
                 </div>
                 {pinError && <p className="text-xs text-red-500">{pinError}</p>}
                 <div className="flex gap-2 pt-2">
-                  <Button size="sm" onClick={handleCreate} data-testid="button-save-user">
-                    <Check className="w-4 h-4 mr-1" />
+                  <Button 
+                    size="sm" 
+                    onClick={handleCreate} 
+                    disabled={createUserMutation.isPending}
+                    data-testid="button-save-user"
+                  >
+                    {createUserMutation.isPending ? (
+                      <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                    ) : (
+                      <Check className="w-4 h-4 mr-1" />
+                    )}
                     Create
                   </Button>
                   <Button size="sm" variant="outline" onClick={resetForm} data-testid="button-cancel">
@@ -398,8 +439,16 @@ export default function Users() {
                   </div>
                   {pinError && <p className="text-xs text-red-500">{pinError}</p>}
                   <div className="flex gap-2">
-                    <Button size="sm" onClick={() => handleUpdate(user.id)}>
-                      <Check className="w-4 h-4 mr-1" />
+                    <Button 
+                      size="sm" 
+                      onClick={() => handleUpdate(user.id)}
+                      disabled={updateUserMutation.isPending}
+                    >
+                      {updateUserMutation.isPending ? (
+                        <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                      ) : (
+                        <Check className="w-4 h-4 mr-1" />
+                      )}
                       Save
                     </Button>
                     <Button size="sm" variant="outline" onClick={resetForm}>

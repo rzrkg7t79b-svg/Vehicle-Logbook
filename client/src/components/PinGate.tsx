@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { Lock, Timer, AlertTriangle, LogOut } from "lucide-react";
 import { UserContext } from "@/contexts/UserContext";
 import type { User } from "@/types";
-import { getUserByPin, localUserToUser } from "@/stores/userStore";
 import { useLocation } from "wouter";
 
 interface PinGateProps {
@@ -14,7 +13,6 @@ const LOCKOUT_STORAGE_KEY = "bodyshop_lockout";
 const TIMEOUT_SECONDS = 5 * 60;
 const LOCKOUT_SECONDS = 5 * 60;
 const MAX_ATTEMPTS = 3;
-const MASTER_RESET_CODE = "169949";
 
 interface LockoutState {
   failedAttempts: number;
@@ -34,7 +32,6 @@ export function PinGate({ children }: PinGateProps) {
   const [failedAttempts, setFailedAttempts] = useState(0);
   const [lockoutEndTime, setLockoutEndTime] = useState<number | null>(null);
   const [lockoutSecondsLeft, setLockoutSecondsLeft] = useState(0);
-  const [isEmergencyMode, setIsEmergencyMode] = useState(false);
   const lockoutCountdownRef = useRef<NodeJS.Timeout | null>(null);
 
   const isLocked = lockoutEndTime !== null && Date.now() < lockoutEndTime;
@@ -49,7 +46,6 @@ export function PinGate({ children }: PinGateProps) {
     setFailedAttempts(0);
     setLockoutEndTime(null);
     setLockoutSecondsLeft(0);
-    setIsEmergencyMode(false);
     localStorage.removeItem(LOCKOUT_STORAGE_KEY);
   }, []);
 
@@ -155,29 +151,9 @@ export function PinGate({ children }: PinGateProps) {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const handleDigit = (digit: string) => {
-    if (isLocked && !isEmergencyMode) return;
+  const handleDigit = async (digit: string) => {
+    if (isLocked) return;
     if (isLoading) return;
-
-    if (isEmergencyMode) {
-      const newPin = pin + digit;
-      setPin(newPin);
-      setError(false);
-      
-      if (newPin.length === 6) {
-        if (newPin === MASTER_RESET_CODE) {
-          clearLockoutState();
-          setPin("");
-        } else {
-          setError(true);
-          setTimeout(() => {
-            setPin("");
-            setError(false);
-          }, 500);
-        }
-      }
-      return;
-    }
 
     if (pin.length < 4) {
       const newPin = pin + digit;
@@ -187,29 +163,41 @@ export function PinGate({ children }: PinGateProps) {
       if (newPin.length === 4) {
         setIsLoading(true);
         
-        const localUser = getUserByPin(newPin);
-        
-        if (localUser) {
-          const user = localUserToUser(localUser);
-          sessionStorage.setItem(STORAGE_KEY, JSON.stringify(user));
-          setCurrentUser(user);
-          setIsUnlocked(true);
-          clearLockoutState();
-          setLocation("/");
-        } else {
-          setError(true);
-          const newFailedAttempts = failedAttempts + 1;
-          setFailedAttempts(newFailedAttempts);
+        try {
+          const response = await fetch("/api/auth/login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ pin: newPin }),
+          });
           
-          if (newFailedAttempts >= MAX_ATTEMPTS) {
-            const endTime = Date.now() + LOCKOUT_SECONDS * 1000;
-            setLockoutEndTime(endTime);
-            setLockoutSecondsLeft(LOCKOUT_SECONDS);
-            saveLockoutState(newFailedAttempts, endTime);
+          if (response.ok) {
+            const user = await response.json() as User;
+            sessionStorage.setItem(STORAGE_KEY, JSON.stringify(user));
+            setCurrentUser(user);
+            setIsUnlocked(true);
+            clearLockoutState();
+            setLocation("/");
           } else {
-            saveLockoutState(newFailedAttempts, null);
+            setError(true);
+            const newFailedAttempts = failedAttempts + 1;
+            setFailedAttempts(newFailedAttempts);
+            
+            if (newFailedAttempts >= MAX_ATTEMPTS) {
+              const endTime = Date.now() + LOCKOUT_SECONDS * 1000;
+              setLockoutEndTime(endTime);
+              setLockoutSecondsLeft(LOCKOUT_SECONDS);
+              saveLockoutState(newFailedAttempts, endTime);
+            } else {
+              saveLockoutState(newFailedAttempts, null);
+            }
+            
+            setTimeout(() => {
+              setPin("");
+              setError(false);
+            }, 500);
           }
-          
+        } catch {
+          setError(true);
           setTimeout(() => {
             setPin("");
             setError(false);
@@ -222,22 +210,11 @@ export function PinGate({ children }: PinGateProps) {
   };
 
   const handleBackspace = () => {
-    if (isLocked && !isEmergencyMode) return;
+    if (isLocked) return;
     if (!isLoading) {
       setPin(pin.slice(0, -1));
       setError(false);
     }
-  };
-
-  const handleEmergencyClick = () => {
-    if (!isLocked) return;
-    setIsEmergencyMode(true);
-    setPin("");
-  };
-
-  const handleExitEmergency = () => {
-    setIsEmergencyMode(false);
-    setPin("");
   };
 
   if (isUnlocked && currentUser) {
@@ -269,9 +246,6 @@ export function PinGate({ children }: PinGateProps) {
     );
   }
 
-  const pinDotsCount = isEmergencyMode ? 6 : 4;
-  const currentPinLength = pin.length;
-
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6">
       <div className="w-full max-w-xs">
@@ -279,36 +253,23 @@ export function PinGate({ children }: PinGateProps) {
           <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 ${
             isLocked 
               ? "bg-red-500/10 border border-red-500/20" 
-              : isEmergencyMode 
-                ? "bg-orange-500/10 border border-orange-500/20"
-                : "bg-primary/10 border border-primary/20"
+              : "bg-primary/10 border border-primary/20"
           }`}>
             {isLocked ? (
               <AlertTriangle className="w-8 h-8 text-red-500" />
-            ) : isEmergencyMode ? (
-              <AlertTriangle className="w-8 h-8 text-orange-500" />
             ) : (
               <Lock className="w-8 h-8 text-primary" />
             )}
           </div>
           <h1 className="text-2xl font-bold text-white mb-1">
-            {isEmergencyMode ? (
-              "Emergency Reset"
-            ) : (
-              <>Master<span className="text-primary">SIXT</span></>
-            )}
+            Master<span className="text-primary">SIXT</span>
           </h1>
           <p className="text-sm text-muted-foreground">
-            {isEmergencyMode 
-              ? "Enter 6-digit master reset code"
-              : isLocked 
-                ? "Login locked" 
-                : "Enter PIN to access"
-            }
+            {isLocked ? "Login locked" : "Enter PIN to access"}
           </p>
         </div>
 
-        {isLocked && !isEmergencyMode && (
+        {isLocked && (
           <div className="text-center mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-xl">
             <p className="text-sm text-red-400 mb-2">Too many failed attempts</p>
             <p className="text-2xl font-mono font-bold text-red-500" data-testid="lockout-timer">
@@ -318,51 +279,25 @@ export function PinGate({ children }: PinGateProps) {
         )}
 
         <div className="flex justify-center gap-3 mb-4">
-          {Array.from({ length: pinDotsCount }).map((_, i) => (
+          {Array.from({ length: 4 }).map((_, i) => (
             <div
               key={i}
               className={`w-4 h-4 rounded-full border-2 transition-all ${
                 error 
                   ? "bg-red-500 border-red-500" 
-                  : currentPinLength > i 
-                    ? isEmergencyMode 
-                      ? "bg-orange-500 border-orange-500"
-                      : "bg-primary border-primary" 
+                  : pin.length > i 
+                    ? "bg-primary border-primary" 
                     : "border-white/20"
               }`}
             />
           ))}
         </div>
 
-        {!isLocked && !isEmergencyMode && failedAttempts > 0 && (
+        {!isLocked && failedAttempts > 0 && (
           <div className="text-center mb-4" data-testid="attempts-remaining">
             <span className="text-sm text-orange-400">
               {attemptsRemaining} attempt{attemptsRemaining !== 1 ? 's' : ''} left
             </span>
-          </div>
-        )}
-
-        {isLocked && !isEmergencyMode && (
-          <div className="text-center mb-4">
-            <button
-              onClick={handleEmergencyClick}
-              className="px-4 py-2 bg-orange-500/20 border border-orange-500/40 rounded-lg text-orange-400 font-medium hover:bg-orange-500/30 active:scale-95 transition-all"
-              data-testid="button-emergency"
-            >
-              Emergency
-            </button>
-          </div>
-        )}
-
-        {isEmergencyMode && (
-          <div className="text-center mb-4">
-            <button
-              onClick={handleExitEmergency}
-              className="text-sm text-muted-foreground hover:text-white transition-colors"
-              data-testid="button-exit-emergency"
-            >
-              Cancel
-            </button>
           </div>
         )}
 
@@ -371,12 +306,8 @@ export function PinGate({ children }: PinGateProps) {
             <button
               key={digit}
               onClick={() => handleDigit(digit.toString())}
-              disabled={isLoading || (isLocked && !isEmergencyMode)}
-              className={`h-16 rounded-xl border text-2xl font-bold transition-all disabled:opacity-50 ${
-                isEmergencyMode 
-                  ? "bg-orange-500/10 border-orange-500/20 text-orange-100 hover:bg-orange-500/20" 
-                  : "bg-card border-white/10 text-white hover:bg-white/5"
-              } active:scale-95`}
+              disabled={isLoading || isLocked}
+              className="h-16 rounded-xl border bg-card border-white/10 text-white hover:bg-white/5 text-2xl font-bold transition-all disabled:opacity-50 active:scale-95"
               data-testid={`pin-digit-${digit}`}
             >
               {digit}
@@ -384,24 +315,16 @@ export function PinGate({ children }: PinGateProps) {
           ))}
           <button
             onClick={handleBackspace}
-            disabled={isLoading || (isLocked && !isEmergencyMode)}
-            className={`h-16 rounded-xl border text-lg font-medium transition-all disabled:opacity-50 ${
-              isEmergencyMode 
-                ? "bg-orange-500/10 border-orange-500/20 text-orange-300 hover:bg-orange-500/20" 
-                : "bg-card border-white/10 text-muted-foreground hover:bg-white/5"
-            } active:scale-95`}
+            disabled={isLoading || isLocked}
+            className="h-16 rounded-xl border bg-card border-white/10 text-muted-foreground hover:bg-white/5 text-lg font-medium transition-all disabled:opacity-50 active:scale-95"
             data-testid="pin-backspace"
           >
             Del
           </button>
           <button
             onClick={() => handleDigit("0")}
-            disabled={isLoading || (isLocked && !isEmergencyMode)}
-            className={`h-16 rounded-xl border text-2xl font-bold transition-all disabled:opacity-50 ${
-              isEmergencyMode 
-                ? "bg-orange-500/10 border-orange-500/20 text-orange-100 hover:bg-orange-500/20" 
-                : "bg-card border-white/10 text-white hover:bg-white/5"
-            } active:scale-95`}
+            disabled={isLoading || isLocked}
+            className="h-16 rounded-xl border bg-card border-white/10 text-white hover:bg-white/5 text-2xl font-bold transition-all disabled:opacity-50 active:scale-95"
             data-testid="pin-digit-0"
           >
             0
