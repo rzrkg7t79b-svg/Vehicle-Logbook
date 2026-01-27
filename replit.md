@@ -54,13 +54,12 @@ Preferred communication style: Simple, everyday language.
 - **UpgradeVehicles**: UP vehicles for upselling with license plate, model, reason, sold status, date tracking
 
 ### Authentication & Authorization
-- **Method**: Frontend-only PIN-based authentication (4-digit codes) validated entirely client-side
-- **User Storage**: Users stored in localStorage (`mastersixt_users` key), initialized with default admin user (BM, PIN: 4266)
-- **Session**: Client-side session storage (`bodyshop_auth`) with 5-minute inactivity timeout
-- **Login Protection**: 3 failed attempts trigger 5-minute lockout with countdown timer
-- **Emergency Reset**: Master code 169949 unlocks system without granting access (visible only when locked)
-- **User Management**: Admin users can add/edit/delete users via localStorage (no backend required)
-- **Why Frontend-Only**: Works reliably on Vercel serverless (no session/cookie complexity), login works even if API is offline
+- **Method**: Backend API PIN-based authentication (4-digit codes) via POST /api/auth/login
+- **User Storage**: Users stored in PostgreSQL database, seeded with default admin user (BM, PIN: 4266)
+- **Session**: React memory only (useState) with 5-minute inactivity timeout - page reload requires re-login
+- **Login Protection**: 3 failed attempts trigger 5-minute lockout with countdown timer (lockout state in localStorage for brute-force protection)
+- **User Management**: Admin users can add/edit/delete users via /api/users endpoints with x-admin-pin header
+- **Drivers API**: GET /api/drivers returns drivers list (public, no auth required)
 - **Context**: React Context (`UserContext`) provides current user state
 - **Role-Based Access**: Users tab visible only to admin users
 
