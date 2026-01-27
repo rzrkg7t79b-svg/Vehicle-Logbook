@@ -9,6 +9,11 @@ export async function registerApiRoutes(app: Express): Promise<void> {
   if (initialized) return;
   initialized = true;
 
+  // Health check endpoint - responds before any DB operations
+  app.get("/api/health", (_req, res) => {
+    res.json({ status: "ok", timestamp: new Date().toISOString() });
+  });
+
   await storage.seedBranchManager();
 
   app.get(api.vehicles.list.path, async (req, res) => {

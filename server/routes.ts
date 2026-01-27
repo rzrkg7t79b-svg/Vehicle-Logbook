@@ -11,6 +11,11 @@ export async function registerRoutes(
   app: Express
 ): Promise<Server> {
 
+  // Health check endpoint
+  app.get("/api/health", (_req, res) => {
+    res.json({ status: "ok", timestamp: new Date().toISOString() });
+  });
+
   app.get(api.vehicles.list.path, async (req, res) => {
     const search = req.query.search as string | undefined;
     const filter = req.query.filter as 'all' | 'expired' | undefined;
