@@ -54,15 +54,15 @@ Preferred communication style: Simple, everyday language.
 - **UpgradeVehicles**: UP vehicles for upselling with license plate, model, reason, sold status, date tracking
 
 ### Authentication & Authorization
-- **Method**: PIN-based authentication (4-digit codes) via `/api/auth/login`
-- **Session**: Client-side session storage with 5-minute timeout
-- **Admin Access**: Server-side authorization via `x-admin-pin` header for user management routes
-- **Public API**: `/api/drivers` returns id, initials, maxDailyHours for drivers (no auth header required)
-- **Context**: React Context (`UserContext`) provides current user state
-- **Branch Manager**: Default admin user (initials: "BM", PIN: 4266) auto-seeded on startup
-- **Role-Based Access**: Users tab visible only to admin users; user CRUD protected server-side
+- **Method**: Frontend-only PIN-based authentication (4-digit codes) validated entirely client-side
+- **User Storage**: Users stored in localStorage (`mastersixt_users` key), initialized with default admin user (BM, PIN: 4266)
+- **Session**: Client-side session storage (`bodyshop_auth`) with 5-minute inactivity timeout
 - **Login Protection**: 3 failed attempts trigger 5-minute lockout with countdown timer
 - **Emergency Reset**: Master code 169949 unlocks system without granting access (visible only when locked)
+- **User Management**: Admin users can add/edit/delete users via localStorage (no backend required)
+- **Why Frontend-Only**: Works reliably on Vercel serverless (no session/cookie complexity), login works even if API is offline
+- **Context**: React Context (`UserContext`) provides current user state
+- **Role-Based Access**: Users tab visible only to admin users
 
 ### Key Design Decisions
 
