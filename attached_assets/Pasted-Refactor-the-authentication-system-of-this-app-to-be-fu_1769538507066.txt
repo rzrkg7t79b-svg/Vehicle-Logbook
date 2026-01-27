@@ -1,0 +1,55 @@
+Refactor the authentication system of this app to be fully frontend-only and remove any dependency on the backend or database for login, without changing any other functionality of the application.
+
+Currently the app uses a PIN-based login with users stored in the database, and also has a special emergency master code that already works fully client-side. I want the normal users to work exactly the same way as this emergency code does, but with multiple users.
+
+Implement the following changes:
+
+Move the entire user list (initials, pin, roles, isAdmin, etc.) into a frontend-only data store (for example a JSON, TS file, or localStorage-backed store).
+
+The login screen must validate the PIN purely on the client, without any API call.
+
+The emergency master code must keep working exactly as before.
+
+After successful login, the app must behave exactly the same as now (same roles, same permissions, same UI, same flows).
+
+The backend must no longer be involved in authentication at all.
+
+The /api/users login check must no longer be used for authentication.
+
+All other API features (todos, vehicles, etc.) must remain untouched.
+
+User management requirements:
+
+The list of users must remain editable from the UI (add/edit/remove users).
+
+Changes to users should be persisted in localStorage (or similar client storage).
+
+On first load, initialize the user list with the existing default users.
+
+Important constraints:
+
+Do NOT change any UI except what is strictly necessary for login to work.
+
+Do NOT change any business logic, features, routes, or screens.
+
+Do NOT change backend APIs except removing their involvement in login.
+
+This is a refactor only of the authentication mechanism.
+
+After this change:
+
+The app must work fully without backend for login.
+
+Login must work even if /api is offline.
+
+The app must still use the backend for all non-auth data (todos, vehicles, etc).
+
+🧠 Warum das deine Probleme löst
+
+Vercel Serverless + Sessions + Cookies + DB = kompliziert & fehleranfällig
+
+Frontend-only PIN = 100% stabil, sofort
+
+Deine App ist intern kein echtes Security-System, sondern ein Terminal-Tool → völlig ok so
+
+Genau so funktioniert dein Emergency Code ja bereits
