@@ -5,11 +5,11 @@
   "framework": "vite",
   "functions": {
     "api/index.ts": {
-      "runtime": "@vercel/node@3.0.0"
+      "runtime": "@vercel/node@3"
     }
   },
-  "rewrites": [
-    { "source": "/api/:path*", "destination": "/api/index" },
-    { "source": "/((?!api/).*)", "destination": "/index.html" }
+  "routes": [
+    { "src": "/api/(.*)", "dest": "/api/index.ts" },
+    { "src": "/(.*)", "dest": "/index.html" }
   ]
 }
