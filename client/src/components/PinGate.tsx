@@ -8,7 +8,6 @@ interface PinGateProps {
   children: React.ReactNode;
 }
 
-const STORAGE_KEY = "bodyshop_auth";
 const LOCKOUT_STORAGE_KEY = "bodyshop_lockout";
 const TIMEOUT_SECONDS = 5 * 60;
 const LOCKOUT_SECONDS = 5 * 60;
@@ -92,7 +91,6 @@ export function PinGate({ children }: PinGateProps) {
   }, [lockoutEndTime, clearLockoutState]);
 
   const logout = useCallback(() => {
-    sessionStorage.removeItem(STORAGE_KEY);
     setIsUnlocked(false);
     setCurrentUser(null);
     setPin("");
@@ -101,19 +99,6 @@ export function PinGate({ children }: PinGateProps) {
 
   const resetTimer = useCallback(() => {
     setSecondsLeft(TIMEOUT_SECONDS);
-  }, []);
-
-  useEffect(() => {
-    const stored = sessionStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      try {
-        const user = JSON.parse(stored) as User;
-        setCurrentUser(user);
-        setIsUnlocked(true);
-      } catch {
-        sessionStorage.removeItem(STORAGE_KEY);
-      }
-    }
   }, []);
 
   useEffect(() => {
@@ -172,7 +157,6 @@ export function PinGate({ children }: PinGateProps) {
           
           if (response.ok) {
             const user = await response.json() as User;
-            sessionStorage.setItem(STORAGE_KEY, JSON.stringify(user));
             setCurrentUser(user);
             setIsUnlocked(true);
             clearLockoutState();
