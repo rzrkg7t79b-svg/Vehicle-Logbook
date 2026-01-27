@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { Lock, Timer, AlertTriangle, LogOut } from "lucide-react";
 import { UserContext } from "@/contexts/UserContext";
 import type { User } from "@/types";
-import { apiRequest } from "@/lib/queryClient";
+import { getUserByPin, localUserToUser } from "@/stores/userStore";
 import { useLocation } from "wouter";
 
 interface PinGateProps {
@@ -155,7 +155,7 @@ export function PinGate({ children }: PinGateProps) {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const handleDigit = async (digit: string) => {
+  const handleDigit = (digit: string) => {
     if (isLocked && !isEmergencyMode) return;
     if (isLoading) return;
 
@@ -186,15 +186,17 @@ export function PinGate({ children }: PinGateProps) {
       
       if (newPin.length === 4) {
         setIsLoading(true);
-        try {
-          const response = await apiRequest("POST", "/api/auth/login", { pin: newPin });
-          const user = await response.json() as User;
+        
+        const localUser = getUserByPin(newPin);
+        
+        if (localUser) {
+          const user = localUserToUser(localUser);
           sessionStorage.setItem(STORAGE_KEY, JSON.stringify(user));
           setCurrentUser(user);
           setIsUnlocked(true);
           clearLockoutState();
           setLocation("/");
-        } catch {
+        } else {
           setError(true);
           const newFailedAttempts = failedAttempts + 1;
           setFailedAttempts(newFailedAttempts);
@@ -212,9 +214,9 @@ export function PinGate({ children }: PinGateProps) {
             setPin("");
             setError(false);
           }, 500);
-        } finally {
-          setIsLoading(false);
         }
+        
+        setIsLoading(false);
       }
     }
   };

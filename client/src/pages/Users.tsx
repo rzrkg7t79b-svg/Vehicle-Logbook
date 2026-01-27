@@ -1,16 +1,23 @@
-import { useState } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useState, useEffect, useCallback } from "react";
 import { useUser } from "@/contexts/UserContext";
 import { Link } from "wouter";
 import { ArrowLeft, Plus, Edit2, Trash2, Shield, User as UserIcon, Check, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { motion, AnimatePresence } from "framer-motion";
-import { queryClient, apiRequest } from "@/lib/queryClient";
 import type { User } from "@/types";
+import {
+  getUsers,
+  createUser,
+  updateUser,
+  deleteUser,
+  localUserToUser,
+  type LocalUser,
+} from "@/stores/userStore";
 
 export default function Users() {
   const { user: currentUser } = useUser();
+  const [users, setUsers] = useState<User[]>([]);
   const [isCreating, setIsCreating] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [newInitials, setNewInitials] = useState("");
@@ -20,58 +27,16 @@ export default function Users() {
   const [newHourlyRate, setNewHourlyRate] = useState<string>("");
   const [pinError, setPinError] = useState("");
 
-  const adminPin = currentUser?.pin;
-  const adminHeaders: Record<string, string> = adminPin ? { "x-admin-pin": adminPin } : {};
+  const loadUsers = useCallback(() => {
+    const localUsers = getUsers();
+    setUsers(localUsers.map(localUserToUser));
+  }, []);
 
-  const { data: users = [], isLoading } = useQuery<User[]>({
-    queryKey: ["/api/users"],
-    queryFn: async () => {
-      const res = await fetch("/api/users", {
-        headers: adminHeaders,
-        credentials: "include",
-      });
-      if (!res.ok) throw new Error("Failed to fetch users");
-      return res.json();
-    },
-    enabled: !!currentUser?.isAdmin,
-  });
-
-  const createMutation = useMutation({
-    mutationFn: async (data: { initials: string; pin: string; roles: string[]; maxDailyHours: number | null; hourlyRate: number | null }) => {
-      const res = await apiRequest("POST", "/api/users", data, adminHeaders);
-      return res.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/users"] });
-      resetForm();
-    },
-    onError: (err: Error) => {
-      setPinError(err.message || "Failed to create user");
-    },
-  });
-
-  const updateMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: number; data: Partial<User> }) => {
-      const res = await apiRequest("PATCH", `/api/users/${id}`, data, adminHeaders);
-      return res.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/users"] });
-      resetForm();
-    },
-    onError: (err: Error) => {
-      setPinError(err.message || "Failed to update user");
-    },
-  });
-
-  const deleteMutation = useMutation({
-    mutationFn: async (id: number) => {
-      await apiRequest("DELETE", `/api/users/${id}`, undefined, adminHeaders);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/users"] });
-    },
-  });
+  useEffect(() => {
+    if (currentUser?.isAdmin) {
+      loadUsers();
+    }
+  }, [currentUser?.isAdmin, loadUsers]);
 
   const resetForm = () => {
     setIsCreating(false);
@@ -100,13 +65,20 @@ export default function Users() {
       setPinError("Hourly rate required for Driver role");
       return;
     }
-    createMutation.mutate({
-      initials: newInitials.toUpperCase(),
-      pin: newPin,
-      roles: newRoles,
-      maxDailyHours: hours,
-      hourlyRate: rate,
-    });
+    
+    try {
+      createUser({
+        initials: newInitials.toUpperCase(),
+        pin: newPin,
+        roles: newRoles,
+        maxDailyHours: hours,
+        hourlyRate: rate,
+      });
+      loadUsers();
+      resetForm();
+    } catch (err) {
+      setPinError(err instanceof Error ? err.message : "Failed to create user");
+    }
   };
 
   const handleUpdate = (id: number) => {
@@ -121,14 +93,33 @@ export default function Users() {
       setPinError("Hourly rate required for Driver role");
       return;
     }
-    const updateData: Partial<User> = {};
-    if (newInitials) updateData.initials = newInitials.toUpperCase();
-    if (newPin && newPin.length === 4) updateData.pin = newPin;
-    if (newRoles.length > 0 || editingId) updateData.roles = newRoles;
-    updateData.maxDailyHours = hours;
-    updateData.hourlyRate = rate;
     
-    updateMutation.mutate({ id, data: updateData });
+    try {
+      const updateData: Partial<LocalUser> = {
+        roles: newRoles,
+        maxDailyHours: hours,
+        hourlyRate: rate,
+      };
+      if (newInitials) updateData.initials = newInitials.toUpperCase();
+      if (newPin && newPin.length === 4) updateData.pin = newPin;
+      
+      updateUser(id, updateData);
+      loadUsers();
+      resetForm();
+    } catch (err) {
+      setPinError(err instanceof Error ? err.message : "Failed to update user");
+    }
+  };
+
+  const handleDelete = (id: number) => {
+    if (confirm("Delete this user?")) {
+      try {
+        deleteUser(id);
+        loadUsers();
+      } catch (err) {
+        setPinError(err instanceof Error ? err.message : "Failed to delete user");
+      }
+    }
   };
 
   const startEdit = (user: User) => {
@@ -296,7 +287,7 @@ export default function Users() {
                 </div>
                 {pinError && <p className="text-xs text-red-500">{pinError}</p>}
                 <div className="flex gap-2 pt-2">
-                  <Button size="sm" onClick={handleCreate} disabled={createMutation.isPending} data-testid="button-save-user">
+                  <Button size="sm" onClick={handleCreate} data-testid="button-save-user">
                     <Check className="w-4 h-4 mr-1" />
                     Create
                   </Button>
@@ -310,183 +301,175 @@ export default function Users() {
           )}
         </AnimatePresence>
 
-        {isLoading ? (
-          <div className="text-center py-12 text-muted-foreground">Loading users...</div>
-        ) : (
-          <div className="space-y-2">
-            {users.map((user) => (
-              <motion.div
-                key={user.id}
-                layout
-                className={`glass-card rounded-xl p-4 ${user.isAdmin ? "border-primary/30" : ""}`}
-              >
-                {editingId === user.id ? (
-                  <div className="space-y-3">
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className="text-xs text-muted-foreground mb-1 block">Initials</label>
-                        <Input
-                          value={newInitials}
-                          onChange={(e) => setNewInitials(e.target.value.toUpperCase().slice(0, 3))}
-                          className="bg-background"
-                          maxLength={3}
-                          disabled={user.isAdmin}
-                          data-testid="input-edit-initials"
-                        />
-                      </div>
-                      <div>
-                        <label className="text-xs text-muted-foreground mb-1 block">New PIN (optional)</label>
-                        <Input
-                          value={newPin}
-                          onChange={(e) => setNewPin(e.target.value.replace(/\D/g, "").slice(0, 4))}
-                          placeholder="Leave blank to keep"
-                          className="bg-background font-mono"
-                          maxLength={4}
-                          type="password"
-                          data-testid="input-edit-pin"
-                        />
-                      </div>
-                    </div>
+        <div className="space-y-2">
+          {users.map((user) => (
+            <motion.div
+              key={user.id}
+              layout
+              className={`glass-card rounded-xl p-4 ${user.isAdmin ? "border-primary/30" : ""}`}
+            >
+              {editingId === user.id ? (
+                <div className="space-y-3">
+                  <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="text-xs text-muted-foreground mb-1 block">Roles</label>
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => toggleRole("Counter")}
-                          className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                            newRoles.includes("Counter")
-                              ? "bg-primary text-white"
-                              : "bg-card border border-white/10 text-muted-foreground"
-                          }`}
-                        >
-                          Counter
-                        </button>
-                        <button
-                          onClick={() => toggleRole("Driver")}
-                          className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                            newRoles.includes("Driver")
-                              ? "bg-primary text-white"
-                              : "bg-card border border-white/10 text-muted-foreground"
-                          }`}
-                        >
-                          Driver
-                        </button>
-                      </div>
-                    </div>
-                    <div>
-                      <label className="text-xs text-muted-foreground mb-1 block">
-                        Max Daily Hours {newRoles.includes("Driver") ? "(required)" : "(optional)"}
-                      </label>
+                      <label className="text-xs text-muted-foreground mb-1 block">Initials</label>
                       <Input
-                        value={newMaxDailyHours}
-                        onChange={(e) => {
-                          const val = e.target.value.replace(/[^\d.]/g, "");
-                          if (val.split('.').length <= 2) {
-                            setNewMaxDailyHours(val.slice(0, 5));
-                          }
-                        }}
-                        placeholder="e.g. 5.5"
+                        value={newInitials}
+                        onChange={(e) => setNewInitials(e.target.value.toUpperCase().slice(0, 3))}
                         className="bg-background"
-                        maxLength={5}
-                        data-testid="input-edit-max-daily-hours"
+                        maxLength={3}
+                        disabled={user.isAdmin}
+                        data-testid="input-edit-initials"
                       />
                     </div>
                     <div>
-                      <label className="text-xs text-muted-foreground mb-1 block">
-                        Hourly Rate (EUR) {newRoles.includes("Driver") ? "(required)" : "(optional)"}
-                      </label>
+                      <label className="text-xs text-muted-foreground mb-1 block">New PIN (optional)</label>
                       <Input
-                        value={newHourlyRate}
-                        onChange={(e) => {
-                          const val = e.target.value.replace(/[^\d.,]/g, "").replace(",", ".");
-                          if (val.split('.').length <= 2) {
-                            setNewHourlyRate(val.slice(0, 6));
-                          }
-                        }}
-                        placeholder="e.g. 27.08"
-                        className="bg-background"
-                        maxLength={6}
-                        data-testid="input-edit-hourly-rate"
+                        value={newPin}
+                        onChange={(e) => setNewPin(e.target.value.replace(/\D/g, "").slice(0, 4))}
+                        placeholder="Leave blank to keep"
+                        className="bg-background font-mono"
+                        maxLength={4}
+                        type="password"
+                        data-testid="input-edit-pin"
                       />
-                    </div>
-                    {pinError && <p className="text-xs text-red-500">{pinError}</p>}
-                    <div className="flex gap-2">
-                      <Button size="sm" onClick={() => handleUpdate(user.id)} disabled={updateMutation.isPending}>
-                        <Check className="w-4 h-4 mr-1" />
-                        Save
-                      </Button>
-                      <Button size="sm" variant="outline" onClick={resetForm}>
-                        <X className="w-4 h-4 mr-1" />
-                        Cancel
-                      </Button>
                     </div>
                   </div>
-                ) : (
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                        user.isAdmin ? "bg-primary/20 text-primary" : "bg-card border border-white/10"
-                      }`}>
-                        {user.isAdmin ? <Shield className="w-5 h-5" /> : <UserIcon className="w-5 h-5 text-muted-foreground" />}
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="font-bold text-white">{user.initials}</span>
-                          {user.isAdmin && (
-                            <span className="text-[10px] px-1.5 py-0.5 bg-primary/20 text-primary rounded font-bold">
-                              ADMIN
-                            </span>
-                          )}
-                        </div>
-                        <div className="flex gap-1 mt-1 flex-wrap">
-                          {(user.roles || []).map((role) => (
-                            <span
-                              key={role}
-                              className="text-[10px] px-1.5 py-0.5 bg-white/5 text-muted-foreground rounded"
-                            >
-                              {role}
-                            </span>
-                          ))}
-                          {user.maxDailyHours && (
-                            <span className="text-[10px] px-1.5 py-0.5 bg-blue-500/20 text-blue-400 rounded">
-                              {Math.floor(user.maxDailyHours)}h{user.maxDailyHours % 1 > 0 ? ` ${Math.round((user.maxDailyHours % 1) * 60)}min` : ""}/day
-                            </span>
-                          )}
-                          {user.hourlyRate && (
-                            <span className="text-[10px] px-1.5 py-0.5 bg-green-500/20 text-green-400 rounded">
-                              {user.hourlyRate} EUR/h
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
+                  <div>
+                    <label className="text-xs text-muted-foreground mb-1 block">Roles</label>
                     <div className="flex gap-2">
                       <button
-                        onClick={() => startEdit(user)}
-                        className="p-2 rounded-lg bg-card border border-white/10 hover:bg-white/5"
-                        data-testid={`button-edit-user-${user.id}`}
+                        onClick={() => toggleRole("Counter")}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                          newRoles.includes("Counter")
+                            ? "bg-primary text-white"
+                            : "bg-card border border-white/10 text-muted-foreground"
+                        }`}
                       >
-                        <Edit2 className="w-4 h-4 text-muted-foreground" />
+                        Counter
                       </button>
-                      {!user.isAdmin && (
-                        <button
-                          onClick={() => {
-                            if (confirm("Delete this user?")) {
-                              deleteMutation.mutate(user.id);
-                            }
-                          }}
-                          className="p-2 rounded-lg bg-card border border-white/10 hover:bg-red-500/20"
-                          data-testid={`button-delete-user-${user.id}`}
-                        >
-                          <Trash2 className="w-4 h-4 text-red-500" />
-                        </button>
-                      )}
+                      <button
+                        onClick={() => toggleRole("Driver")}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                          newRoles.includes("Driver")
+                            ? "bg-primary text-white"
+                            : "bg-card border border-white/10 text-muted-foreground"
+                        }`}
+                      >
+                        Driver
+                      </button>
                     </div>
                   </div>
-                )}
-              </motion.div>
-            ))}
-          </div>
-        )}
+                  <div>
+                    <label className="text-xs text-muted-foreground mb-1 block">
+                      Max Daily Hours {newRoles.includes("Driver") ? "(required)" : "(optional)"}
+                    </label>
+                    <Input
+                      value={newMaxDailyHours}
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/[^\d.]/g, "");
+                        if (val.split('.').length <= 2) {
+                          setNewMaxDailyHours(val.slice(0, 5));
+                        }
+                      }}
+                      placeholder="e.g. 5.5"
+                      className="bg-background"
+                      maxLength={5}
+                      data-testid="input-edit-max-daily-hours"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs text-muted-foreground mb-1 block">
+                      Hourly Rate (EUR) {newRoles.includes("Driver") ? "(required)" : "(optional)"}
+                    </label>
+                    <Input
+                      value={newHourlyRate}
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/[^\d.,]/g, "").replace(",", ".");
+                        if (val.split('.').length <= 2) {
+                          setNewHourlyRate(val.slice(0, 6));
+                        }
+                      }}
+                      placeholder="e.g. 27.08"
+                      className="bg-background"
+                      maxLength={6}
+                      data-testid="input-edit-hourly-rate"
+                    />
+                  </div>
+                  {pinError && <p className="text-xs text-red-500">{pinError}</p>}
+                  <div className="flex gap-2">
+                    <Button size="sm" onClick={() => handleUpdate(user.id)}>
+                      <Check className="w-4 h-4 mr-1" />
+                      Save
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={resetForm}>
+                      <X className="w-4 h-4 mr-1" />
+                      Cancel
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                      user.isAdmin ? "bg-primary/20 text-primary" : "bg-card border border-white/10"
+                    }`}>
+                      {user.isAdmin ? <Shield className="w-5 h-5" /> : <UserIcon className="w-5 h-5 text-muted-foreground" />}
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-white">{user.initials}</span>
+                        {user.isAdmin && (
+                          <span className="text-[10px] px-1.5 py-0.5 bg-primary/20 text-primary rounded font-bold">
+                            ADMIN
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex gap-1 mt-1 flex-wrap">
+                        {(user.roles || []).map((role) => (
+                          <span
+                            key={role}
+                            className="text-[10px] px-1.5 py-0.5 bg-white/5 text-muted-foreground rounded"
+                          >
+                            {role}
+                          </span>
+                        ))}
+                        {user.maxDailyHours && (
+                          <span className="text-[10px] px-1.5 py-0.5 bg-blue-500/20 text-blue-400 rounded">
+                            {Math.floor(user.maxDailyHours)}h{user.maxDailyHours % 1 > 0 ? ` ${Math.round((user.maxDailyHours % 1) * 60)}min` : ""}/day
+                          </span>
+                        )}
+                        {user.hourlyRate && (
+                          <span className="text-[10px] px-1.5 py-0.5 bg-green-500/20 text-green-400 rounded">
+                            {user.hourlyRate} EUR/h
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => startEdit(user)}
+                      className="p-2 rounded-lg bg-card border border-white/10 hover:bg-white/5"
+                      data-testid={`button-edit-user-${user.id}`}
+                    >
+                      <Edit2 className="w-4 h-4 text-muted-foreground" />
+                    </button>
+                    {!user.isAdmin && (
+                      <button
+                        onClick={() => handleDelete(user.id)}
+                        className="p-2 rounded-lg bg-card border border-white/10 hover:bg-red-500/20"
+                        data-testid={`button-delete-user-${user.id}`}
+                      >
+                        <Trash2 className="w-4 h-4 text-red-500" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
+            </motion.div>
+          ))}
+        </div>
       </main>
     </div>
   );
