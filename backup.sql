@@ -2,7 +2,6 @@
 -- PostgreSQL database dump
 --
 
-\restrict vzmd1GLBlWXsiPJWb2i6Ke0kiksdS2MsiNypO1EwsMrvBRouu1KDXezTCX5dJ8I
 
 -- Dumped from database version 16.10
 -- Dumped by pg_dump version 16.10
@@ -18,12 +17,76 @@ SET xmloption = content;
 SET client_min_messages = warning;
 SET row_security = off;
 
+ALTER TABLE IF EXISTS ONLY public.vehicle_daily_comments DROP CONSTRAINT IF EXISTS vehicle_daily_comments_vehicle_id_vehicles_id_fk;
+ALTER TABLE IF EXISTS ONLY public.driver_tasks DROP CONSTRAINT IF EXISTS driver_tasks_quality_check_id_quality_checks_id_fk;
+ALTER TABLE IF EXISTS ONLY public.comments DROP CONSTRAINT IF EXISTS comments_vehicle_id_vehicles_id_fk;
+ALTER TABLE IF EXISTS ONLY public.vehicles DROP CONSTRAINT IF EXISTS vehicles_pkey;
+ALTER TABLE IF EXISTS ONLY public.vehicle_daily_comments DROP CONSTRAINT IF EXISTS vehicle_daily_comments_pkey;
+ALTER TABLE IF EXISTS ONLY public.users DROP CONSTRAINT IF EXISTS users_pkey;
+ALTER TABLE IF EXISTS ONLY public.users DROP CONSTRAINT IF EXISTS users_pin_unique;
+ALTER TABLE IF EXISTS ONLY public.upgrade_vehicles DROP CONSTRAINT IF EXISTS upgrade_vehicles_pkey;
+ALTER TABLE IF EXISTS ONLY public.todos DROP CONSTRAINT IF EXISTS todos_pkey;
+ALTER TABLE IF EXISTS ONLY public.timedriver_calculations DROP CONSTRAINT IF EXISTS timedriver_calculations_pkey;
+ALTER TABLE IF EXISTS ONLY public.timedriver_calculations DROP CONSTRAINT IF EXISTS timedriver_calculations_date_unique;
+ALTER TABLE IF EXISTS ONLY public.quality_checks DROP CONSTRAINT IF EXISTS quality_checks_pkey;
+ALTER TABLE IF EXISTS ONLY public.module_status DROP CONSTRAINT IF EXISTS module_status_pkey;
+ALTER TABLE IF EXISTS ONLY public.kpi_metrics DROP CONSTRAINT IF EXISTS kpi_metrics_pkey;
+ALTER TABLE IF EXISTS ONLY public.kpi_metrics DROP CONSTRAINT IF EXISTS kpi_metrics_key_unique;
+ALTER TABLE IF EXISTS ONLY public.future_planning DROP CONSTRAINT IF EXISTS future_planning_pkey;
+ALTER TABLE IF EXISTS ONLY public.future_planning DROP CONSTRAINT IF EXISTS future_planning_date_unique;
+ALTER TABLE IF EXISTS ONLY public.flow_tasks DROP CONSTRAINT IF EXISTS flow_tasks_pkey;
+ALTER TABLE IF EXISTS ONLY public.driver_tasks DROP CONSTRAINT IF EXISTS driver_tasks_pkey;
+ALTER TABLE IF EXISTS ONLY public.comments DROP CONSTRAINT IF EXISTS comments_pkey;
+ALTER TABLE IF EXISTS ONLY public.app_settings DROP CONSTRAINT IF EXISTS app_settings_pkey;
+ALTER TABLE IF EXISTS ONLY public.app_settings DROP CONSTRAINT IF EXISTS app_settings_key_unique;
+ALTER TABLE IF EXISTS public.vehicles ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE IF EXISTS public.vehicle_daily_comments ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE IF EXISTS public.users ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE IF EXISTS public.upgrade_vehicles ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE IF EXISTS public.todos ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE IF EXISTS public.timedriver_calculations ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE IF EXISTS public.quality_checks ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE IF EXISTS public.module_status ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE IF EXISTS public.kpi_metrics ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE IF EXISTS public.future_planning ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE IF EXISTS public.flow_tasks ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE IF EXISTS public.driver_tasks ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE IF EXISTS public.comments ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE IF EXISTS public.app_settings ALTER COLUMN id DROP DEFAULT;
+DROP SEQUENCE IF EXISTS public.vehicles_id_seq;
+DROP TABLE IF EXISTS public.vehicles;
+DROP SEQUENCE IF EXISTS public.vehicle_daily_comments_id_seq;
+DROP TABLE IF EXISTS public.vehicle_daily_comments;
+DROP SEQUENCE IF EXISTS public.users_id_seq;
+DROP TABLE IF EXISTS public.users;
+DROP SEQUENCE IF EXISTS public.upgrade_vehicles_id_seq;
+DROP TABLE IF EXISTS public.upgrade_vehicles;
+DROP SEQUENCE IF EXISTS public.todos_id_seq;
+DROP TABLE IF EXISTS public.todos;
+DROP SEQUENCE IF EXISTS public.timedriver_calculations_id_seq;
+DROP TABLE IF EXISTS public.timedriver_calculations;
+DROP SEQUENCE IF EXISTS public.quality_checks_id_seq;
+DROP TABLE IF EXISTS public.quality_checks;
+DROP SEQUENCE IF EXISTS public.module_status_id_seq;
+DROP TABLE IF EXISTS public.module_status;
+DROP SEQUENCE IF EXISTS public.kpi_metrics_id_seq;
+DROP TABLE IF EXISTS public.kpi_metrics;
+DROP SEQUENCE IF EXISTS public.future_planning_id_seq;
+DROP TABLE IF EXISTS public.future_planning;
+DROP SEQUENCE IF EXISTS public.flow_tasks_id_seq;
+DROP TABLE IF EXISTS public.flow_tasks;
+DROP SEQUENCE IF EXISTS public.driver_tasks_id_seq;
+DROP TABLE IF EXISTS public.driver_tasks;
+DROP SEQUENCE IF EXISTS public.comments_id_seq;
+DROP TABLE IF EXISTS public.comments;
+DROP SEQUENCE IF EXISTS public.app_settings_id_seq;
+DROP TABLE IF EXISTS public.app_settings;
 SET default_tablespace = '';
 
 SET default_table_access_method = heap;
 
 --
--- Name: app_settings; Type: TABLE; Schema: public; Owner: postgres
+-- Name: app_settings; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.app_settings (
@@ -34,10 +97,8 @@ CREATE TABLE public.app_settings (
 );
 
 
-ALTER TABLE public.app_settings OWNER TO postgres;
-
 --
--- Name: app_settings_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- Name: app_settings_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
 CREATE SEQUENCE public.app_settings_id_seq
@@ -49,17 +110,15 @@ CREATE SEQUENCE public.app_settings_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.app_settings_id_seq OWNER TO postgres;
-
 --
--- Name: app_settings_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+-- Name: app_settings_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
 ALTER SEQUENCE public.app_settings_id_seq OWNED BY public.app_settings.id;
 
 
 --
--- Name: comments; Type: TABLE; Schema: public; Owner: postgres
+-- Name: comments; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.comments (
@@ -71,10 +130,8 @@ CREATE TABLE public.comments (
 );
 
 
-ALTER TABLE public.comments OWNER TO postgres;
-
 --
--- Name: comments_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- Name: comments_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
 CREATE SEQUENCE public.comments_id_seq
@@ -86,17 +143,15 @@ CREATE SEQUENCE public.comments_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.comments_id_seq OWNER TO postgres;
-
 --
--- Name: comments_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+-- Name: comments_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
 ALTER SEQUENCE public.comments_id_seq OWNED BY public.comments.id;
 
 
 --
--- Name: driver_tasks; Type: TABLE; Schema: public; Owner: postgres
+-- Name: driver_tasks; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.driver_tasks (
@@ -111,10 +166,8 @@ CREATE TABLE public.driver_tasks (
 );
 
 
-ALTER TABLE public.driver_tasks OWNER TO postgres;
-
 --
--- Name: driver_tasks_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- Name: driver_tasks_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
 CREATE SEQUENCE public.driver_tasks_id_seq
@@ -126,17 +179,15 @@ CREATE SEQUENCE public.driver_tasks_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.driver_tasks_id_seq OWNER TO postgres;
-
 --
--- Name: driver_tasks_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+-- Name: driver_tasks_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
 ALTER SEQUENCE public.driver_tasks_id_seq OWNED BY public.driver_tasks.id;
 
 
 --
--- Name: flow_tasks; Type: TABLE; Schema: public; Owner: postgres
+-- Name: flow_tasks; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.flow_tasks (
@@ -155,10 +206,8 @@ CREATE TABLE public.flow_tasks (
 );
 
 
-ALTER TABLE public.flow_tasks OWNER TO postgres;
-
 --
--- Name: flow_tasks_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- Name: flow_tasks_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
 CREATE SEQUENCE public.flow_tasks_id_seq
@@ -170,17 +219,15 @@ CREATE SEQUENCE public.flow_tasks_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.flow_tasks_id_seq OWNER TO postgres;
-
 --
--- Name: flow_tasks_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+-- Name: flow_tasks_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
 ALTER SEQUENCE public.flow_tasks_id_seq OWNED BY public.flow_tasks.id;
 
 
 --
--- Name: future_planning; Type: TABLE; Schema: public; Owner: postgres
+-- Name: future_planning; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.future_planning (
@@ -197,10 +244,8 @@ CREATE TABLE public.future_planning (
 );
 
 
-ALTER TABLE public.future_planning OWNER TO postgres;
-
 --
--- Name: future_planning_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- Name: future_planning_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
 CREATE SEQUENCE public.future_planning_id_seq
@@ -212,17 +257,15 @@ CREATE SEQUENCE public.future_planning_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.future_planning_id_seq OWNER TO postgres;
-
 --
--- Name: future_planning_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+-- Name: future_planning_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
 ALTER SEQUENCE public.future_planning_id_seq OWNED BY public.future_planning.id;
 
 
 --
--- Name: kpi_metrics; Type: TABLE; Schema: public; Owner: postgres
+-- Name: kpi_metrics; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.kpi_metrics (
@@ -235,10 +278,8 @@ CREATE TABLE public.kpi_metrics (
 );
 
 
-ALTER TABLE public.kpi_metrics OWNER TO postgres;
-
 --
--- Name: kpi_metrics_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- Name: kpi_metrics_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
 CREATE SEQUENCE public.kpi_metrics_id_seq
@@ -250,17 +291,15 @@ CREATE SEQUENCE public.kpi_metrics_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.kpi_metrics_id_seq OWNER TO postgres;
-
 --
--- Name: kpi_metrics_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+-- Name: kpi_metrics_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
 ALTER SEQUENCE public.kpi_metrics_id_seq OWNED BY public.kpi_metrics.id;
 
 
 --
--- Name: module_status; Type: TABLE; Schema: public; Owner: postgres
+-- Name: module_status; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.module_status (
@@ -273,10 +312,8 @@ CREATE TABLE public.module_status (
 );
 
 
-ALTER TABLE public.module_status OWNER TO postgres;
-
 --
--- Name: module_status_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- Name: module_status_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
 CREATE SEQUENCE public.module_status_id_seq
@@ -288,17 +325,15 @@ CREATE SEQUENCE public.module_status_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.module_status_id_seq OWNER TO postgres;
-
 --
--- Name: module_status_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+-- Name: module_status_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
 ALTER SEQUENCE public.module_status_id_seq OWNED BY public.module_status.id;
 
 
 --
--- Name: quality_checks; Type: TABLE; Schema: public; Owner: postgres
+-- Name: quality_checks; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.quality_checks (
@@ -312,10 +347,8 @@ CREATE TABLE public.quality_checks (
 );
 
 
-ALTER TABLE public.quality_checks OWNER TO postgres;
-
 --
--- Name: quality_checks_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- Name: quality_checks_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
 CREATE SEQUENCE public.quality_checks_id_seq
@@ -327,17 +360,15 @@ CREATE SEQUENCE public.quality_checks_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.quality_checks_id_seq OWNER TO postgres;
-
 --
--- Name: quality_checks_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+-- Name: quality_checks_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
 ALTER SEQUENCE public.quality_checks_id_seq OWNED BY public.quality_checks.id;
 
 
 --
--- Name: timedriver_calculations; Type: TABLE; Schema: public; Owner: postgres
+-- Name: timedriver_calculations; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.timedriver_calculations (
@@ -352,10 +383,8 @@ CREATE TABLE public.timedriver_calculations (
 );
 
 
-ALTER TABLE public.timedriver_calculations OWNER TO postgres;
-
 --
--- Name: timedriver_calculations_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- Name: timedriver_calculations_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
 CREATE SEQUENCE public.timedriver_calculations_id_seq
@@ -367,17 +396,15 @@ CREATE SEQUENCE public.timedriver_calculations_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.timedriver_calculations_id_seq OWNER TO postgres;
-
 --
--- Name: timedriver_calculations_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+-- Name: timedriver_calculations_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
 ALTER SEQUENCE public.timedriver_calculations_id_seq OWNED BY public.timedriver_calculations.id;
 
 
 --
--- Name: todos; Type: TABLE; Schema: public; Owner: postgres
+-- Name: todos; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.todos (
@@ -397,10 +424,8 @@ CREATE TABLE public.todos (
 );
 
 
-ALTER TABLE public.todos OWNER TO postgres;
-
 --
--- Name: todos_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- Name: todos_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
 CREATE SEQUENCE public.todos_id_seq
@@ -412,17 +437,15 @@ CREATE SEQUENCE public.todos_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.todos_id_seq OWNER TO postgres;
-
 --
--- Name: todos_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+-- Name: todos_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
 ALTER SEQUENCE public.todos_id_seq OWNED BY public.todos.id;
 
 
 --
--- Name: upgrade_vehicles; Type: TABLE; Schema: public; Owner: postgres
+-- Name: upgrade_vehicles; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.upgrade_vehicles (
@@ -440,10 +463,8 @@ CREATE TABLE public.upgrade_vehicles (
 );
 
 
-ALTER TABLE public.upgrade_vehicles OWNER TO postgres;
-
 --
--- Name: upgrade_vehicles_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- Name: upgrade_vehicles_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
 CREATE SEQUENCE public.upgrade_vehicles_id_seq
@@ -455,17 +476,15 @@ CREATE SEQUENCE public.upgrade_vehicles_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.upgrade_vehicles_id_seq OWNER TO postgres;
-
 --
--- Name: upgrade_vehicles_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+-- Name: upgrade_vehicles_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
 ALTER SEQUENCE public.upgrade_vehicles_id_seq OWNED BY public.upgrade_vehicles.id;
 
 
 --
--- Name: users; Type: TABLE; Schema: public; Owner: postgres
+-- Name: users; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.users (
@@ -480,10 +499,8 @@ CREATE TABLE public.users (
 );
 
 
-ALTER TABLE public.users OWNER TO postgres;
-
 --
--- Name: users_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- Name: users_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
 CREATE SEQUENCE public.users_id_seq
@@ -495,17 +512,15 @@ CREATE SEQUENCE public.users_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.users_id_seq OWNER TO postgres;
-
 --
--- Name: users_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+-- Name: users_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
 ALTER SEQUENCE public.users_id_seq OWNED BY public.users.id;
 
 
 --
--- Name: vehicle_daily_comments; Type: TABLE; Schema: public; Owner: postgres
+-- Name: vehicle_daily_comments; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.vehicle_daily_comments (
@@ -517,10 +532,8 @@ CREATE TABLE public.vehicle_daily_comments (
 );
 
 
-ALTER TABLE public.vehicle_daily_comments OWNER TO postgres;
-
 --
--- Name: vehicle_daily_comments_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- Name: vehicle_daily_comments_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
 CREATE SEQUENCE public.vehicle_daily_comments_id_seq
@@ -532,17 +545,15 @@ CREATE SEQUENCE public.vehicle_daily_comments_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.vehicle_daily_comments_id_seq OWNER TO postgres;
-
 --
--- Name: vehicle_daily_comments_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+-- Name: vehicle_daily_comments_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
 ALTER SEQUENCE public.vehicle_daily_comments_id_seq OWNED BY public.vehicle_daily_comments.id;
 
 
 --
--- Name: vehicles; Type: TABLE; Schema: public; Owner: postgres
+-- Name: vehicles; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.vehicles (
@@ -559,10 +570,8 @@ CREATE TABLE public.vehicles (
 );
 
 
-ALTER TABLE public.vehicles OWNER TO postgres;
-
 --
--- Name: vehicles_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- Name: vehicles_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
 CREATE SEQUENCE public.vehicles_id_seq
@@ -574,115 +583,113 @@ CREATE SEQUENCE public.vehicles_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.vehicles_id_seq OWNER TO postgres;
-
 --
--- Name: vehicles_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+-- Name: vehicles_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
 ALTER SEQUENCE public.vehicles_id_seq OWNED BY public.vehicles.id;
 
 
 --
--- Name: app_settings id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: app_settings id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.app_settings ALTER COLUMN id SET DEFAULT nextval('public.app_settings_id_seq'::regclass);
 
 
 --
--- Name: comments id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: comments id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.comments ALTER COLUMN id SET DEFAULT nextval('public.comments_id_seq'::regclass);
 
 
 --
--- Name: driver_tasks id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: driver_tasks id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.driver_tasks ALTER COLUMN id SET DEFAULT nextval('public.driver_tasks_id_seq'::regclass);
 
 
 --
--- Name: flow_tasks id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: flow_tasks id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.flow_tasks ALTER COLUMN id SET DEFAULT nextval('public.flow_tasks_id_seq'::regclass);
 
 
 --
--- Name: future_planning id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: future_planning id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.future_planning ALTER COLUMN id SET DEFAULT nextval('public.future_planning_id_seq'::regclass);
 
 
 --
--- Name: kpi_metrics id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: kpi_metrics id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.kpi_metrics ALTER COLUMN id SET DEFAULT nextval('public.kpi_metrics_id_seq'::regclass);
 
 
 --
--- Name: module_status id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: module_status id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.module_status ALTER COLUMN id SET DEFAULT nextval('public.module_status_id_seq'::regclass);
 
 
 --
--- Name: quality_checks id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: quality_checks id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.quality_checks ALTER COLUMN id SET DEFAULT nextval('public.quality_checks_id_seq'::regclass);
 
 
 --
--- Name: timedriver_calculations id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: timedriver_calculations id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.timedriver_calculations ALTER COLUMN id SET DEFAULT nextval('public.timedriver_calculations_id_seq'::regclass);
 
 
 --
--- Name: todos id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: todos id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.todos ALTER COLUMN id SET DEFAULT nextval('public.todos_id_seq'::regclass);
 
 
 --
--- Name: upgrade_vehicles id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: upgrade_vehicles id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.upgrade_vehicles ALTER COLUMN id SET DEFAULT nextval('public.upgrade_vehicles_id_seq'::regclass);
 
 
 --
--- Name: users id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: users id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.users ALTER COLUMN id SET DEFAULT nextval('public.users_id_seq'::regclass);
 
 
 --
--- Name: vehicle_daily_comments id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: vehicle_daily_comments id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.vehicle_daily_comments ALTER COLUMN id SET DEFAULT nextval('public.vehicle_daily_comments_id_seq'::regclass);
 
 
 --
--- Name: vehicles id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: vehicles id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.vehicles ALTER COLUMN id SET DEFAULT nextval('public.vehicles_id_seq'::regclass);
 
 
 --
--- Data for Name: app_settings; Type: TABLE DATA; Schema: public; Owner: postgres
+-- Data for Name: app_settings; Type: TABLE DATA; Schema: public; Owner: -
 --
 
 COPY public.app_settings (id, key, value, updated_at) FROM stdin;
@@ -690,7 +697,7 @@ COPY public.app_settings (id, key, value, updated_at) FROM stdin;
 
 
 --
--- Data for Name: comments; Type: TABLE DATA; Schema: public; Owner: postgres
+-- Data for Name: comments; Type: TABLE DATA; Schema: public; Owner: -
 --
 
 COPY public.comments (id, vehicle_id, content, created_at, user_initials) FROM stdin;
@@ -703,7 +710,7 @@ COPY public.comments (id, vehicle_id, content, created_at, user_initials) FROM s
 
 
 --
--- Data for Name: driver_tasks; Type: TABLE DATA; Schema: public; Owner: postgres
+-- Data for Name: driver_tasks; Type: TABLE DATA; Schema: public; Owner: -
 --
 
 COPY public.driver_tasks (id, quality_check_id, license_plate, description, completed, completed_by, completed_at, created_at) FROM stdin;
@@ -714,7 +721,7 @@ COPY public.driver_tasks (id, quality_check_id, license_plate, description, comp
 
 
 --
--- Data for Name: flow_tasks; Type: TABLE DATA; Schema: public; Owner: postgres
+-- Data for Name: flow_tasks; Type: TABLE DATA; Schema: public; Owner: -
 --
 
 COPY public.flow_tasks (id, license_plate, is_ev, task_type, priority, completed, completed_by, completed_at, needs_retry, created_by, created_at, need_at) FROM stdin;
@@ -730,7 +737,7 @@ COPY public.flow_tasks (id, license_plate, is_ev, task_type, priority, completed
 
 
 --
--- Data for Name: future_planning; Type: TABLE DATA; Schema: public; Owner: postgres
+-- Data for Name: future_planning; Type: TABLE DATA; Schema: public; Owner: -
 --
 
 COPY public.future_planning (id, date, reservations_total, reservations_car, reservations_van, reservations_tas, deliveries_tomorrow, collections_open, saved_by, saved_at) FROM stdin;
@@ -739,7 +746,7 @@ COPY public.future_planning (id, date, reservations_total, reservations_car, res
 
 
 --
--- Data for Name: kpi_metrics; Type: TABLE DATA; Schema: public; Owner: postgres
+-- Data for Name: kpi_metrics; Type: TABLE DATA; Schema: public; Owner: -
 --
 
 COPY public.kpi_metrics (id, key, value, goal, updated_by, updated_at) FROM stdin;
@@ -749,7 +756,7 @@ COPY public.kpi_metrics (id, key, value, goal, updated_by, updated_at) FROM stdi
 
 
 --
--- Data for Name: module_status; Type: TABLE DATA; Schema: public; Owner: postgres
+-- Data for Name: module_status; Type: TABLE DATA; Schema: public; Owner: -
 --
 
 COPY public.module_status (id, module_name, is_done, done_at, done_by, date) FROM stdin;
@@ -761,7 +768,7 @@ COPY public.module_status (id, module_name, is_done, done_at, done_by, date) FRO
 
 
 --
--- Data for Name: quality_checks; Type: TABLE DATA; Schema: public; Owner: postgres
+-- Data for Name: quality_checks; Type: TABLE DATA; Schema: public; Owner: -
 --
 
 COPY public.quality_checks (id, license_plate, passed, comment, checked_by, created_at, is_ev) FROM stdin;
@@ -777,7 +784,7 @@ COPY public.quality_checks (id, license_plate, passed, comment, checked_by, crea
 
 
 --
--- Data for Name: timedriver_calculations; Type: TABLE DATA; Schema: public; Owner: postgres
+-- Data for Name: timedriver_calculations; Type: TABLE DATA; Schema: public; Owner: -
 --
 
 COPY public.timedriver_calculations (id, date, rentals, budget_per_rental, total_budget, drivers_data, calculated_by, calculated_at) FROM stdin;
@@ -786,7 +793,7 @@ COPY public.timedriver_calculations (id, date, rentals, budget_per_rental, total
 
 
 --
--- Data for Name: todos; Type: TABLE DATA; Schema: public; Owner: postgres
+-- Data for Name: todos; Type: TABLE DATA; Schema: public; Owner: -
 --
 
 COPY public.todos (id, title, completed, completed_by, completed_at, created_at, assigned_to, vehicle_id, is_system_generated, postponed_to_date, postpone_count, is_recurring, priority) FROM stdin;
@@ -803,7 +810,7 @@ COPY public.todos (id, title, completed, completed_by, completed_at, created_at,
 
 
 --
--- Data for Name: upgrade_vehicles; Type: TABLE DATA; Schema: public; Owner: postgres
+-- Data for Name: upgrade_vehicles; Type: TABLE DATA; Schema: public; Owner: -
 --
 
 COPY public.upgrade_vehicles (id, license_plate, model, reason, is_sold, sold_at, sold_by, date, created_by, created_at, is_van) FROM stdin;
@@ -814,7 +821,7 @@ COPY public.upgrade_vehicles (id, license_plate, model, reason, is_sold, sold_at
 
 
 --
--- Data for Name: users; Type: TABLE DATA; Schema: public; Owner: postgres
+-- Data for Name: users; Type: TABLE DATA; Schema: public; Owner: -
 --
 
 COPY public.users (id, initials, pin, roles, is_admin, created_at, max_daily_hours, hourly_rate) FROM stdin;
@@ -826,7 +833,7 @@ COPY public.users (id, initials, pin, roles, is_admin, created_at, max_daily_hou
 
 
 --
--- Data for Name: vehicle_daily_comments; Type: TABLE DATA; Schema: public; Owner: postgres
+-- Data for Name: vehicle_daily_comments; Type: TABLE DATA; Schema: public; Owner: -
 --
 
 COPY public.vehicle_daily_comments (id, vehicle_id, date, has_comment, comment_id) FROM stdin;
@@ -835,7 +842,7 @@ COPY public.vehicle_daily_comments (id, vehicle_id, date, has_comment, comment_i
 
 
 --
--- Data for Name: vehicles; Type: TABLE DATA; Schema: public; Owner: postgres
+-- Data for Name: vehicles; Type: TABLE DATA; Schema: public; Owner: -
 --
 
 COPY public.vehicles (id, license_plate, name, notes, is_ev, countdown_start, created_at, ready_for_collection, collection_todo_id, is_past) FROM stdin;
@@ -844,105 +851,105 @@ COPY public.vehicles (id, license_plate, name, notes, is_ev, countdown_start, cr
 
 
 --
--- Name: app_settings_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+-- Name: app_settings_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
 SELECT pg_catalog.setval('public.app_settings_id_seq', 1, false);
 
 
 --
--- Name: comments_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+-- Name: comments_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
 SELECT pg_catalog.setval('public.comments_id_seq', 9, true);
 
 
 --
--- Name: driver_tasks_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+-- Name: driver_tasks_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
 SELECT pg_catalog.setval('public.driver_tasks_id_seq', 3, true);
 
 
 --
--- Name: flow_tasks_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+-- Name: flow_tasks_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
 SELECT pg_catalog.setval('public.flow_tasks_id_seq', 8, true);
 
 
 --
--- Name: future_planning_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+-- Name: future_planning_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
 SELECT pg_catalog.setval('public.future_planning_id_seq', 2, true);
 
 
 --
--- Name: kpi_metrics_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+-- Name: kpi_metrics_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
 SELECT pg_catalog.setval('public.kpi_metrics_id_seq', 2, true);
 
 
 --
--- Name: module_status_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+-- Name: module_status_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
 SELECT pg_catalog.setval('public.module_status_id_seq', 4, true);
 
 
 --
--- Name: quality_checks_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+-- Name: quality_checks_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
 SELECT pg_catalog.setval('public.quality_checks_id_seq', 8, true);
 
 
 --
--- Name: timedriver_calculations_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+-- Name: timedriver_calculations_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
 SELECT pg_catalog.setval('public.timedriver_calculations_id_seq', 2, true);
 
 
 --
--- Name: todos_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+-- Name: todos_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
 SELECT pg_catalog.setval('public.todos_id_seq', 13, true);
 
 
 --
--- Name: upgrade_vehicles_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+-- Name: upgrade_vehicles_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
 SELECT pg_catalog.setval('public.upgrade_vehicles_id_seq', 3, true);
 
 
 --
--- Name: users_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+-- Name: users_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
 SELECT pg_catalog.setval('public.users_id_seq', 5, true);
 
 
 --
--- Name: vehicle_daily_comments_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+-- Name: vehicle_daily_comments_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
 SELECT pg_catalog.setval('public.vehicle_daily_comments_id_seq', 1, true);
 
 
 --
--- Name: vehicles_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+-- Name: vehicles_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
 SELECT pg_catalog.setval('public.vehicles_id_seq', 4, true);
 
 
 --
--- Name: app_settings app_settings_key_unique; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: app_settings app_settings_key_unique; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.app_settings
@@ -950,7 +957,7 @@ ALTER TABLE ONLY public.app_settings
 
 
 --
--- Name: app_settings app_settings_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: app_settings app_settings_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.app_settings
@@ -958,7 +965,7 @@ ALTER TABLE ONLY public.app_settings
 
 
 --
--- Name: comments comments_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: comments comments_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.comments
@@ -966,7 +973,7 @@ ALTER TABLE ONLY public.comments
 
 
 --
--- Name: driver_tasks driver_tasks_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: driver_tasks driver_tasks_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.driver_tasks
@@ -974,7 +981,7 @@ ALTER TABLE ONLY public.driver_tasks
 
 
 --
--- Name: flow_tasks flow_tasks_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: flow_tasks flow_tasks_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.flow_tasks
@@ -982,7 +989,7 @@ ALTER TABLE ONLY public.flow_tasks
 
 
 --
--- Name: future_planning future_planning_date_unique; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: future_planning future_planning_date_unique; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.future_planning
@@ -990,7 +997,7 @@ ALTER TABLE ONLY public.future_planning
 
 
 --
--- Name: future_planning future_planning_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: future_planning future_planning_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.future_planning
@@ -998,7 +1005,7 @@ ALTER TABLE ONLY public.future_planning
 
 
 --
--- Name: kpi_metrics kpi_metrics_key_unique; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: kpi_metrics kpi_metrics_key_unique; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.kpi_metrics
@@ -1006,7 +1013,7 @@ ALTER TABLE ONLY public.kpi_metrics
 
 
 --
--- Name: kpi_metrics kpi_metrics_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: kpi_metrics kpi_metrics_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.kpi_metrics
@@ -1014,7 +1021,7 @@ ALTER TABLE ONLY public.kpi_metrics
 
 
 --
--- Name: module_status module_status_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: module_status module_status_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.module_status
@@ -1022,7 +1029,7 @@ ALTER TABLE ONLY public.module_status
 
 
 --
--- Name: quality_checks quality_checks_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: quality_checks quality_checks_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.quality_checks
@@ -1030,7 +1037,7 @@ ALTER TABLE ONLY public.quality_checks
 
 
 --
--- Name: timedriver_calculations timedriver_calculations_date_unique; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: timedriver_calculations timedriver_calculations_date_unique; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.timedriver_calculations
@@ -1038,7 +1045,7 @@ ALTER TABLE ONLY public.timedriver_calculations
 
 
 --
--- Name: timedriver_calculations timedriver_calculations_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: timedriver_calculations timedriver_calculations_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.timedriver_calculations
@@ -1046,7 +1053,7 @@ ALTER TABLE ONLY public.timedriver_calculations
 
 
 --
--- Name: todos todos_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: todos todos_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.todos
@@ -1054,7 +1061,7 @@ ALTER TABLE ONLY public.todos
 
 
 --
--- Name: upgrade_vehicles upgrade_vehicles_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: upgrade_vehicles upgrade_vehicles_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.upgrade_vehicles
@@ -1062,7 +1069,7 @@ ALTER TABLE ONLY public.upgrade_vehicles
 
 
 --
--- Name: users users_pin_unique; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: users users_pin_unique; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.users
@@ -1070,7 +1077,7 @@ ALTER TABLE ONLY public.users
 
 
 --
--- Name: users users_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: users users_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.users
@@ -1078,7 +1085,7 @@ ALTER TABLE ONLY public.users
 
 
 --
--- Name: vehicle_daily_comments vehicle_daily_comments_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: vehicle_daily_comments vehicle_daily_comments_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.vehicle_daily_comments
@@ -1086,7 +1093,7 @@ ALTER TABLE ONLY public.vehicle_daily_comments
 
 
 --
--- Name: vehicles vehicles_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: vehicles vehicles_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.vehicles
@@ -1094,7 +1101,7 @@ ALTER TABLE ONLY public.vehicles
 
 
 --
--- Name: comments comments_vehicle_id_vehicles_id_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: comments comments_vehicle_id_vehicles_id_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.comments
@@ -1102,7 +1109,7 @@ ALTER TABLE ONLY public.comments
 
 
 --
--- Name: driver_tasks driver_tasks_quality_check_id_quality_checks_id_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: driver_tasks driver_tasks_quality_check_id_quality_checks_id_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.driver_tasks
@@ -1110,7 +1117,7 @@ ALTER TABLE ONLY public.driver_tasks
 
 
 --
--- Name: vehicle_daily_comments vehicle_daily_comments_vehicle_id_vehicles_id_fk; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: vehicle_daily_comments vehicle_daily_comments_vehicle_id_vehicles_id_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.vehicle_daily_comments
@@ -1121,5 +1128,5 @@ ALTER TABLE ONLY public.vehicle_daily_comments
 -- PostgreSQL database dump complete
 --
 
-\unrestrict vzmd1GLBlWXsiPJWb2i6Ke0kiksdS2MsiNypO1EwsMrvBRouu1KDXezTCX5dJ8I
+\unrestrict jmNM3QJfxEVRiRL1DDTDl07SztMXOWFrR0XfR4fg8tX1qGAEyexCdK3T3h6yZjS
 
