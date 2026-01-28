@@ -161,21 +161,17 @@ export function ExportPreview({ open, onOpenChange }: ExportPreviewProps) {
     }
   };
 
-  const getKpiGlowStyle = (key: "irpd" | "ses", value: number | undefined): React.CSSProperties => {
-    if (value === undefined) return {};
-    let color: string;
+  const getKpiGlowColor = (key: "irpd" | "ses", value: number | undefined): string => {
+    if (value === undefined) return "100, 100, 100";
     if (key === "irpd") {
-      if (value >= 8.0) color = "34, 197, 94";
-      else if (value >= 7.2) color = "234, 179, 8";
-      else color = "239, 68, 68";
+      if (value >= 8.0) return "34, 197, 94";
+      if (value >= 7.2) return "234, 179, 8";
+      return "239, 68, 68";
     } else {
-      if (value >= 92.5) color = "34, 197, 94";
-      else if (value >= 90.0) color = "234, 179, 8";
-      else color = "239, 68, 68";
+      if (value >= 92.5) return "34, 197, 94";
+      if (value >= 90.0) return "234, 179, 8";
+      return "239, 68, 68";
     }
-    return {
-      boxShadow: `0 0 20px rgba(${color}, 0.4), 0 0 40px rgba(${color}, 0.2)`,
-    };
   };
 
   const isKpiStale = (updatedAt: Date | string | null): boolean => {
@@ -339,22 +335,35 @@ export function ExportPreview({ open, onOpenChange }: ExportPreviewProps) {
                 </p>
               </div>
               <div style={{ 
-                display: "flex", 
-                alignItems: "center", 
-                gap: "20px",
-                backgroundColor: progress === 100 ? "rgba(34, 197, 94, 0.15)" : "rgba(249, 115, 22, 0.15)",
-                backdropFilter: "blur(20px)",
-                padding: "24px 40px",
+                position: "relative" as const,
                 borderRadius: "20px",
-                border: `1px solid ${progress === 100 ? "rgba(34, 197, 94, 0.4)" : "rgba(249, 115, 22, 0.4)"}`,
-                boxShadow: progress === 100 
-                  ? "0 0 30px rgba(34, 197, 94, 0.3), 0 0 60px rgba(34, 197, 94, 0.15)"
-                  : "0 0 30px rgba(249, 115, 22, 0.3), 0 0 60px rgba(249, 115, 22, 0.15)",
+                overflow: "hidden" as const,
               }}>
-                <span style={{ fontSize: "64px", fontWeight: "bold", color: progress === 100 ? "#22c55e" : "#f97316" }}>
-                  {progress}%
-                </span>
-                <span style={{ fontSize: "20px", color: "rgba(255,255,255,0.5)" }}>Daily<br/>Progress</span>
+                {/* Glow background layer for progress */}
+                <div style={{
+                  position: "absolute" as const,
+                  inset: "-30px",
+                  background: progress === 100 
+                    ? "radial-gradient(ellipse at center, rgba(34, 197, 94, 0.5) 0%, rgba(34, 197, 94, 0.2) 40%, transparent 70%)"
+                    : "radial-gradient(ellipse at center, rgba(249, 115, 22, 0.5) 0%, rgba(249, 115, 22, 0.2) 40%, transparent 70%)",
+                  zIndex: 0,
+                }} />
+                <div style={{ 
+                  position: "relative" as const,
+                  zIndex: 1,
+                  display: "flex", 
+                  alignItems: "center", 
+                  gap: "20px",
+                  backgroundColor: progress === 100 ? "rgba(34, 197, 94, 0.15)" : "rgba(249, 115, 22, 0.15)",
+                  padding: "24px 40px",
+                  borderRadius: "20px",
+                  border: `2px solid ${progress === 100 ? "rgba(34, 197, 94, 0.6)" : "rgba(249, 115, 22, 0.6)"}`,
+                }}>
+                  <span style={{ fontSize: "64px", fontWeight: "bold", color: progress === 100 ? "#22c55e" : "#f97316" }}>
+                    {progress}%
+                  </span>
+                  <span style={{ fontSize: "20px", color: "rgba(255,255,255,0.5)" }}>Daily<br/>Progress</span>
+                </div>
               </div>
             </div>
 
@@ -374,74 +383,128 @@ export function ExportPreview({ open, onOpenChange }: ExportPreviewProps) {
                   const color = getKpiColor(kpiKey, value);
                   const stale = isKpiStale(metric.updatedAt);
                   const trafficLight = getKpiTrafficLight(kpiKey, value);
-                  const glowStyle = stale ? {} : getKpiGlowStyle(kpiKey, value);
+                  const glowColor = stale ? "100, 100, 100" : getKpiGlowColor(kpiKey, value);
                   
                   return (
                     <div key={kpiKey} style={{ 
-                      backgroundColor: stale ? "rgba(40, 40, 40, 0.6)" : "rgba(30, 30, 30, 0.8)",
-                      backdropFilter: "blur(20px)",
-                      borderRadius: "16px",
-                      padding: "20px",
-                      border: stale ? "1px solid rgba(249, 115, 22, 0.5)" : `1px solid ${color}50`,
-                      opacity: stale ? 0.6 : 1,
                       position: "relative" as const,
-                      ...glowStyle,
+                      borderRadius: "16px",
+                      overflow: "hidden" as const,
                     }}>
-                      {/* Traffic Light */}
+                      {/* Glow background layer - radial gradient for export compatibility */}
+                      {!stale && (
+                        <div style={{
+                          position: "absolute" as const,
+                          inset: "-20px",
+                          background: `radial-gradient(ellipse at center, rgba(${glowColor}, 0.35) 0%, rgba(${glowColor}, 0.15) 40%, transparent 70%)`,
+                          zIndex: 0,
+                        }} />
+                      )}
+                      {/* Card content */}
                       <div style={{ 
-                        position: "absolute" as const, 
-                        top: "16px", 
-                        right: "16px", 
-                        display: "flex", 
-                        flexDirection: "column" as const, 
-                        gap: "6px" 
+                        position: "relative" as const,
+                        zIndex: 1,
+                        backgroundColor: stale ? "rgba(40, 40, 40, 0.9)" : "rgba(30, 30, 30, 0.85)",
+                        borderRadius: "16px",
+                        padding: "20px",
+                        border: stale ? "2px solid rgba(249, 115, 22, 0.5)" : `2px solid rgba(${glowColor}, 0.6)`,
+                        opacity: stale ? 0.6 : 1,
                       }}>
+                        {/* Traffic Light with glow backgrounds */}
                         <div style={{ 
-                          width: "14px", 
-                          height: "14px", 
-                          borderRadius: "50%", 
-                          backgroundColor: trafficLight === "green" ? "#22c55e" : "rgba(34, 197, 94, 0.2)",
-                          boxShadow: trafficLight === "green" ? "0 0 12px rgba(34, 197, 94, 0.8), 0 0 24px rgba(34, 197, 94, 0.4)" : "none",
-                        }} />
-                        <div style={{ 
-                          width: "14px", 
-                          height: "14px", 
-                          borderRadius: "50%", 
-                          backgroundColor: trafficLight === "yellow" ? "#eab308" : "rgba(234, 179, 8, 0.2)",
-                          boxShadow: trafficLight === "yellow" ? "0 0 12px rgba(234, 179, 8, 0.8), 0 0 24px rgba(234, 179, 8, 0.4)" : "none",
-                        }} />
-                        <div style={{ 
-                          width: "14px", 
-                          height: "14px", 
-                          borderRadius: "50%", 
-                          backgroundColor: trafficLight === "red" ? "#ef4444" : "rgba(239, 68, 68, 0.2)",
-                          boxShadow: trafficLight === "red" ? "0 0 12px rgba(239, 68, 68, 0.8), 0 0 24px rgba(239, 68, 68, 0.4)" : "none",
-                        }} />
-                      </div>
+                          position: "absolute" as const, 
+                          top: "16px", 
+                          right: "16px", 
+                          display: "flex", 
+                          flexDirection: "column" as const, 
+                          gap: "6px" 
+                        }}>
+                          <div style={{ 
+                            position: "relative" as const,
+                            width: "14px", 
+                            height: "14px", 
+                          }}>
+                            {trafficLight === "green" && (
+                              <div style={{
+                                position: "absolute" as const,
+                                inset: "-8px",
+                                background: "radial-gradient(circle, rgba(34, 197, 94, 0.8) 0%, rgba(34, 197, 94, 0.3) 50%, transparent 70%)",
+                              }} />
+                            )}
+                            <div style={{ 
+                              position: "relative" as const,
+                              width: "14px", 
+                              height: "14px", 
+                              borderRadius: "50%", 
+                              backgroundColor: trafficLight === "green" ? "#22c55e" : "rgba(34, 197, 94, 0.2)",
+                            }} />
+                          </div>
+                          <div style={{ 
+                            position: "relative" as const,
+                            width: "14px", 
+                            height: "14px", 
+                          }}>
+                            {trafficLight === "yellow" && (
+                              <div style={{
+                                position: "absolute" as const,
+                                inset: "-8px",
+                                background: "radial-gradient(circle, rgba(234, 179, 8, 0.8) 0%, rgba(234, 179, 8, 0.3) 50%, transparent 70%)",
+                              }} />
+                            )}
+                            <div style={{ 
+                              position: "relative" as const,
+                              width: "14px", 
+                              height: "14px", 
+                              borderRadius: "50%", 
+                              backgroundColor: trafficLight === "yellow" ? "#eab308" : "rgba(234, 179, 8, 0.2)",
+                            }} />
+                          </div>
+                          <div style={{ 
+                            position: "relative" as const,
+                            width: "14px", 
+                            height: "14px", 
+                          }}>
+                            {trafficLight === "red" && (
+                              <div style={{
+                                position: "absolute" as const,
+                                inset: "-8px",
+                                background: "radial-gradient(circle, rgba(239, 68, 68, 0.8) 0%, rgba(239, 68, 68, 0.3) 50%, transparent 70%)",
+                              }} />
+                            )}
+                            <div style={{ 
+                              position: "relative" as const,
+                              width: "14px", 
+                              height: "14px", 
+                              borderRadius: "50%", 
+                              backgroundColor: trafficLight === "red" ? "#ef4444" : "rgba(239, 68, 68, 0.2)",
+                            }} />
+                          </div>
+                        </div>
 
-                      <div style={{ 
-                        display: "flex", 
-                        alignItems: "center", 
-                        justifyContent: "space-between",
-                        marginBottom: "12px",
-                        paddingRight: "40px",
-                      }}>
-                        <span style={{ fontSize: "14px", fontWeight: "600", color: "rgba(255,255,255,0.5)", textTransform: "uppercase", letterSpacing: "1px" }}>
-                          {kpiKey === "irpd" ? "IRPD MTD" : "SES MTD"}
-                        </span>
-                        {stale && (
-                          <span style={{ fontSize: "12px", color: "#f97316", fontWeight: "500" }}>Stale</span>
-                        )}
-                      </div>
-                      <div style={{ display: "flex", alignItems: "baseline", gap: "8px" }}>
-                        <span style={{ fontSize: "36px", fontWeight: "bold", color: stale ? "#888" : color }}>
-                          {value !== undefined 
-                            ? (kpiKey === "irpd" ? `${value.toFixed(2)}` : `${value.toFixed(1)}%`)
-                            : "--"}
-                        </span>
-                        <span style={{ fontSize: "16px", color: "rgba(255,255,255,0.4)" }}>
-                          / {kpiKey === "irpd" ? goal.toFixed(2) : `${goal.toFixed(1)}%`}
-                        </span>
+                        <div style={{ 
+                          display: "flex", 
+                          alignItems: "center", 
+                          justifyContent: "space-between",
+                          marginBottom: "12px",
+                          paddingRight: "40px",
+                        }}>
+                          <span style={{ fontSize: "14px", fontWeight: "600", color: "rgba(255,255,255,0.5)", textTransform: "uppercase", letterSpacing: "1px" }}>
+                            {kpiKey === "irpd" ? "IRPD MTD" : "SES MTD"}
+                          </span>
+                          {stale && (
+                            <span style={{ fontSize: "12px", color: "#f97316", fontWeight: "500" }}>Stale</span>
+                          )}
+                        </div>
+                        <div style={{ display: "flex", alignItems: "baseline", gap: "8px" }}>
+                          <span style={{ fontSize: "36px", fontWeight: "bold", color: stale ? "#888" : color }}>
+                            {value !== undefined 
+                              ? (kpiKey === "irpd" ? `${value.toFixed(2)}` : `${value.toFixed(1)}%`)
+                              : "--"}
+                          </span>
+                          <span style={{ fontSize: "16px", color: "rgba(255,255,255,0.4)" }}>
+                            / {kpiKey === "irpd" ? goal.toFixed(2) : `${goal.toFixed(1)}%`}
+                          </span>
+                        </div>
                       </div>
                     </div>
                   );
