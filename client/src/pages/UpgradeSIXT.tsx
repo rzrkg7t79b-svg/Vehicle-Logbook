@@ -379,6 +379,11 @@ export default function UpgradeSIXT() {
             </p>
           </Card>
         )}
+
+        <footer className="mt-8 pt-8 border-t border-white/10 text-center space-y-1">
+          <p className="text-xs text-muted-foreground">Version v3.1.1</p>
+          <p className="text-xs text-muted-foreground">&copy; 2026 by Nathanael Prem</p>
+        </footer>
         </div>
       </div>
     </div>
