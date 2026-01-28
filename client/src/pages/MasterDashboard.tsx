@@ -245,6 +245,37 @@ export default function MasterDashboard() {
     }
   };
 
+  const getKpiGlowStyle = (key: "irpd" | "ses", value: number | undefined): React.CSSProperties => {
+    if (value === undefined) return {};
+    let color: string;
+    if (key === "irpd") {
+      if (value >= 8.0) color = "34, 197, 94"; // green
+      else if (value >= 7.2) color = "234, 179, 8"; // yellow
+      else color = "239, 68, 68"; // red
+    } else {
+      if (value >= 92.5) color = "34, 197, 94"; // green
+      else if (value >= 90.0) color = "234, 179, 8"; // yellow
+      else color = "239, 68, 68"; // red
+    }
+    return {
+      boxShadow: `0 0 20px rgba(${color}, 0.3), 0 0 40px rgba(${color}, 0.15), inset 0 1px 0 rgba(255,255,255,0.1)`,
+      border: `1px solid rgba(${color}, 0.4)`,
+    };
+  };
+
+  const getKpiTrafficLight = (key: "irpd" | "ses", value: number | undefined): "green" | "yellow" | "red" | "off" => {
+    if (value === undefined) return "off";
+    if (key === "irpd") {
+      if (value >= 8.0) return "green";
+      if (value >= 7.2) return "yellow";
+      return "red";
+    } else {
+      if (value >= 92.5) return "green";
+      if (value >= 90.0) return "yellow";
+      return "red";
+    }
+  };
+
   const isKpiStale = (updatedAt: Date | string | null): boolean => {
     if (!updatedAt) return true;
     const updated = new Date(updatedAt);
@@ -402,13 +433,36 @@ export default function MasterDashboard() {
             const stale = isKpiStale(metric?.updatedAt ?? null);
             const timeSince = formatTimeSinceUpdate(metric?.updatedAt ?? null);
             
+            const glowStyle = getKpiGlowStyle(kpiKey, value);
+            const trafficLight = getKpiTrafficLight(kpiKey, value);
+            
             return (
               <Card 
                 key={kpiKey}
-                className={`p-3 ${stale ? 'opacity-50 border-orange-500/50' : ''} ${bgColor.replace('/20', '/10')}`}
+                className={`p-3 relative overflow-hidden ${stale ? 'opacity-60' : ''} ${bgColor.replace('/20', '/10')}`}
+                style={stale ? {} : glowStyle}
                 data-testid={`kpi-card-${kpiKey}`}
               >
-                <div className="flex items-center justify-between mb-1">
+                {/* Traffic Light Indicator */}
+                <div className="absolute top-2 right-2 flex flex-col gap-1">
+                  <div className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${
+                    trafficLight === "green" 
+                      ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.8),0_0_16px_rgba(34,197,94,0.4)]" 
+                      : "bg-green-900/30"
+                  }`} />
+                  <div className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${
+                    trafficLight === "yellow" 
+                      ? "bg-yellow-500 shadow-[0_0_8px_rgba(234,179,8,0.8),0_0_16px_rgba(234,179,8,0.4)]" 
+                      : "bg-yellow-900/30"
+                  }`} />
+                  <div className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${
+                    trafficLight === "red" 
+                      ? "bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.8),0_0_16px_rgba(239,68,68,0.4)]" 
+                      : "bg-red-900/30"
+                  }`} />
+                </div>
+
+                <div className="flex items-center justify-between mb-1 pr-6">
                   <span className="text-xs font-medium text-muted-foreground uppercase">
                     {kpiKey === "irpd" ? "IRPD" : "SES"} MTD
                   </span>
@@ -889,7 +943,7 @@ export default function MasterDashboard() {
 
       <footer className="pb-24 pt-8 border-t border-white/10 text-center space-y-1 mx-4">
         <p className="text-xs text-muted-foreground">
-          Version v2.0.5
+          Version v3.1.1
         </p>
         <p className="text-xs text-muted-foreground">
           &copy; 2026 by Nathanael Prem
