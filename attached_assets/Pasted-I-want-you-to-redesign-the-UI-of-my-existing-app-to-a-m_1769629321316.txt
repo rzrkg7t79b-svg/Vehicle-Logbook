@@ -1,0 +1,58 @@
+I want you to redesign the UI of my existing app to a modern, premium, iOS-26-inspired “glass / frosted / liquid glass” style.
+
+IMPORTANT RULES:
+- Do NOT change any business logic, backend logic, API calls, database structure, state management, or app behavior.
+- Do NOT change any functionality.
+- Do NOT remove or rename any functions, endpoints, or data models.
+- The app must behave 100% identical after the refactor.
+- Only the visual appearance (UI, layout, styling) should change.
+
+DESIGN GOALS:
+- Modern iOS 26 style UI with:
+  - Glassmorphism / frosted glass panels
+  - Subtle blur backgrounds
+  - Soft transparency
+  - Smooth shadows and depth
+  - Rounded corners
+  - Clean, premium, minimalistic look
+  - Light reflections and layered surfaces
+
+COLOR RULES:
+- The main color scheme must be: Black, Orange, White.
+- These three colors define the global look and feel.
+- Keep all existing function-specific / semantic colors exactly as they are.
+- Do NOT change the meaning of any colors (e.g. success, warning, error, feature-specific colors).
+- You may only modernize how colors are presented (e.g. gradients, glass overlays, subtle lighting).
+
+LAYOUT RULES:
+- Keep the same screens, same components, same structure.
+- You may improve spacing, padding, alignment, and visual hierarchy.
+- You may modernize components (cards, lists, buttons, modals, inputs, navigation, etc).
+- Do NOT remove, merge, or add features or screens.
+
+TECHNICAL RULES:
+- Do NOT introduce new frameworks.
+- Do NOT migrate the project.
+- Only refactor UI components and styling.
+- Prefer creating reusable modern UI wrappers if helpful.
+
+VERSION RULE:
+- Update the app version shown in the footer to: v2.0.9
+- Do not change anything else related to versioning, releases, or backend metadata.
+
+IMPLEMENTATION STRATEGY:
+- Step by step:
+  1. Identify shared UI components
+  2. Create a modern glass-style design system
+  3. Apply it consistently across the app
+  4. Keep everything else untouched
+
+FINAL GOAL:
+The app should look like a modern iOS 26 glass-style app using a Black / Orange / White theme, but function exactly like before.
+
+Before finalizing, double-check:
+- No logic changes
+- No backend changes
+- No data model changes
+- No feature changes
+- Only UI/styling changes
