@@ -84,9 +84,8 @@ export default function Dashboard() {
             </button>
           </div>
 
-      {/* Vehicle List */}
-      <main className="p-4 space-y-3">
-        {!vehicles || vehicles.length === 0 ? (
+          {/* Vehicle List */}
+          {!vehicles || vehicles.length === 0 ? (
           <div className="text-center py-20 opacity-50">
             <Car className="w-16 h-16 mx-auto mb-4 text-muted-foreground/30" />
             <h3 className="text-lg font-medium text-muted-foreground">No vehicles found</h3>
@@ -148,7 +147,8 @@ export default function Dashboard() {
             ))}
           </AnimatePresence>
         )}
-      </main>
+        </div>
+      </div>
     </div>
   );
 }

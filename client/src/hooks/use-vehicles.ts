@@ -4,7 +4,7 @@ import type { Vehicle, VehicleWithComments, CreateVehicleRequest, Comment } from
 
 export function useVehicles(filters?: { search?: string, filter?: 'all' | 'expired' }) {
   const queryKey = [API_PATHS.vehicles.list, filters];
-  return useQuery<Vehicle[]>({
+  return useQuery<VehicleWithComments[]>({
     queryKey,
     queryFn: async () => {
       const params = new URLSearchParams();
