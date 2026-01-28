@@ -556,8 +556,14 @@ export class DatabaseStorage implements IStorage {
 
     await db.delete(moduleStatus);
 
-    await db.delete(qualityChecks);
-    await db.delete(driverTasks);
+    // Only delete passed quality checks (keep failed ones until driver task is done)
+    await db.delete(qualityChecks).where(eq(qualityChecks.passed, true));
+    
+    // Only delete completed driver tasks (keep incomplete ones)
+    await db.delete(driverTasks).where(eq(driverTasks.completed, true));
+    
+    // Only delete completed flow tasks (keep incomplete ones)
+    await db.delete(flowTasks).where(eq(flowTasks.completed, true));
 
     await db.delete(timedriverCalculations);
     
