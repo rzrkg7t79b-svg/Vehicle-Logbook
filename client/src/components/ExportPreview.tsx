@@ -148,6 +148,36 @@ export function ExportPreview({ open, onOpenChange }: ExportPreviewProps) {
     }
   };
 
+  const getKpiTrafficLight = (key: "irpd" | "ses", value: number | undefined): "green" | "yellow" | "red" | "off" => {
+    if (value === undefined) return "off";
+    if (key === "irpd") {
+      if (value >= 8.0) return "green";
+      if (value >= 7.2) return "yellow";
+      return "red";
+    } else {
+      if (value >= 92.5) return "green";
+      if (value >= 90.0) return "yellow";
+      return "red";
+    }
+  };
+
+  const getKpiGlowStyle = (key: "irpd" | "ses", value: number | undefined): React.CSSProperties => {
+    if (value === undefined) return {};
+    let color: string;
+    if (key === "irpd") {
+      if (value >= 8.0) color = "34, 197, 94";
+      else if (value >= 7.2) color = "234, 179, 8";
+      else color = "239, 68, 68";
+    } else {
+      if (value >= 92.5) color = "34, 197, 94";
+      else if (value >= 90.0) color = "234, 179, 8";
+      else color = "239, 68, 68";
+    }
+    return {
+      boxShadow: `0 0 20px rgba(${color}, 0.4), 0 0 40px rgba(${color}, 0.2)`,
+    };
+  };
+
   const isKpiStale = (updatedAt: Date | string | null): boolean => {
     if (!updatedAt) return true;
     const updated = new Date(updatedAt);
@@ -267,14 +297,15 @@ export function ExportPreview({ open, onOpenChange }: ExportPreviewProps) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-auto">
         <DialogHeader>
-          <DialogTitle className="flex items-center justify-between">
-            <span>Export Preview - Dashboard Cards</span>
-            <Button onClick={handleExport} disabled={isExporting} size="sm">
-              <Download className="w-4 h-4 mr-2" />
-              {isExporting ? "Exporting..." : "Export"}
-            </Button>
-          </DialogTitle>
+          <DialogTitle>Export Preview - Dashboard Cards</DialogTitle>
         </DialogHeader>
+        
+        <div className="flex justify-end mb-4">
+          <Button onClick={handleExport} disabled={isExporting} size="sm">
+            <Download className="w-4 h-4 mr-2" />
+            {isExporting ? "Exporting..." : "Export"}
+          </Button>
+        </div>
 
         <div className="overflow-auto border rounded-lg" style={{ maxHeight: "70vh" }}>
           <div 
@@ -288,13 +319,22 @@ export function ExportPreview({ open, onOpenChange }: ExportPreviewProps) {
               fontFamily: "system-ui, -apple-system, sans-serif",
             }}
           >
-            {/* Header */}
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "30px" }}>
+            {/* Header with Glass Effect */}
+            <div style={{ 
+              display: "flex", 
+              justifyContent: "space-between", 
+              alignItems: "center", 
+              marginBottom: "30px",
+              background: "linear-gradient(135deg, rgba(249, 115, 22, 0.1) 0%, transparent 50%)",
+              borderRadius: "24px",
+              padding: "32px",
+              border: "1px solid rgba(255, 255, 255, 0.1)",
+            }}>
               <div>
                 <h1 style={{ fontSize: "48px", fontWeight: "bold", color: "white", margin: 0 }}>
                   Master<span style={{ color: "#f97316" }}>SIXT</span>
                 </h1>
-                <p style={{ fontSize: "20px", color: "#888", margin: "5px 0 0 0" }}>
+                <p style={{ fontSize: "20px", color: "rgba(255,255,255,0.5)", margin: "8px 0 0 0" }}>
                   Daily Status Report - {formatDate(todayDate)}
                 </p>
               </div>
@@ -302,19 +342,23 @@ export function ExportPreview({ open, onOpenChange }: ExportPreviewProps) {
                 display: "flex", 
                 alignItems: "center", 
                 gap: "20px",
-                backgroundColor: progress === 100 ? "rgba(34, 197, 94, 0.2)" : "rgba(249, 115, 22, 0.2)",
-                padding: "20px 40px",
-                borderRadius: "16px",
-                border: `2px solid ${progress === 100 ? "#22c55e" : "#f97316"}`,
+                backgroundColor: progress === 100 ? "rgba(34, 197, 94, 0.15)" : "rgba(249, 115, 22, 0.15)",
+                backdropFilter: "blur(20px)",
+                padding: "24px 40px",
+                borderRadius: "20px",
+                border: `1px solid ${progress === 100 ? "rgba(34, 197, 94, 0.4)" : "rgba(249, 115, 22, 0.4)"}`,
+                boxShadow: progress === 100 
+                  ? "0 0 30px rgba(34, 197, 94, 0.3), 0 0 60px rgba(34, 197, 94, 0.15)"
+                  : "0 0 30px rgba(249, 115, 22, 0.3), 0 0 60px rgba(249, 115, 22, 0.15)",
               }}>
                 <span style={{ fontSize: "64px", fontWeight: "bold", color: progress === 100 ? "#22c55e" : "#f97316" }}>
                   {progress}%
                 </span>
-                <span style={{ fontSize: "20px", color: "#888" }}>Daily<br/>Progress</span>
+                <span style={{ fontSize: "20px", color: "rgba(255,255,255,0.5)" }}>Daily<br/>Progress</span>
               </div>
             </div>
 
-            {/* KPI Indicators */}
+            {/* KPI Indicators with Traffic Lights */}
             {(getKpiMetric("irpd") || getKpiMetric("ses")) && (
               <div style={{ 
                 display: "grid", 
@@ -329,35 +373,73 @@ export function ExportPreview({ open, onOpenChange }: ExportPreviewProps) {
                   const goal = metric.goal ?? (kpiKey === "irpd" ? 8.0 : 92.5);
                   const color = getKpiColor(kpiKey, value);
                   const stale = isKpiStale(metric.updatedAt);
+                  const trafficLight = getKpiTrafficLight(kpiKey, value);
+                  const glowStyle = stale ? {} : getKpiGlowStyle(kpiKey, value);
                   
                   return (
                     <div key={kpiKey} style={{ 
-                      backgroundColor: stale ? "rgba(100, 100, 100, 0.2)" : `${color}20`,
-                      borderRadius: "12px",
-                      padding: "16px",
-                      border: stale ? "2px solid #f97316" : `2px solid ${color}`,
+                      backgroundColor: stale ? "rgba(40, 40, 40, 0.6)" : "rgba(30, 30, 30, 0.8)",
+                      backdropFilter: "blur(20px)",
+                      borderRadius: "16px",
+                      padding: "20px",
+                      border: stale ? "1px solid rgba(249, 115, 22, 0.5)" : `1px solid ${color}50`,
                       opacity: stale ? 0.6 : 1,
+                      position: "relative" as const,
+                      ...glowStyle,
                     }}>
+                      {/* Traffic Light */}
+                      <div style={{ 
+                        position: "absolute" as const, 
+                        top: "16px", 
+                        right: "16px", 
+                        display: "flex", 
+                        flexDirection: "column" as const, 
+                        gap: "6px" 
+                      }}>
+                        <div style={{ 
+                          width: "14px", 
+                          height: "14px", 
+                          borderRadius: "50%", 
+                          backgroundColor: trafficLight === "green" ? "#22c55e" : "rgba(34, 197, 94, 0.2)",
+                          boxShadow: trafficLight === "green" ? "0 0 12px rgba(34, 197, 94, 0.8), 0 0 24px rgba(34, 197, 94, 0.4)" : "none",
+                        }} />
+                        <div style={{ 
+                          width: "14px", 
+                          height: "14px", 
+                          borderRadius: "50%", 
+                          backgroundColor: trafficLight === "yellow" ? "#eab308" : "rgba(234, 179, 8, 0.2)",
+                          boxShadow: trafficLight === "yellow" ? "0 0 12px rgba(234, 179, 8, 0.8), 0 0 24px rgba(234, 179, 8, 0.4)" : "none",
+                        }} />
+                        <div style={{ 
+                          width: "14px", 
+                          height: "14px", 
+                          borderRadius: "50%", 
+                          backgroundColor: trafficLight === "red" ? "#ef4444" : "rgba(239, 68, 68, 0.2)",
+                          boxShadow: trafficLight === "red" ? "0 0 12px rgba(239, 68, 68, 0.8), 0 0 24px rgba(239, 68, 68, 0.4)" : "none",
+                        }} />
+                      </div>
+
                       <div style={{ 
                         display: "flex", 
                         alignItems: "center", 
                         justifyContent: "space-between",
-                        marginBottom: "8px",
+                        marginBottom: "12px",
+                        paddingRight: "40px",
                       }}>
-                        <span style={{ fontSize: "14px", fontWeight: "600", color: "#888", textTransform: "uppercase" }}>
+                        <span style={{ fontSize: "14px", fontWeight: "600", color: "rgba(255,255,255,0.5)", textTransform: "uppercase", letterSpacing: "1px" }}>
                           {kpiKey === "irpd" ? "IRPD MTD" : "SES MTD"}
                         </span>
                         {stale && (
-                          <span style={{ fontSize: "12px", color: "#f97316" }}>Stale</span>
+                          <span style={{ fontSize: "12px", color: "#f97316", fontWeight: "500" }}>Stale</span>
                         )}
                       </div>
                       <div style={{ display: "flex", alignItems: "baseline", gap: "8px" }}>
-                        <span style={{ fontSize: "32px", fontWeight: "bold", color: stale ? "#888" : color }}>
+                        <span style={{ fontSize: "36px", fontWeight: "bold", color: stale ? "#888" : color }}>
                           {value !== undefined 
                             ? (kpiKey === "irpd" ? `${value.toFixed(2)}` : `${value.toFixed(1)}%`)
                             : "--"}
                         </span>
-                        <span style={{ fontSize: "16px", color: "#888" }}>
+                        <span style={{ fontSize: "16px", color: "rgba(255,255,255,0.4)" }}>
                           / {kpiKey === "irpd" ? goal.toFixed(2) : `${goal.toFixed(1)}%`}
                         </span>
                       </div>
