@@ -4,19 +4,22 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 const badgeVariants = cva(
-  // Whitespace-nowrap: Badges should never wrap.
-  "whitespace-nowrap inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2" +
-  " hover-elevate " ,
+  "whitespace-nowrap inline-flex items-center rounded-lg border px-2.5 py-1 text-xs font-medium transition-all duration-200",
   {
     variants: {
       variant: {
         default:
-          "border-transparent bg-primary text-primary-foreground shadow-xs",
-        secondary: "border-transparent bg-secondary text-secondary-foreground",
+          "border-primary/30 bg-primary/20 text-primary shadow-[0_0_8px_rgba(255,102,0,0.2)]",
+        secondary:
+          "border-white/[0.08] bg-white/[0.06] text-white/80 backdrop-blur-sm",
         destructive:
-          "border-transparent bg-destructive text-destructive-foreground shadow-xs",
-
-        outline: " border [border-color:var(--badge-outline)] shadow-xs",
+          "border-red-500/30 bg-red-500/20 text-red-400 shadow-[0_0_8px_rgba(239,68,68,0.2)]",
+        outline:
+          "border-white/[0.12] bg-transparent text-white/70",
+        success:
+          "border-green-500/30 bg-green-500/20 text-green-400 shadow-[0_0_8px_rgba(34,197,94,0.2)]",
+        warning:
+          "border-orange-500/30 bg-orange-500/20 text-orange-400 shadow-[0_0_8px_rgba(251,146,60,0.2)]",
       },
     },
     defaultVariants: {

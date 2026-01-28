@@ -192,18 +192,24 @@ export default function FlowSIXT() {
   };
 
   return (
-    <div className="min-h-screen bg-background pb-24">
-      <div className="max-w-md mx-auto p-4 space-y-6">
-        <div className="flex items-center gap-4">
-          <Link href="/" className="text-muted-foreground hover:text-foreground" data-testid="link-back-master">
-            <ArrowLeft className="w-6 h-6" />
-          </Link>
-          <div>
-            <h1 className="text-2xl font-bold text-foreground">FlowSIXT</h1>
-            <p className="text-sm text-muted-foreground">Driver Task Management</p>
+    <div className="min-h-screen pb-24">
+      <div className="max-w-md mx-auto">
+        <div className="relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-b from-yellow-500/10 via-yellow-500/5 to-transparent" />
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[300px] h-[200px] bg-yellow-500/15 blur-[100px] rounded-full" />
+          <div className="relative p-6 pt-8">
+            <Link href="/" className="flex items-center gap-2 text-white/50 hover:text-white mb-4 transition-colors rounded-xl px-3 py-1.5 -ml-3 hover:bg-white/[0.04] w-fit" data-testid="link-back-master">
+              <ArrowLeft className="w-4 h-4" />
+              <span className="text-sm">Back to Master</span>
+            </Link>
+            <h1 className="text-3xl font-bold text-white mb-1">
+              Flow<span className="text-yellow-400">SIXT</span>
+            </h1>
+            <p className="text-sm text-white/50">Driver Task Management</p>
           </div>
         </div>
 
+        <div className="p-4 space-y-6">
         {isAdminOrCounter && (
           <Card>
             <CardHeader className="pb-3">
@@ -370,6 +376,7 @@ export default function FlowSIXT() {
             </CardContent>
           </Card>
         )}
+        </div>
       </div>
     </div>
   );

@@ -205,18 +205,22 @@ export function PinGate({ children }: PinGateProps) {
     return (
       <UserContext.Provider value={{ user: currentUser, logout }}>
         <div className="relative pt-14">
-          <div className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 py-2.5 bg-card/95 backdrop-blur border-b border-white/10">
-            <span className="text-sm font-bold text-primary">{currentUser.initials}</span>
+          <div className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 py-3 header-glass">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-xl bg-primary/20 flex items-center justify-center">
+                <span className="text-sm font-bold text-primary">{currentUser.initials}</span>
+              </div>
+            </div>
             <div className="flex items-center gap-3">
-              <div className="flex items-center gap-1.5">
-                <Timer className="w-3.5 h-3.5 text-muted-foreground" />
-                <span className={`text-xs font-mono font-bold ${secondsLeft <= 60 ? 'text-red-500' : 'text-muted-foreground'}`}>
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/[0.04] border border-white/[0.06]">
+                <Timer className="w-3.5 h-3.5 text-white/50" />
+                <span className={`text-xs font-mono font-semibold ${secondsLeft <= 60 ? 'text-red-400' : 'text-white/60'}`}>
                   {formatTime(secondsLeft)}
                 </span>
               </div>
               <button
                 onClick={logout}
-                className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-muted-foreground hover:text-white bg-white/5 hover:bg-white/10 rounded-md transition-colors"
+                className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-white/60 hover:text-white bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.06] hover:border-white/[0.1] rounded-xl transition-all duration-200"
                 data-testid="button-logout"
               >
                 <LogOut className="w-3.5 h-3.5" />
@@ -231,54 +235,54 @@ export function PinGate({ children }: PinGateProps) {
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6">
+    <div className="min-h-screen bg-gradient-to-b from-[#0A0A0A] to-[#111] flex flex-col items-center justify-center p-6">
       <div className="w-full max-w-xs">
-        <div className="text-center mb-8">
-          <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 ${
+        <div className="text-center mb-10">
+          <div className={`w-20 h-20 rounded-3xl flex items-center justify-center mx-auto mb-6 ${
             isLocked 
-              ? "bg-red-500/10 border border-red-500/20" 
-              : "bg-primary/10 border border-primary/20"
+              ? "bg-red-500/15 border border-red-500/25 shadow-[0_0_30px_rgba(239,68,68,0.15)]" 
+              : "bg-primary/15 border border-primary/25 shadow-[0_0_30px_rgba(255,102,0,0.15)]"
           }`}>
             {isLocked ? (
-              <AlertTriangle className="w-8 h-8 text-red-500" />
+              <AlertTriangle className="w-9 h-9 text-red-400" />
             ) : (
-              <Lock className="w-8 h-8 text-primary" />
+              <Lock className="w-9 h-9 text-primary" />
             )}
           </div>
-          <h1 className="text-2xl font-bold text-white mb-1">
-            Master<span className="text-primary">SIXT</span>
+          <h1 className="text-3xl font-bold text-white mb-2">
+            Master<span className="text-primary text-glow">SIXT</span>
           </h1>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-white/50">
             {isLocked ? "Login locked" : "Enter PIN to access"}
           </p>
         </div>
 
         {isLocked && (
-          <div className="text-center mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-xl">
-            <p className="text-sm text-red-400 mb-2">Too many failed attempts</p>
-            <p className="text-2xl font-mono font-bold text-red-500" data-testid="lockout-timer">
+          <div className="text-center mb-8 p-5 rounded-2xl bg-red-500/10 border border-red-500/20 shadow-[inset_0_0_20px_rgba(239,68,68,0.1)]">
+            <p className="text-sm text-red-300 mb-2">Too many failed attempts</p>
+            <p className="text-3xl font-mono font-bold text-red-400" data-testid="lockout-timer">
               {formatTime(lockoutSecondsLeft)}
             </p>
           </div>
         )}
 
-        <div className="flex justify-center gap-3 mb-4">
+        <div className="flex justify-center gap-4 mb-6">
           {Array.from({ length: 4 }).map((_, i) => (
             <div
               key={i}
-              className={`w-4 h-4 rounded-full border-2 transition-all ${
+              className={`w-4 h-4 rounded-full transition-all duration-200 ${
                 error 
-                  ? "bg-red-500 border-red-500" 
+                  ? "bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.5)]" 
                   : pin.length > i 
-                    ? "bg-primary border-primary" 
-                    : "border-white/20"
+                    ? "bg-primary shadow-[0_0_10px_rgba(255,102,0,0.5)]" 
+                    : "bg-white/10 border border-white/20"
               }`}
             />
           ))}
         </div>
 
         {!isLocked && failedAttempts > 0 && (
-          <div className="text-center mb-4" data-testid="attempts-remaining">
+          <div className="text-center mb-6" data-testid="attempts-remaining">
             <span className="text-sm text-orange-400">
               {attemptsRemaining} attempt{attemptsRemaining !== 1 ? 's' : ''} left
             </span>
@@ -291,7 +295,7 @@ export function PinGate({ children }: PinGateProps) {
               key={digit}
               onClick={() => handleDigit(digit.toString())}
               disabled={isLoading || isLocked}
-              className="h-16 rounded-xl border bg-card border-white/10 text-white hover:bg-white/5 text-2xl font-bold transition-all disabled:opacity-50 active:scale-95"
+              className="h-[68px] rounded-2xl bg-gradient-to-b from-[rgba(40,40,40,0.8)] to-[rgba(25,25,25,0.9)] border border-white/[0.08] text-white hover:from-[rgba(50,50,50,0.85)] hover:to-[rgba(35,35,35,0.95)] hover:border-white/[0.12] text-2xl font-semibold transition-all duration-150 disabled:opacity-50 active:scale-[0.96] shadow-[0_4px_12px_rgba(0,0,0,0.3),inset_0_1px_0_rgba(255,255,255,0.05)]"
               data-testid={`pin-digit-${digit}`}
             >
               {digit}
@@ -300,7 +304,7 @@ export function PinGate({ children }: PinGateProps) {
           <button
             onClick={handleBackspace}
             disabled={isLoading || isLocked}
-            className="h-16 rounded-xl border bg-card border-white/10 text-muted-foreground hover:bg-white/5 text-lg font-medium transition-all disabled:opacity-50 active:scale-95"
+            className="h-[68px] rounded-2xl bg-gradient-to-b from-[rgba(40,40,40,0.8)] to-[rgba(25,25,25,0.9)] border border-white/[0.08] text-white/60 hover:text-white hover:from-[rgba(50,50,50,0.85)] hover:to-[rgba(35,35,35,0.95)] hover:border-white/[0.12] text-lg font-medium transition-all duration-150 disabled:opacity-50 active:scale-[0.96] shadow-[0_4px_12px_rgba(0,0,0,0.3),inset_0_1px_0_rgba(255,255,255,0.05)]"
             data-testid="pin-backspace"
           >
             Del
@@ -308,19 +312,23 @@ export function PinGate({ children }: PinGateProps) {
           <button
             onClick={() => handleDigit("0")}
             disabled={isLoading || isLocked}
-            className="h-16 rounded-xl border bg-card border-white/10 text-white hover:bg-white/5 text-2xl font-bold transition-all disabled:opacity-50 active:scale-95"
+            className="h-[68px] rounded-2xl bg-gradient-to-b from-[rgba(40,40,40,0.8)] to-[rgba(25,25,25,0.9)] border border-white/[0.08] text-white hover:from-[rgba(50,50,50,0.85)] hover:to-[rgba(35,35,35,0.95)] hover:border-white/[0.12] text-2xl font-semibold transition-all duration-150 disabled:opacity-50 active:scale-[0.96] shadow-[0_4px_12px_rgba(0,0,0,0.3),inset_0_1px_0_rgba(255,255,255,0.05)]"
             data-testid="pin-digit-0"
           >
             0
           </button>
-          <div className="h-16" />
+          <div className="h-[68px]" />
         </div>
         
         {isLoading && (
-          <div className="text-center mt-4 text-sm text-muted-foreground">
+          <div className="text-center mt-6 text-sm text-white/50">
             Authenticating...
           </div>
         )}
+        
+        <div className="text-center mt-10 text-xs text-white/30">
+          v2.0.9
+        </div>
       </div>
     </div>
   );

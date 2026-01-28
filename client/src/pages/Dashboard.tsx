@@ -4,7 +4,7 @@ import { CountdownTimer } from "@/components/CountdownTimer";
 import { GermanPlate } from "@/components/GermanPlate";
 import { Link } from "wouter";
 import { Input } from "@/components/ui/input";
-import { Search, Filter, Car, BatteryCharging, PackageCheck } from "lucide-react";
+import { Search, Filter, Car, BatteryCharging, PackageCheck, ArrowLeft } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { isToday } from "date-fns";
 
@@ -38,44 +38,51 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-background pb-24">
-      {/* Header */}
-      <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-lg border-b border-white/5 px-4 pt-12 pb-4">
-        <div className="flex justify-between items-end mb-4">
-          <div>
-            <h1 className="text-3xl font-display font-bold text-white tracking-tight">
-              Bodyshop<span className="text-primary">SIXT</span>
+    <div className="min-h-screen pb-24">
+      <div className="max-w-md mx-auto">
+        {/* Header with Glass Effect */}
+        <div className="relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-b from-red-500/10 via-red-500/5 to-transparent" />
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[300px] h-[200px] bg-red-500/15 blur-[100px] rounded-full" />
+          <div className="relative p-6 pt-8">
+            <Link href="/" className="flex items-center gap-2 text-white/50 hover:text-white mb-4 transition-colors rounded-xl px-3 py-1.5 -ml-3 hover:bg-white/[0.04] w-fit" data-testid="link-back-master">
+              <ArrowLeft className="w-4 h-4" />
+              <span className="text-sm">Back to Master</span>
+            </Link>
+            <h1 className="text-3xl font-bold text-white mb-1">
+              Bodyshop<span className="text-red-400">SIXT</span>
             </h1>
-            <p className="text-sm text-muted-foreground mt-1">
+            <p className="text-sm text-white/50">
               Active Vehicles: <span className="text-white font-mono">{vehicles?.length || 0}</span>
             </p>
           </div>
         </div>
 
-        <div className="flex gap-2">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input 
-              placeholder="Search Plate..." 
-              className="pl-9 bg-card border-white/5 focus:border-primary/50 transition-colors h-11"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
+        <div className="p-4 space-y-4">
+          {/* Search and Filter */}
+          <div className="flex gap-2">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input 
+                placeholder="Search Plate..." 
+                className="pl-9"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </div>
+            <button
+              onClick={() => setFilter(prev => prev === 'all' ? 'expired' : 'all')}
+              className={`
+                h-11 px-4 rounded-lg border flex items-center gap-2 font-medium transition-all
+                ${filter === 'expired' 
+                  ? 'bg-red-500/10 border-red-500/50 text-red-500' 
+                  : 'bg-white/[0.04] border-white/10 text-muted-foreground hover:text-white'}
+              `}
+            >
+              <Filter className="w-4 h-4" />
+              <span className="hidden sm:inline">Expired</span>
+            </button>
           </div>
-          <button
-            onClick={() => setFilter(prev => prev === 'all' ? 'expired' : 'all')}
-            className={`
-              h-11 px-4 rounded-lg border flex items-center gap-2 font-medium transition-all
-              ${filter === 'expired' 
-                ? 'bg-red-500/10 border-red-500/50 text-red-500' 
-                : 'bg-card border-white/5 text-muted-foreground hover:text-white'}
-            `}
-          >
-            <Filter className="w-4 h-4" />
-            <span className="hidden sm:inline">Expired</span>
-          </button>
-        </div>
-      </header>
 
       {/* Vehicle List */}
       <main className="p-4 space-y-3">

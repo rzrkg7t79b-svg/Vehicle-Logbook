@@ -148,15 +148,20 @@ export default function DriverSIXT() {
   const isLoading = flowLoading || todosLoading || qualityLoading;
 
   return (
-    <div className="min-h-screen bg-background pb-24">
-      <div className="bg-gradient-to-b from-primary/20 to-transparent p-6">
-        <h1 className="text-2xl font-bold text-white mb-1">
-          Driver<span className="text-primary">SIXT</span>
-        </h1>
-        <p className="text-sm text-muted-foreground">Your Tasks</p>
-      </div>
+    <div className="min-h-screen pb-24">
+      <div className="max-w-md mx-auto">
+        <div className="relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-b from-orange-500/10 via-orange-500/5 to-transparent" />
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[300px] h-[200px] bg-orange-500/15 blur-[100px] rounded-full" />
+          <div className="relative p-6 pt-8">
+            <h1 className="text-3xl font-bold text-white mb-1">
+              Driver<span className="text-orange-500">SIXT</span>
+            </h1>
+            <p className="text-sm text-white/50">Your Tasks</p>
+          </div>
+        </div>
 
-      <div className="max-w-md mx-auto p-4 space-y-4">
+        <div className="p-4 space-y-4">
         <Card className="p-4">
           <div className="flex items-center justify-between mb-3">
             <span className="text-sm font-medium text-muted-foreground">Your Progress</span>
@@ -346,16 +351,17 @@ export default function DriverSIXT() {
             )}
           </>
         )}
-      </div>
+        </div>
 
-      <footer className="mt-8 pt-8 pb-24 border-t border-white/10 text-center space-y-1">
-        <p className="text-xs text-muted-foreground">
-          Version v2.0.5
-        </p>
-        <p className="text-xs text-muted-foreground">
-          &copy; 2026 by Nathanael Prem
-        </p>
-      </footer>
+        <footer className="mt-8 pt-8 border-t border-white/10 text-center space-y-1">
+          <p className="text-xs text-muted-foreground">
+            Version v2.0.5
+          </p>
+          <p className="text-xs text-muted-foreground">
+            &copy; 2026 by Nathanael Prem
+          </p>
+        </footer>
+      </div>
     </div>
   );
 }

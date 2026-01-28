@@ -379,11 +379,15 @@ export default function MasterDashboard() {
 
   return (
     <div className="pb-24">
-      <div className="bg-gradient-to-b from-primary/20 to-transparent p-6">
-        <h1 className="text-2xl font-bold text-white mb-1">
-          Master<span className="text-[#f97316]">SIXT</span>
-        </h1>
-        <p className="text-sm text-muted-foreground">Daily Task Overview</p>
+      <div className="relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-b from-primary/15 via-primary/5 to-transparent" />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[300px] h-[200px] bg-primary/20 blur-[100px] rounded-full" />
+        <div className="relative p-6 pt-8">
+          <h1 className="text-3xl font-bold text-white mb-1">
+            Master<span className="text-primary text-glow">SIXT</span>
+          </h1>
+          <p className="text-sm text-white/50">Daily Task Overview</p>
+        </div>
       </div>
 
       <div className="p-4 space-y-4">
@@ -441,22 +445,24 @@ export default function MasterDashboard() {
           })}
         </div>
 
-        <Card className={`p-4 ${totalProgress === 100 ? 'border-green-500/50 bg-green-500/10' : ''}`}>
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-sm font-medium text-muted-foreground">Daily Progress</span>
-            <span className={`text-sm font-bold ${totalProgress === 100 ? 'text-green-500' : 'text-primary'}`}>
+        <Card className={`p-5 ${totalProgress === 100 ? 'status-done' : ''}`}>
+          <div className="flex items-center justify-between mb-4">
+            <span className="text-sm font-medium text-white/60">Daily Progress</span>
+            <span className={`text-lg font-bold ${totalProgress === 100 ? 'text-green-400' : 'text-primary'}`}>
               {totalProgress}%
             </span>
           </div>
-          <div className="relative h-3 bg-white/10 rounded-full overflow-hidden">
+          <div className="relative h-3 bg-white/[0.08] rounded-full overflow-hidden">
             <div 
               className={`h-full rounded-full transition-all duration-500 ${
-                totalProgress === 100 ? 'bg-green-500' : 'bg-primary'
+                totalProgress === 100 
+                  ? 'bg-gradient-to-r from-green-500 to-green-400 shadow-[0_0_12px_rgba(34,197,94,0.4)]' 
+                  : 'bg-gradient-to-r from-primary to-[#FF8533] shadow-[0_0_12px_rgba(255,102,0,0.4)]'
               }`}
               style={{ width: `${totalProgress}%` }}
             />
           </div>
-          <p className="text-xs text-muted-foreground mt-2">
+          <p className="text-xs text-white/40 mt-3">
             {totalProgress === 100 ? 'All modules completed' : 'Complete all modules before 16:30'}
           </p>
           {dashboardStatus?.hasPostponedTasks && 
@@ -468,15 +474,15 @@ export default function MasterDashboard() {
           )}
         </Card>
 
-        <Card className={`p-4 ${masterOverdue ? 'border-red-500/50 bg-red-500/10' : ''}`}>
+        <Card className={`p-5 ${masterOverdue ? 'status-overdue' : ''}`}>
           <div className="flex items-center justify-between">
             <div>
-              <span className="text-sm font-medium text-muted-foreground">Daily Deadline</span>
-              <p className="text-xs text-muted-foreground">16:30 German Time</p>
+              <span className="text-sm font-medium text-white/60">Daily Deadline</span>
+              <p className="text-xs text-white/40">16:30 German Time</p>
             </div>
             <div className="text-right">
               {masterOverdue ? (
-                <div className="flex items-center gap-2 text-red-500">
+                <div className="flex items-center gap-2 text-red-400">
                   <AlertTriangle className="w-5 h-5" />
                   <span className="text-lg font-bold">OVERDUE</span>
                 </div>
@@ -500,12 +506,14 @@ export default function MasterDashboard() {
         </Button>
 
         {isDriver && pendingDriverTasks.length > 0 && (
-          <Card className="p-4 border-orange-500/50 bg-orange-500/10">
-            <div className="flex items-center gap-3">
-              <AlertTriangle className="w-5 h-5 text-orange-500" />
+          <Card className="p-5 status-pending">
+            <div className="flex items-center gap-4">
+              <div className="w-10 h-10 rounded-2xl bg-orange-500/20 flex items-center justify-center">
+                <AlertTriangle className="w-5 h-5 text-orange-400" />
+              </div>
               <div>
-                <p className="text-sm font-medium text-orange-400">Driver Tasks Pending</p>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-sm font-medium text-orange-300">Driver Tasks Pending</p>
+                <p className="text-xs text-white/40">
                   {pendingDriverTasks.length} quality issue{pendingDriverTasks.length !== 1 ? 's' : ''} to address
                 </p>
               </div>
@@ -513,8 +521,8 @@ export default function MasterDashboard() {
           </Card>
         )}
 
-        <div className="space-y-3">
-          <h2 className="text-sm font-medium text-muted-foreground px-1">Modules</h2>
+        <div className="space-y-3 mt-6">
+          <h2 className="text-sm font-medium text-white/50 px-1">Modules</h2>
           
           {MODULES.map((module, index) => {
             const isDone = getModuleStatus(module.id);
@@ -530,29 +538,29 @@ export default function MasterDashboard() {
               >
                 <Link href={module.path}>
                   <Card 
-                    className={`p-4 hover-elevate cursor-pointer transition-all ${
-                      isDone ? 'border-green-500/30 bg-green-500/5' : ''
+                    className={`p-4 cursor-pointer transition-all duration-200 hover:border-white/[0.12] active:scale-[0.98] ${
+                      isDone ? 'status-done' : ''
                     }`}
                     data-testid={`module-card-${module.id}`}
                   >
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                          isDone ? 'bg-green-500/20' : 'bg-primary/10'
+                      <div className="flex items-center gap-4">
+                        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${
+                          isDone ? 'module-icon-done' : 'module-icon'
                         }`}>
-                          <Icon className={`w-5 h-5 ${isDone ? 'text-green-500' : module.color}`} />
+                          <Icon className={`w-6 h-6 ${isDone ? 'text-green-400' : module.color}`} />
                         </div>
                         <div>
-                          <p className="font-medium text-white">{module.name}<span className={module.color}>SIXT</span></p>
+                          <p className="font-semibold text-white">{module.name}<span className={module.color}>SIXT</span></p>
                           {details && (
-                            <p className={`text-xs ${isDone ? 'text-green-400' : module.detailColor}`}>
+                            <p className={`text-xs mt-0.5 ${isDone ? 'text-green-400' : 'text-white/50'}`}>
                               {details}
                             </p>
                           )}
                           {module.id === "upgrade" && dashboardStatus?.upgrade.pendingVehicles && dashboardStatus.upgrade.pendingVehicles.length > 0 && (
                             <div className="flex flex-wrap gap-2 mt-2">
                               {dashboardStatus.upgrade.pendingVehicles.map((v) => (
-                                <div key={v.id} className="flex items-center gap-1 text-xs bg-orange-500/20 text-orange-400 px-2 py-1 rounded" data-testid={`pending-upgrade-${v.id}`}>
+                                <div key={v.id} className="flex items-center gap-1 text-xs bg-orange-500/15 text-orange-400 px-2 py-1 rounded-lg border border-orange-500/20" data-testid={`pending-upgrade-${v.id}`}>
                                   {v.isVan ? <Truck className="w-3 h-3" /> : <Car className="w-3 h-3" />}
                                   <span>{v.licensePlate}</span>
                                 </div>
@@ -562,9 +570,9 @@ export default function MasterDashboard() {
                         </div>
                       </div>
                       {isDone ? (
-                        <CheckCircle className="w-5 h-5 text-green-500" />
+                        <CheckCircle className="w-6 h-6 text-green-400" />
                       ) : (
-                        <div className="w-2 h-2 rounded-full bg-muted-foreground/30" />
+                        <div className="w-2 h-2 rounded-full bg-white/20" />
                       )}
                     </div>
                   </Card>

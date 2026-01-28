@@ -132,22 +132,22 @@ export default function UpgradeSIXT() {
   const isFormValid = letters.length >= 1 && numbers.length >= 1 && model.trim() && reason.trim();
 
   return (
-    <div className="pb-6">
-      <div className="bg-gradient-to-b from-primary/20 to-transparent p-4">
-        <div className="flex items-center gap-3">
-          <Link href="/">
-            <Button variant="ghost" size="icon" data-testid="button-back">
-              <ArrowLeft className="w-5 h-5" />
-            </Button>
-          </Link>
-          <div>
-            <h1 className="text-xl font-bold text-white">
-              Upgrade<span className="text-blue-500">SIXT</span>
+    <div className="min-h-screen pb-24">
+      <div className="max-w-md mx-auto">
+        <div className="relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-b from-blue-500/10 via-blue-500/5 to-transparent" />
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[300px] h-[200px] bg-blue-500/15 blur-[100px] rounded-full" />
+          <div className="relative p-6 pt-8">
+            <Link href="/" className="flex items-center gap-2 text-white/50 hover:text-white mb-4 transition-colors rounded-xl px-3 py-1.5 -ml-3 hover:bg-white/[0.04] w-fit" data-testid="link-back-master">
+              <ArrowLeft className="w-4 h-4" />
+              <span className="text-sm">Back to Master</span>
+            </Link>
+            <h1 className="text-3xl font-bold text-white mb-1">
+              Upgrade<span className="text-blue-400">SIXT</span>
             </h1>
-            <p className="text-xs text-muted-foreground">Daily UP Vehicle Management</p>
+            <p className="text-sm text-white/50">Daily UP Vehicle Management</p>
           </div>
         </div>
-      </div>
 
       <div className="p-4 space-y-4">
         <Card className={`p-4 ${isDone ? 'border-green-500/50 bg-green-500/10' : deadlineOverdue && !hasPending ? 'border-red-500/50 bg-red-500/10' : ''}`}>
@@ -379,6 +379,7 @@ export default function UpgradeSIXT() {
             </p>
           </Card>
         )}
+        </div>
       </div>
     </div>
   );

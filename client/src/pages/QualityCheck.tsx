@@ -104,17 +104,21 @@ export default function QualityCheck() {
 
   return (
     <div className="pb-24">
-      <div className="bg-gradient-to-b from-teal-500/20 to-transparent p-6">
-        <Link href="/">
-          <button className="flex items-center gap-2 text-muted-foreground hover:text-white mb-4 transition-colors">
-            <ArrowLeft className="w-4 h-4" />
-            <span className="text-sm">Back to Master</span>
-          </button>
-        </Link>
-        <h1 className="text-2xl font-bold text-white mb-1">
-          Quality<span className="text-teal-400">SIXT</span>
-        </h1>
-        <p className="text-sm text-muted-foreground">Vehicle Quality Checks</p>
+      <div className="relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-b from-cyan-500/10 via-cyan-500/5 to-transparent" />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[300px] h-[200px] bg-cyan-500/15 blur-[100px] rounded-full" />
+        <div className="relative p-6 pt-8">
+          <Link href="/">
+            <button className="flex items-center gap-2 text-white/50 hover:text-white mb-4 transition-colors rounded-xl px-3 py-1.5 -ml-3 hover:bg-white/[0.04]">
+              <ArrowLeft className="w-4 h-4" />
+              <span className="text-sm">Back to Master</span>
+            </button>
+          </Link>
+          <h1 className="text-3xl font-bold text-white mb-1">
+            Quality<span className="text-cyan-400">SIXT</span>
+          </h1>
+          <p className="text-sm text-white/50">Vehicle Quality Checks</p>
+        </div>
       </div>
 
       <div className="p-4 space-y-4">

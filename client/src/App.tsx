@@ -36,7 +36,7 @@ function Router() {
   useRealtimeUpdates();
 
   return (
-    <div className="w-full max-w-md mx-auto relative bg-background min-h-screen shadow-2xl overflow-hidden border-x border-white/5">
+    <div className="w-full max-w-md mx-auto relative bg-gradient-to-b from-[#0A0A0A] to-[#111] min-h-screen shadow-[0_0_60px_rgba(0,0,0,0.5)] overflow-hidden border-x border-white/[0.04]">
       <Switch>
         <Route path="/" component={HomeRedirect} />
         <Route path="/driver" component={DriverSIXT} />

@@ -1,83 +1,316 @@
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Outfit:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=SF+Pro+Display:wght@300;400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  --font-display: 'Outfit', sans-serif;
-  --font-body: 'Outfit', sans-serif;
-  --font-mono: 'JetBrains Mono', monospace;
+  --font-display: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
+  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
+  --font-mono: 'SF Mono', 'JetBrains Mono', monospace;
 
-  /* Anthracite Dark Theme */
-  --background: 0 0% 12%;         /* Anthracite - #1F1F1F */
-  --foreground: 0 0% 95%;         /* Off-white text */
+  /* iOS 26 Glass Dark Theme - Black/Orange/White */
+  --background: 0 0% 4%;           /* Deep black #0A0A0A */
+  --foreground: 0 0% 98%;          /* Pure white text */
 
-  --card: 0 0% 16%;               /* Slightly lighter anthracite */
-  --card-foreground: 0 0% 95%;
+  --card: 0 0% 8%;                 /* Glass panel base #141414 */
+  --card-foreground: 0 0% 98%;
+  --card-border: 0 0% 18%;
 
-  --popover: 0 0% 16%;
-  --popover-foreground: 0 0% 95%;
+  --popover: 0 0% 10%;
+  --popover-foreground: 0 0% 98%;
 
-  /* Vibrant Orange Accent */
-  --primary: 24 95% 53%;          /* #F97316 - Orange */
+  /* Vibrant Orange Accent - SIXT Brand */
+  --primary: 24 100% 50%;          /* #FF6600 - SIXT Orange */
   --primary-foreground: 0 0% 100%;
+  --primary-border: 24 100% 40%;
 
-  --secondary: 0 0% 22%;          /* Dark anthracite grey */
-  --secondary-foreground: 0 0% 90%;
+  --secondary: 0 0% 12%;           /* Dark glass */
+  --secondary-foreground: 0 0% 85%;
+  --secondary-border: 0 0% 20%;
 
-  --muted: 0 0% 22%;
-  --muted-foreground: 0 0% 55%;
+  --muted: 0 0% 14%;
+  --muted-foreground: 0 0% 50%;
 
-  --accent: 0 0% 22%;
+  --accent: 0 0% 14%;
   --accent-foreground: 0 0% 90%;
+  --accent-border: 0 0% 22%;
 
-  --destructive: 0 84% 60%;       /* Red - for timers only */
+  --destructive: 0 72% 51%;
   --destructive-foreground: 0 0% 100%;
+  --destructive-border: 0 72% 40%;
 
-  --border: 0 0% 22%;
-  --input: 0 0% 22%;
-  --ring: 24 95% 53%;
+  --border: 0 0% 16%;
+  --input: 0 0% 12%;
+  --ring: 24 100% 50%;
 
-  --radius: 1rem;
+  --radius: 1.25rem;
+  
+  /* Glass effect variables */
+  --glass-bg: rgba(20, 20, 20, 0.7);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-highlight: rgba(255, 255, 255, 0.05);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  
+  /* Button outline color */
+  --button-outline: rgba(255, 255, 255, 0.15);
 }
 
 @layer base {
   * {
     @apply border-border;
   }
-  body {
-    @apply bg-background text-foreground antialiased selection:bg-primary/30 selection:text-primary-foreground;
-    font-family: var(--font-body);
+  
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
+  
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: var(--font-body);
+    background: linear-gradient(180deg, hsl(0 0% 4%) 0%, hsl(0 0% 6%) 100%);
+    min-height: 100vh;
+  }
+  
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-display);
-    @apply tracking-tight font-bold;
+    @apply tracking-tight font-semibold;
+  }
+  
+  ::selection {
+    @apply bg-primary/30 text-primary-foreground;
   }
 }
 
 @layer utilities {
-  .text-shadow-sm {
-    text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+  /* iOS 26 Liquid Glass Effects */
+  .glass {
+    background: var(--glass-bg);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow);
   }
+  
   .glass-card {
-    @apply bg-card/90 backdrop-blur-md border border-white/5 shadow-xl;
+    @apply bg-card/80 backdrop-blur-xl border border-white/[0.08] shadow-2xl;
+    background: linear-gradient(135deg, rgba(30, 30, 30, 0.9) 0%, rgba(20, 20, 20, 0.95) 100%);
+    box-shadow: 
+      0 8px 32px rgba(0, 0, 0, 0.4),
+      inset 0 1px 0 rgba(255, 255, 255, 0.05);
   }
+  
+  .glass-panel {
+    @apply backdrop-blur-2xl border border-white/[0.06];
+    background: linear-gradient(180deg, rgba(25, 25, 25, 0.85) 0%, rgba(15, 15, 15, 0.9) 100%);
+    box-shadow: 
+      0 4px 24px rgba(0, 0, 0, 0.3),
+      inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  }
+  
+  .glass-input {
+    @apply bg-white/[0.04] backdrop-blur-lg border border-white/[0.08] focus:border-primary/50 focus:ring-1 focus:ring-primary/30;
+    transition: all 0.2s ease;
+  }
+  
+  .glass-button {
+    @apply backdrop-blur-lg border border-white/[0.1];
+    background: linear-gradient(135deg, rgba(40, 40, 40, 0.8) 0%, rgba(25, 25, 25, 0.9) 100%);
+    box-shadow: 
+      0 2px 8px rgba(0, 0, 0, 0.3),
+      inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    transition: all 0.2s ease;
+  }
+  
+  .glass-button:hover {
+    background: linear-gradient(135deg, rgba(50, 50, 50, 0.85) 0%, rgba(35, 35, 35, 0.95) 100%);
+    border-color: rgba(255, 255, 255, 0.15);
+  }
+  
+  .glass-button:active {
+    transform: scale(0.98);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+  }
+  
+  /* Glow effects */
+  .glow-orange {
+    box-shadow: 0 0 20px rgba(255, 102, 0, 0.3), 0 0 40px rgba(255, 102, 0, 0.1);
+  }
+  
+  .glow-orange-sm {
+    box-shadow: 0 0 10px rgba(255, 102, 0, 0.2);
+  }
+  
+  .text-glow {
+    text-shadow: 0 0 20px rgba(255, 102, 0, 0.5);
+  }
+  
+  /* Gradient utilities */
+  .gradient-orange {
+    background: linear-gradient(135deg, #FF6600 0%, #FF8533 100%);
+  }
+  
+  .gradient-dark {
+    background: linear-gradient(180deg, rgba(20, 20, 20, 0.9) 0%, rgba(10, 10, 10, 0.95) 100%);
+  }
+  
+  /* iOS-style shadows */
+  .shadow-glass {
+    box-shadow: 
+      0 8px 32px rgba(0, 0, 0, 0.4),
+      0 2px 8px rgba(0, 0, 0, 0.2);
+  }
+  
+  .shadow-glass-lg {
+    box-shadow: 
+      0 16px 48px rgba(0, 0, 0, 0.5),
+      0 4px 16px rgba(0, 0, 0, 0.3);
+  }
+  
+  /* Text utilities */
+  .text-shadow-sm {
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  }
+  
+  .text-gradient-orange {
+    background: linear-gradient(135deg, #FF6600 0%, #FF9933 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  
+  /* Safe area for iOS */
   .safe-bottom {
     padding-bottom: env(safe-area-inset-bottom);
   }
+  
+  .safe-top {
+    padding-top: env(safe-area-inset-top);
+  }
+  
+  /* Hover/Active states */
+  .hover-elevate {
+    transition: all 0.2s ease;
+  }
+  
+  .hover-elevate:hover {
+    transform: translateY(-1px);
+    box-shadow: 
+      0 12px 40px rgba(0, 0, 0, 0.5),
+      0 4px 12px rgba(0, 0, 0, 0.3);
+  }
+  
+  .active-elevate-2:active {
+    transform: translateY(0) scale(0.98);
+  }
+  
+  /* Progress bar glow */
+  .progress-glow {
+    box-shadow: 0 0 12px rgba(255, 102, 0, 0.4);
+  }
+  
+  /* Divider with glow */
+  .divider-glow {
+    height: 1px;
+    background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.1) 50%, transparent 100%);
+  }
+  
+  /* Module card status colors with glass */
+  .status-done {
+    @apply border-green-500/30 bg-green-500/10;
+    box-shadow: inset 0 0 20px rgba(34, 197, 94, 0.1);
+  }
+  
+  .status-pending {
+    @apply border-orange-500/30 bg-orange-500/10;
+    box-shadow: inset 0 0 20px rgba(255, 102, 0, 0.1);
+  }
+  
+  .status-overdue {
+    @apply border-red-500/40 bg-red-500/15;
+    box-shadow: inset 0 0 20px rgba(239, 68, 68, 0.15);
+  }
 }
 
-/* Custom Scrollbar */
+/* Custom Scrollbar - iOS style */
 ::-webkit-scrollbar {
-  width: 6px;
+  width: 4px;
 }
+
 ::-webkit-scrollbar-track {
-  @apply bg-background;
+  background: transparent;
 }
+
 ::-webkit-scrollbar-thumb {
-  @apply bg-muted rounded-full;
+  @apply bg-white/10 rounded-full;
 }
+
 ::-webkit-scrollbar-thumb:hover {
-  @apply bg-muted-foreground;
+  @apply bg-white/20;
+}
+
+/* PIN pad button styling */
+.pin-button {
+  @apply glass-button rounded-2xl text-white font-semibold text-2xl;
+  transition: all 0.15s ease;
+}
+
+.pin-button:active {
+  transform: scale(0.95);
+  background: linear-gradient(135deg, rgba(60, 60, 60, 0.9) 0%, rgba(40, 40, 40, 0.95) 100%);
+}
+
+/* Module icon container */
+.module-icon {
+  @apply rounded-2xl flex items-center justify-center;
+  background: linear-gradient(135deg, rgba(255, 102, 0, 0.15) 0%, rgba(255, 102, 0, 0.08) 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.module-icon-done {
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.2) 0%, rgba(34, 197, 94, 0.1) 100%);
+}
+
+/* Navigation bar glass */
+.nav-glass {
+  @apply backdrop-blur-2xl border-t border-white/[0.06];
+  background: linear-gradient(180deg, rgba(20, 20, 20, 0.95) 0%, rgba(15, 15, 15, 0.98) 100%);
+}
+
+/* Header glass */
+.header-glass {
+  @apply backdrop-blur-2xl border-b border-white/[0.06];
+  background: linear-gradient(180deg, rgba(20, 20, 20, 0.92) 0%, rgba(15, 15, 15, 0.88) 100%);
+}
+
+/* Input focus ring */
+input:focus, textarea:focus, select:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(255, 102, 0, 0.3);
+}
+
+/* Animated gradient background for special cards */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.shimmer {
+  background: linear-gradient(90deg, 
+    rgba(255, 255, 255, 0) 0%, 
+    rgba(255, 255, 255, 0.03) 50%, 
+    rgba(255, 255, 255, 0) 100%);
+  background-size: 200% 100%;
+  animation: shimmer 3s infinite;
+}
+
+/* Pulse animation for alerts */
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 10px rgba(255, 102, 0, 0.3); }
+  50% { box-shadow: 0 0 20px rgba(255, 102, 0, 0.5); }
+}
+
+.pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
 }
