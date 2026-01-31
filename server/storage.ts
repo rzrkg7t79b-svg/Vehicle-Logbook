@@ -15,6 +15,7 @@ import {
   upgradeVehicles,
   futurePlanning,
   kpiMetrics,
+  dailyResets,
   type InsertVehicle,
   type InsertComment,
   type InsertUser,
@@ -41,8 +42,20 @@ import {
   type UpgradeVehicle,
   type FuturePlanning,
   type KpiMetric,
+  type DailyReset,
 } from "@shared/schema";
 import { eq, desc, asc, lte, and, sql, ne, inArray, gte } from "drizzle-orm";
+
+function getBerlinDateString(): string {
+  const now = new Date();
+  const berlinFormatter = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Europe/Berlin',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  });
+  return berlinFormatter.format(now);
+}
 
 export interface IStorage {
   getVehicles(filter?: 'all' | 'expired', search?: string): Promise<Vehicle[]>;
@@ -121,6 +134,8 @@ export interface IStorage {
   upsertKpiMetric(data: InsertKpiMetric): Promise<KpiMetric>;
 
   performMidnightReset(): Promise<void>;
+  checkAndPerformDailyReset(): Promise<{ wasReset: boolean; date: string }>;
+  getLastResetDate(): Promise<string | null>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -547,22 +562,32 @@ export class DatabaseStorage implements IStorage {
   }
 
   async performMidnightReset(): Promise<void> {
-    // Only reset recurring todos, not one-time tasks
+    console.log('[storage] Performing daily reset...');
+    
+    // ToDoSIXT: Reset recurring todos to undone
     await db.update(todos).set({
       completed: false,
       completedBy: null,
       completedAt: null,
     }).where(eq(todos.isRecurring, true));
+    
+    // ToDoSIXT: Delete completed one-time tasks
+    await db.delete(todos).where(
+      and(
+        eq(todos.isRecurring, false),
+        eq(todos.completed, true)
+      )
+    );
 
     await db.delete(moduleStatus);
 
-    // Only delete passed quality checks (keep failed ones until driver task is done)
+    // QualitySIXT: Delete passed quality checks (keep failed ones until driver task is done)
     await db.delete(qualityChecks).where(eq(qualityChecks.passed, true));
     
-    // Only delete completed driver tasks (keep incomplete ones)
+    // QualitySIXT: Delete completed driver tasks (keep incomplete ones - they get deleted when marked done)
     await db.delete(driverTasks).where(eq(driverTasks.completed, true));
     
-    // Only delete completed flow tasks (keep incomplete ones)
+    // FlowSIXT: Delete completed flow tasks (keep open/incomplete ones)
     await db.delete(flowTasks).where(eq(flowTasks.completed, true));
 
     await db.delete(timedriverCalculations);
@@ -570,6 +595,68 @@ export class DatabaseStorage implements IStorage {
     await db.delete(futurePlanning);
     
     await db.delete(upgradeVehicles);
+    
+    console.log('[storage] Daily reset completed');
+  }
+
+  async getLastResetDate(): Promise<string | null> {
+    const [lastReset] = await db
+      .select()
+      .from(dailyResets)
+      .orderBy(desc(dailyResets.executedAt))
+      .limit(1);
+    return lastReset?.resetDate ?? null;
+  }
+
+  private resetInProgress = false;
+
+  async checkAndPerformDailyReset(): Promise<{ wasReset: boolean; date: string }> {
+    const todayBerlin = getBerlinDateString();
+    
+    // Check if reset already done for today
+    const [existingReset] = await db
+      .select()
+      .from(dailyResets)
+      .where(eq(dailyResets.resetDate, todayBerlin))
+      .limit(1);
+    
+    if (existingReset) {
+      return { wasReset: false, date: todayBerlin };
+    }
+    
+    // Prevent concurrent resets using in-memory lock
+    if (this.resetInProgress) {
+      return { wasReset: false, date: todayBerlin };
+    }
+    
+    this.resetInProgress = true;
+    
+    try {
+      // Double-check after acquiring lock (in case another request completed)
+      const [doubleCheck] = await db
+        .select()
+        .from(dailyResets)
+        .where(eq(dailyResets.resetDate, todayBerlin))
+        .limit(1);
+      
+      if (doubleCheck) {
+        return { wasReset: false, date: todayBerlin };
+      }
+      
+      // Record reset FIRST (using INSERT with ON CONFLICT to be idempotent)
+      await db
+        .insert(dailyResets)
+        .values({ resetDate: todayBerlin })
+        .onConflictDoNothing();
+      
+      // Perform the actual reset
+      await this.performMidnightReset();
+      
+      console.log(`[storage] Daily reset executed for ${todayBerlin}`);
+      return { wasReset: true, date: todayBerlin };
+    } finally {
+      this.resetInProgress = false;
+    }
   }
 }
 

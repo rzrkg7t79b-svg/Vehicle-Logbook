@@ -34,7 +34,9 @@ export type UpdateType =
   | "timedriver-calculation"
   | "dashboard"
   | "upgrade-vehicles"
-  | "future-planning";
+  | "future-planning"
+  | "daily-reset"
+  | "kpi-metrics";
 
 export function broadcastUpdate(type: UpdateType) {
   if (!wss) return;

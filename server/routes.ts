@@ -11,6 +11,20 @@ export async function registerRoutes(
   app: Express
 ): Promise<Server> {
 
+  // Daily reset middleware - triggered on first API request of each day
+  app.use("/api", async (_req, _res, next) => {
+    try {
+      const result = await storage.checkAndPerformDailyReset();
+      if (result.wasReset) {
+        console.log(`[routes] Daily reset triggered via API request for ${result.date}`);
+        broadcastUpdate("daily-reset");
+      }
+    } catch (error) {
+      console.error('[routes] Daily reset check failed:', error);
+    }
+    next();
+  });
+
   // Health check endpoint
   app.get("/api/health", (_req, res) => {
     res.json({ status: "ok", timestamp: new Date().toISOString() });

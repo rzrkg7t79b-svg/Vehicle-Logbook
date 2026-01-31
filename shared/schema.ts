@@ -170,6 +170,12 @@ export const kpiMetrics = pgTable("kpi_metrics", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+export const dailyResets = pgTable("daily_resets", {
+  id: serial("id").primaryKey(),
+  resetDate: text("reset_date").notNull().unique(),
+  executedAt: timestamp("executed_at").defaultNow().notNull(),
+});
+
 export const insertUserSchema = createInsertSchema(users)
   .omit({ id: true, createdAt: true })
   .extend({
@@ -318,6 +324,8 @@ export type InsertKpiMetric = z.infer<typeof insertKpiMetricSchema>;
 
 export type AppSettings = typeof appSettings.$inferSelect;
 export type InsertAppSettings = z.infer<typeof insertAppSettingsSchema>;
+
+export type DailyReset = typeof dailyResets.$inferSelect;
 
 export type CreateUserRequest = InsertUser;
 export type CreateVehicleRequest = InsertVehicle;
