@@ -224,7 +224,8 @@ export default function AddVehicle() {
               required
               value={formData.countdownStart}
               onChange={(e) => setFormData(prev => ({ ...prev, countdownStart: e.target.value }))}
-              className="bg-card border-white/10 h-12 text-center font-mono"
+              className="bg-card border-white/10 h-12 text-center font-mono w-full max-w-full"
+              data-testid="input-start-date"
             />
           </div>
 

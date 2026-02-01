@@ -410,12 +410,12 @@ export default function TimeDriver() {
                       <span className="font-mono font-bold text-green-400">
                         {driver.assignedHours}h {driver.assignedMinutes}min
                       </span>
-                      {(driver.overflowHours !== undefined || driver.overflowMinutes !== undefined) && (
-                        <span className="ml-2 text-xs text-orange-400 font-medium" data-testid={`overflow-${driver.id}`}>
-                          if needed +{driver.overflowHours || 0}h {driver.overflowMinutes || 0}min
-                        </span>
-                      )}
                     </div>
+                    {(driver.overflowHours !== undefined || driver.overflowMinutes !== undefined) && (
+                      <div className="text-xs text-white/50 mt-0.5" data-testid={`overflow-${driver.id}`}>
+                        (if needed +{driver.overflowHours || 0}h {driver.overflowMinutes || 0}min)
+                      </div>
+                    )}
                   </div>
                   <div className="relative h-6 bg-white/5 rounded-full overflow-hidden">
                     <div 

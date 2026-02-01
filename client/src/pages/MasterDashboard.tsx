@@ -626,6 +626,22 @@ export default function MasterDashboard() {
               )}
             </div>
           </div>
+          {/* Mandatory break info message */}
+          {!dashboardStatus?.breaksixt?.isDone && (
+            <div className="mt-3 pt-3 border-t border-white/10">
+              <p className="text-xs text-white/50 leading-relaxed">
+                {dashboardStatus?.breaksixt?.isOverdue || breakOverdue ? (
+                  <>
+                    Break after a maximum of 6 hours of working time, according to <span className="font-bold">§ 4 ArbZG</span> – exceeding rest breaks is at your own risk and may result in legal consequences.
+                  </>
+                ) : (
+                  <>
+                    Mandatory break after a max of 6 hours working time, according to <span className="font-bold">§ 4 ArbZG</span> – Rest breaks
+                  </>
+                )}
+              </p>
+            </div>
+          )}
         </Card>
 
         <Button
