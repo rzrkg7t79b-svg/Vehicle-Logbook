@@ -18,6 +18,7 @@ type DashboardStatus = {
   quality: { isDone: boolean; passedChecks: number; incompleteTasks: number };
   bodyshop: { isDone: boolean; vehiclesWithoutComment: number; total: number };
   future: { isDone: boolean; isLocked: boolean; data?: FuturePlanning };
+  breaksixt: { isDone: boolean; isOverdue: boolean; doneBy?: string | null; doneAt?: string | null };
   overallProgress: number;
   hasPostponedTasks?: boolean;
 };
@@ -52,6 +53,8 @@ type DriverData = {
   assignedHours: number;
   assignedMinutes: number;
   percent: number;
+  overflowHours?: number;
+  overflowMinutes?: number;
 };
 
 interface ExportPreviewProps {
@@ -596,6 +599,63 @@ export function ExportPreview({ open, onOpenChange }: ExportPreviewProps) {
               </div>
             )}
 
+            {/* Break?SIXT Status */}
+            <div style={{ 
+              backgroundColor: "#262626", 
+              borderRadius: "16px", 
+              padding: "20px",
+              marginBottom: "20px",
+              border: dashboardStatus?.breaksixt?.isDone 
+                ? "2px solid #22c55e" 
+                : dashboardStatus?.breaksixt?.isOverdue 
+                  ? "2px solid #ef4444" 
+                  : "2px solid #f59e0b",
+            }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                  <div style={{ 
+                    width: "40px", 
+                    height: "40px", 
+                    borderRadius: "10px", 
+                    backgroundColor: dashboardStatus?.breaksixt?.isDone 
+                      ? "rgba(34, 197, 94, 0.2)" 
+                      : dashboardStatus?.breaksixt?.isOverdue 
+                        ? "rgba(239, 68, 68, 0.2)"
+                        : "rgba(245, 158, 11, 0.2)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}>
+                    <Clock style={{ width: "20px", height: "20px", color: dashboardStatus?.breaksixt?.isDone ? "#22c55e" : dashboardStatus?.breaksixt?.isOverdue ? "#ef4444" : "#f59e0b" }} />
+                  </div>
+                  <div>
+                    <h3 style={{ fontSize: "18px", fontWeight: "bold", color: "white", margin: 0 }}>
+                      Break?<span style={{ color: "#f59e0b" }}>SIXT</span>
+                    </h3>
+                    <p style={{ fontSize: "12px", color: "#888", margin: 0 }}>Lunch Break (13:00)</p>
+                  </div>
+                </div>
+                <div style={{ textAlign: "right" }}>
+                  {dashboardStatus?.breaksixt?.isDone ? (
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                      <span style={{ color: "#22c55e", fontWeight: "bold" }}>Done</span>
+                      {dashboardStatus.breaksixt.doneBy && (
+                        <span style={{ color: "#888", fontSize: "12px" }}>by {dashboardStatus.breaksixt.doneBy}</span>
+                      )}
+                      <CheckCircle style={{ width: "20px", height: "20px", color: "#22c55e" }} />
+                    </div>
+                  ) : dashboardStatus?.breaksixt?.isOverdue ? (
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                      <AlertCircle style={{ width: "20px", height: "20px", color: "#ef4444" }} />
+                      <span style={{ color: "#ef4444", fontWeight: "bold" }}>Overdue</span>
+                    </div>
+                  ) : (
+                    <span style={{ color: "#f59e0b", fontWeight: "500" }}>Pending</span>
+                  )}
+                </div>
+              </div>
+            </div>
+
             {/* Module Cards Grid */}
             <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "20px" }}>
               
@@ -659,9 +719,14 @@ export function ExportPreview({ open, onOpenChange }: ExportPreviewProps) {
                           marginBottom: "4px",
                         }}>
                           <span style={{ color: "#fff", fontWeight: "500" }}>{driver.initials}</span>
-                          <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+                          <div style={{ display: "flex", gap: "12px", alignItems: "center", flexWrap: "wrap" }}>
                             <span style={{ color: "#888", fontSize: "12px" }}>max {driver.maxHours}h</span>
                             <span style={{ color: "#f97316", fontWeight: "bold" }}>{driver.assignedHours}h {driver.assignedMinutes}m</span>
+                            {(driver.overflowHours !== undefined || driver.overflowMinutes !== undefined) && (
+                              <span style={{ color: "#fb923c", fontSize: "11px", fontWeight: "500" }}>
+                                if needed +{driver.overflowHours || 0}h {driver.overflowMinutes || 0}m
+                              </span>
+                            )}
                           </div>
                         </div>
                       ))}
@@ -1044,7 +1109,7 @@ export function ExportPreview({ open, onOpenChange }: ExportPreviewProps) {
               alignItems: "center",
             }}>
               <div style={{ color: "#666", fontSize: "14px" }}>
-                <p style={{ margin: 0 }}>Version v3.1.7</p>
+                <p style={{ margin: 0 }}>Version v3.1.8</p>
                 <p style={{ margin: "4px 0 0 0" }}>&copy; 2026 by Nathanael Prem</p>
               </div>
               <div style={{ textAlign: "right", color: "#666", fontSize: "14px" }}>

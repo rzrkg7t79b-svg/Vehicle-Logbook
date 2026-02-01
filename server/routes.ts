@@ -615,6 +615,14 @@ export async function registerRoutes(
     const berlinHour = berlinTime.getHours();
     const futureIsLocked = berlinHour < 15;
     
+    // Break?SIXT status - countdown task to 13:00, stored in moduleStatus
+    const breaksixtModuleStatus = timedriverStatus.find(s => s.moduleName === "breaksixt");
+    const breaksixtIsDone = breaksixtModuleStatus?.isDone || false;
+    const breaksixtDoneBy = breaksixtModuleStatus?.doneBy || null;
+    const breaksixtDoneAt = breaksixtModuleStatus?.doneAt || null;
+    // Check if past 13:00 German time (overdue if not done)
+    const breaksixtIsOverdue = berlinHour >= 13 && !breaksixtIsDone;
+    
     // Calculate overall progress (7 modules now, each worth ~14.3%)
     let completedModules = 0;
     if (timedriverIsDone) completedModules++;
@@ -635,6 +643,7 @@ export async function registerRoutes(
       quality: { isDone: qualityIsDone, passedChecks, incompleteTasks: incompleteTasks.length },
       bodyshop: { isDone: bodyshopIsDone, vehiclesWithoutComment: vehiclesWithoutComment.length, total: activeVehicles.length },
       future: { isDone: futureIsDone, isLocked: futureIsLocked, data: futurePlanning },
+      breaksixt: { isDone: breaksixtIsDone, isOverdue: breaksixtIsOverdue, doneBy: breaksixtDoneBy, doneAt: breaksixtDoneAt },
       overallProgress,
       hasPostponedTasks: totalPostponed > 0,
     });

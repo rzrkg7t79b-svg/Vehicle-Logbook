@@ -327,7 +327,7 @@ export function PinGate({ children }: PinGateProps) {
         )}
         
         <div className="text-center mt-10 text-xs text-white/30">
-          v3.1.7
+          v3.1.8
         </div>
       </div>
     </div>

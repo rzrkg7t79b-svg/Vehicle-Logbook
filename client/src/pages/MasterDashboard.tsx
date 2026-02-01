@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { motion } from "framer-motion";
-import { Clock, Car, ClipboardCheck, CheckSquare, AlertTriangle, CheckCircle, Workflow, Share2, TrendingUp, Truck, Lock, Plane, RotateCcw } from "lucide-react";
+import { Clock, Car, ClipboardCheck, CheckSquare, AlertTriangle, CheckCircle, Workflow, Share2, TrendingUp, Truck, Lock, Plane, RotateCcw, Coffee } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -32,6 +32,7 @@ type DashboardStatus = {
   quality: { isDone: boolean; passedChecks: number; incompleteTasks: number };
   bodyshop: { isDone: boolean; vehiclesWithoutComment: number; total: number };
   future: { isDone: boolean; isLocked: boolean; data?: FuturePlanning };
+  breaksixt: { isDone: boolean; isOverdue: boolean; doneBy?: string | null; doneAt?: string | null };
   overallProgress: number;
   hasPostponedTasks?: boolean;
 };
@@ -50,6 +51,8 @@ export default function MasterDashboard() {
   const { toast } = useToast();
   const [masterCountdown, setMasterCountdown] = useState(getSecondsUntilGermanTime(16, 30));
   const [masterOverdue, setMasterOverdue] = useState(isOverdue(16, 30));
+  const [breakCountdown, setBreakCountdown] = useState(getSecondsUntilGermanTime(13, 0));
+  const [breakOverdue, setBreakOverdue] = useState(isOverdue(13, 0));
   const [showExportPreview, setShowExportPreview] = useState(false);
   const [futureUnlocked, setFutureUnlocked] = useState(isAfterGermanTime(15, 0));
   const [futureAdminUnlocked, setFutureAdminUnlocked] = useState(false);
@@ -150,10 +153,27 @@ export default function MasterDashboard() {
     const interval = setInterval(() => {
       setMasterCountdown(getSecondsUntilGermanTime(16, 30));
       setMasterOverdue(isOverdue(16, 30));
+      setBreakCountdown(getSecondsUntilGermanTime(13, 0));
+      setBreakOverdue(isOverdue(13, 0));
       setFutureUnlocked(isAfterGermanTime(15, 0));
     }, 1000);
     return () => clearInterval(interval);
   }, []);
+
+  const toggleBreaksixtMutation = useMutation({
+    mutationFn: async (isDone: boolean) => {
+      return apiRequest("POST", "/api/module-status", {
+        moduleName: "breaksixt",
+        date: todayDate,
+        isDone,
+        doneBy: user?.initials,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/status", todayDate] });
+      queryClient.invalidateQueries({ queryKey: ["/api/module-status"] });
+    },
+  });
 
   const saveFutureMutation = useMutation({
     mutationFn: async (data: {
@@ -543,6 +563,66 @@ export default function MasterDashboard() {
               ) : (
                 <span className="text-2xl font-mono font-bold text-primary" data-testid="master-countdown">
                   {formatCountdown(masterCountdown)}
+                </span>
+              )}
+            </div>
+          </div>
+        </Card>
+
+        {/* Break?SIXT - Countdown to 13:00 */}
+        <Card 
+          className={`p-4 cursor-pointer transition-all ${
+            dashboardStatus?.breaksixt?.isDone 
+              ? 'status-done' 
+              : dashboardStatus?.breaksixt?.isOverdue || breakOverdue
+                ? 'status-overdue'
+                : ''
+          }`}
+          onClick={() => {
+            if (!dashboardStatus?.breaksixt?.isDone) {
+              toggleBreaksixtMutation.mutate(true);
+            }
+          }}
+          data-testid="breaksixt-card"
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className={`w-10 h-10 rounded-2xl flex items-center justify-center ${
+                dashboardStatus?.breaksixt?.isDone 
+                  ? 'bg-green-500/20' 
+                  : dashboardStatus?.breaksixt?.isOverdue || breakOverdue
+                    ? 'bg-red-500/20'
+                    : 'bg-amber-500/20'
+              }`}>
+                <Coffee className={`w-5 h-5 ${
+                  dashboardStatus?.breaksixt?.isDone 
+                    ? 'text-green-400' 
+                    : dashboardStatus?.breaksixt?.isOverdue || breakOverdue
+                      ? 'text-red-400'
+                      : 'text-amber-400'
+                }`} />
+              </div>
+              <div>
+                <p className="font-semibold text-white">Break?<span className="text-amber-400">SIXT</span></p>
+                <p className="text-xs text-white/40">
+                  {dashboardStatus?.breaksixt?.isDone 
+                    ? `Done${dashboardStatus.breaksixt.doneBy ? ` by ${dashboardStatus.breaksixt.doneBy}` : ''}`
+                    : 'Tap to mark lunch break done'
+                  }
+                </p>
+              </div>
+            </div>
+            <div className="text-right">
+              {dashboardStatus?.breaksixt?.isDone ? (
+                <CheckCircle className="w-6 h-6 text-green-400" />
+              ) : dashboardStatus?.breaksixt?.isOverdue || breakOverdue ? (
+                <div className="flex items-center gap-2 text-red-400">
+                  <AlertTriangle className="w-5 h-5" />
+                  <span className="text-sm font-bold">OVERDUE</span>
+                </div>
+              ) : (
+                <span className="text-lg font-mono font-bold text-amber-400" data-testid="break-countdown">
+                  {formatCountdown(breakCountdown)}
                 </span>
               )}
             </div>
@@ -943,7 +1023,7 @@ export default function MasterDashboard() {
 
       <footer className="pb-24 pt-8 border-t border-white/10 text-center space-y-1 mx-4">
         <p className="text-xs text-muted-foreground">
-          Version v3.1.7
+          Version v3.1.8
         </p>
         <p className="text-xs text-muted-foreground">
           &copy; 2026 by Nathanael Prem

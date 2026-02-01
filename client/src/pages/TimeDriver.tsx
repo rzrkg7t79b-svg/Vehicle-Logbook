@@ -19,6 +19,8 @@ type DriverResult = {
   assignedHours: number; 
   assignedMinutes: number; 
   percent: number;
+  overflowHours?: number;
+  overflowMinutes?: number;
 };
 
 export default function TimeDriver() {
@@ -169,6 +171,18 @@ export default function TimeDriver() {
       const assignedMinutes = Math.round((cappedHours - assignedHours) * 60);
       const percent = Math.round((cappedHours / maxHours) * 100);
 
+      // Calculate overflow: if calculated exceeds max, show extra needed (minus 30min grace)
+      let overflowHours: number | undefined;
+      let overflowMinutes: number | undefined;
+      if (calculatedHours > maxHours) {
+        const GRACE_TIME_HOURS = 0.5; // 30 minutes grace time
+        const rawOverflow = calculatedHours - maxHours - GRACE_TIME_HOURS;
+        if (rawOverflow > 0) {
+          overflowHours = Math.floor(rawOverflow);
+          overflowMinutes = Math.round((rawOverflow - overflowHours) * 60);
+        }
+      }
+
       return {
         id: driver.id,
         initials: driver.initials,
@@ -177,6 +191,8 @@ export default function TimeDriver() {
         assignedHours,
         assignedMinutes,
         percent,
+        overflowHours,
+        overflowMinutes,
       };
     });
 
@@ -394,6 +410,11 @@ export default function TimeDriver() {
                       <span className="font-mono font-bold text-green-400">
                         {driver.assignedHours}h {driver.assignedMinutes}min
                       </span>
+                      {(driver.overflowHours !== undefined || driver.overflowMinutes !== undefined) && (
+                        <span className="ml-2 text-xs text-orange-400 font-medium" data-testid={`overflow-${driver.id}`}>
+                          if needed +{driver.overflowHours || 0}h {driver.overflowMinutes || 0}min
+                        </span>
+                      )}
                     </div>
                   </div>
                   <div className="relative h-6 bg-white/5 rounded-full overflow-hidden">
@@ -418,7 +439,7 @@ export default function TimeDriver() {
         )}
 
         <footer className="mt-8 pt-8 border-t border-white/10 text-center space-y-1">
-          <p className="text-xs text-muted-foreground">Version v3.1.7</p>
+          <p className="text-xs text-muted-foreground">Version v3.1.8</p>
           <p className="text-xs text-muted-foreground">&copy; 2026 by Nathanael Prem</p>
         </footer>
       </div>
