@@ -114,9 +114,12 @@ export function ExportPreview({ open, onOpenChange }: ExportPreviewProps) {
   // Filter quality checks for export: show passed OR not-passed with incomplete driver task
   const exportQualityChecks = qualityChecks.filter(check => {
     if (check.passed) return true;
-    // For not-passed checks, only show if driver task is NOT completed
+    // For not-passed checks, only show if driver task exists and is NOT completed
     const relatedTask = driverTasks.find(t => t.qualityCheckId === check.id);
-    return relatedTask && !relatedTask.completed;
+    // If no related task found, show the check (safety - shouldn't happen normally)
+    if (!relatedTask) return true;
+    // Only show if driver task is not completed
+    return !relatedTask.completed;
   });
 
   const { data: timedriverCalc } = useQuery<TimedriverCalculation | null>({
