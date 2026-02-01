@@ -943,7 +943,7 @@ export default function MasterDashboard() {
 
       <footer className="pb-24 pt-8 border-t border-white/10 text-center space-y-1 mx-4">
         <p className="text-xs text-muted-foreground">
-          Version v3.1.3
+          Version v3.1.4
         </p>
         <p className="text-xs text-muted-foreground">
           &copy; 2026 by Nathanael Prem

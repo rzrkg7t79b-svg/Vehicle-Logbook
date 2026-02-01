@@ -455,12 +455,10 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getQualityChecksForDate(date: string): Promise<QualityCheck[]> {
-    const allChecks = await db.select().from(qualityChecks).orderBy(desc(qualityChecks.createdAt));
-    return allChecks.filter(check => {
-      if (!check.createdAt) return false;
-      const checkDate = check.createdAt.toISOString().split('T')[0];
-      return checkDate === date;
-    });
+    // Use Berlin timezone for date comparison
+    return await db.select().from(qualityChecks)
+      .where(sql`DATE(${qualityChecks.createdAt} AT TIME ZONE 'Europe/Berlin') = ${date}`)
+      .orderBy(desc(qualityChecks.createdAt));
   }
 
   async getIncompleteDriverTasks(): Promise<DriverTask[]> {
