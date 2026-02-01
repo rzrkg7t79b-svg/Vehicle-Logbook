@@ -314,3 +314,21 @@ input:focus, textarea:focus, select:focus {
 .pulse-glow {
   animation: pulse-glow 2s ease-in-out infinite;
 }
+
+/* Fix date input width on iOS Safari */
+input[type="date"] {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+input[type="date"]::-webkit-date-and-time-value {
+  text-align: left;
+}
+
+input[type="date"]::-webkit-datetime-edit {
+  width: 100%;
+}

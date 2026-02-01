@@ -218,18 +218,16 @@ export default function AddVehicle() {
             <Label htmlFor="date" className="text-muted-foreground text-xs uppercase tracking-widest font-bold">
               Start Date
             </Label>
-            <div className="relative">
-              <Input
-                id="date"
-                type="date"
-                required
-                value={formData.countdownStart}
-                onChange={(e) => setFormData(prev => ({ ...prev, countdownStart: e.target.value }))}
-                className="bg-card border-white/10 h-12 w-full [&::-webkit-calendar-picker-indicator]:opacity-50 [&::-webkit-calendar-picker-indicator]:invert"
-                style={{ colorScheme: 'dark' }}
-                data-testid="input-start-date"
-              />
-            </div>
+            <Input
+              id="date"
+              type="date"
+              required
+              value={formData.countdownStart}
+              onChange={(e) => setFormData(prev => ({ ...prev, countdownStart: e.target.value }))}
+              className="bg-card border-white/10 h-12 !w-full !max-w-full !min-w-0 box-border [&::-webkit-calendar-picker-indicator]:opacity-50 [&::-webkit-calendar-picker-indicator]:invert [&::-webkit-datetime-edit]:w-full"
+              style={{ colorScheme: 'dark', width: '100%', maxWidth: '100%' }}
+              data-testid="input-start-date"
+            />
           </div>
 
           {/* Notes */}
