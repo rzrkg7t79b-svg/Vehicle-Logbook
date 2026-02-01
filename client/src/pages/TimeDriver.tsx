@@ -400,22 +400,24 @@ export default function TimeDriver() {
               {calculationResult.drivers.map(driver => (
                 <div key={driver.id} className="space-y-2" data-testid={`result-driver-${driver.id}`}>
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <span className="font-bold text-white">{driver.initials}</span>
-                      <span className="text-xs text-muted-foreground">
-                        (max {Math.floor(driver.maxHours)}h{driver.maxHours % 1 > 0 ? ` ${Math.round((driver.maxHours % 1) * 60)}min` : ""}/day)
-                      </span>
+                    <div className="flex flex-col">
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-white">{driver.initials}</span>
+                        <span className="text-xs text-muted-foreground">
+                          (max {Math.floor(driver.maxHours)}h{driver.maxHours % 1 > 0 ? ` ${Math.round((driver.maxHours % 1) * 60)}min` : ""}/day)
+                        </span>
+                      </div>
+                      {(driver.overflowHours !== undefined || driver.overflowMinutes !== undefined) && (
+                        <span className="text-xs text-white/50 mt-0.5" data-testid={`overflow-${driver.id}`}>
+                          (if needed +{driver.overflowHours || 0}h {driver.overflowMinutes || 0}min)
+                        </span>
+                      )}
                     </div>
                     <div className="text-right">
                       <span className="font-mono font-bold text-green-400">
                         {driver.assignedHours}h {driver.assignedMinutes}min
                       </span>
                     </div>
-                    {(driver.overflowHours !== undefined || driver.overflowMinutes !== undefined) && (
-                      <div className="text-xs text-white/50 mt-0.5" data-testid={`overflow-${driver.id}`}>
-                        (if needed +{driver.overflowHours || 0}h {driver.overflowMinutes || 0}min)
-                      </div>
-                    )}
                   </div>
                   <div className="relative h-6 bg-white/5 rounded-full overflow-hidden">
                     <div 
