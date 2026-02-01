@@ -579,9 +579,8 @@ export default function MasterDashboard() {
                 : ''
           }`}
           onClick={() => {
-            if (!dashboardStatus?.breaksixt?.isDone) {
-              toggleBreaksixtMutation.mutate(true);
-            }
+            const currentStatus = dashboardStatus?.breaksixt?.isDone ?? false;
+            toggleBreaksixtMutation.mutate(!currentStatus);
           }}
           data-testid="breaksixt-card"
         >
@@ -606,7 +605,7 @@ export default function MasterDashboard() {
                 <p className="font-semibold text-white">Break?<span className="text-amber-400">SIXT</span></p>
                 <p className="text-xs text-white/40">
                   {dashboardStatus?.breaksixt?.isDone 
-                    ? `Done${dashboardStatus.breaksixt.doneBy ? ` by ${dashboardStatus.breaksixt.doneBy}` : ''}`
+                    ? `Done${dashboardStatus.breaksixt.doneBy ? ` by ${dashboardStatus.breaksixt.doneBy}` : ''} • Tap to undo`
                     : 'Tap to mark lunch break done'
                   }
                 </p>
