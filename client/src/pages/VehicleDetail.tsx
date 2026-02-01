@@ -244,7 +244,7 @@ export default function VehicleDetail() {
         </section>
 
         <footer className="mt-8 pt-8 border-t border-white/10 text-center space-y-1">
-          <p className="text-xs text-muted-foreground">Version v3.1.2</p>
+          <p className="text-xs text-muted-foreground">Version v3.1.3</p>
           <p className="text-xs text-muted-foreground">&copy; 2026 by Nathanael Prem</p>
         </footer>
       </main>

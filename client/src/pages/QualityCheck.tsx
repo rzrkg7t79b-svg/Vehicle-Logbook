@@ -1,10 +1,21 @@
 import { useState } from "react";
 import { Link } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { ArrowLeft, CheckCircle, XCircle, AlertTriangle, Zap } from "lucide-react";
+import { ArrowLeft, CheckCircle, XCircle, AlertTriangle, Zap, RotateCcw } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { motion, AnimatePresence } from "framer-motion";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useUser } from "@/contexts/UserContext";
@@ -87,6 +98,25 @@ export default function QualityCheck() {
       queryClient.invalidateQueries({ queryKey: ["/api/module-status", todayDate] });
     },
   });
+
+  const resetQualitySixtMutation = useMutation({
+    mutationFn: async () => {
+      await fetch("/api/quality-checks/reset", {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          "x-admin-pin": user?.pin || "",
+        },
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/quality-checks"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/driver-tasks"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/module-status", todayDate] });
+    },
+  });
+
+  const isAdminOrBM = user?.isAdmin || user?.roles?.includes("Branch Manager");
 
   const resetForm = () => {
     setPlateLetters("");
@@ -263,8 +293,41 @@ export default function QualityCheck() {
           </Button>
         )}
 
+        {isAdminOrBM && (todayChecks.length > 0 || pendingTasks.length > 0) && (
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button
+                variant="destructive"
+                className="w-full"
+                data-testid="button-reset-quality"
+              >
+                <RotateCcw className="w-4 h-4 mr-2" />
+                Reset QualitySIXT
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Reset QualitySIXT?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This will delete ALL quality checks and driver tasks for today.
+                  This action cannot be undone.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={() => resetQualitySixtMutation.mutate()}
+                  className="bg-red-500 hover:bg-red-600"
+                >
+                  {resetQualitySixtMutation.isPending ? "Resetting..." : "Reset"}
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        )}
+
         <footer className="mt-8 pt-8 border-t border-white/10 text-center space-y-1">
-          <p className="text-xs text-muted-foreground">Version v3.1.2</p>
+          <p className="text-xs text-muted-foreground">Version v3.1.3</p>
           <p className="text-xs text-muted-foreground">&copy; 2026 by Nathanael Prem</p>
         </footer>
       </div>

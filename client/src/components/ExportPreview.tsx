@@ -6,7 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { getGermanDateString } from "@/lib/germanTime";
 import { addDays } from "date-fns";
 import { toJpeg } from "html-to-image";
-import type { Todo, FlowTask, Vehicle, TimedriverCalculation, User, Comment, FuturePlanning, KpiMetric } from "@/types";
+import type { Todo, FlowTask, Vehicle, TimedriverCalculation, User, Comment, FuturePlanning, KpiMetric, DriverTask } from "@/types";
 
 type VehicleWithComments = Vehicle & { comments: Comment[] };
 
@@ -105,6 +105,18 @@ export function ExportPreview({ open, onOpenChange }: ExportPreviewProps) {
       const res = await fetch(`/api/quality-checks?date=${todayDate}`);
       return res.json();
     },
+  });
+
+  const { data: driverTasks = [] } = useQuery<DriverTask[]>({
+    queryKey: ["/api/driver-tasks"],
+  });
+
+  // Filter quality checks for export: show passed OR not-passed with incomplete driver task
+  const exportQualityChecks = qualityChecks.filter(check => {
+    if (check.passed) return true;
+    // For not-passed checks, only show if driver task is NOT completed
+    const relatedTask = driverTasks.find(t => t.qualityCheckId === check.id);
+    return relatedTask && !relatedTask.completed;
   });
 
   const { data: timedriverCalc } = useQuery<TimedriverCalculation | null>({
@@ -957,10 +969,10 @@ export function ExportPreview({ open, onOpenChange }: ExportPreviewProps) {
                     {dashboardStatus?.quality.passedChecks}/5 checks passed
                     {dashboardStatus?.quality.incompleteTasks ? `, ${dashboardStatus.quality.incompleteTasks} pending` : ""}
                   </p>
-                  {qualityChecks.length === 0 ? (
+                  {exportQualityChecks.length === 0 ? (
                     <p style={{ margin: 0, color: "#888" }}>No checks today</p>
                   ) : (
-                    qualityChecks.map(check => (
+                    exportQualityChecks.map(check => (
                       <div key={check.id} style={{ 
                         padding: "6px 0",
                         borderBottom: "1px solid #333",
@@ -1029,7 +1041,7 @@ export function ExportPreview({ open, onOpenChange }: ExportPreviewProps) {
               alignItems: "center",
             }}>
               <div style={{ color: "#666", fontSize: "14px" }}>
-                <p style={{ margin: 0 }}>Version v3.1.2</p>
+                <p style={{ margin: 0 }}>Version v3.1.3</p>
                 <p style={{ margin: "4px 0 0 0" }}>&copy; 2026 by Nathanael Prem</p>
               </div>
               <div style={{ textAlign: "right", color: "#666", fontSize: "14px" }}>

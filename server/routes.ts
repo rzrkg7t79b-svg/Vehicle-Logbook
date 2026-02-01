@@ -442,6 +442,24 @@ export async function registerRoutes(
     }
   });
 
+  // QualitySIXT manual reset (BM/Admin only)
+  app.delete("/api/quality-checks/reset", async (req, res) => {
+    const adminPin = req.headers['x-admin-pin'] as string;
+    if (!adminPin) {
+      return res.status(401).json({ message: "Admin PIN required" });
+    }
+    const users = await storage.getUsers();
+    const adminUser = users.find(u => u.pin === adminPin && u.isAdmin);
+    if (!adminUser) {
+      return res.status(403).json({ message: "Invalid admin PIN or not an admin" });
+    }
+    await storage.resetQualitySixt();
+    broadcastUpdate("quality-checks");
+    broadcastUpdate("driver-tasks");
+    broadcastUpdate("module-status");
+    res.json({ success: true, message: "QualitySIXT reset completed" });
+  });
+
   // Driver task routes
   app.get(api.driverTasks.list.path, async (req, res) => {
     const tasks = await storage.getDriverTasks();

@@ -136,6 +136,7 @@ export interface IStorage {
   performMidnightReset(): Promise<void>;
   checkAndPerformDailyReset(): Promise<{ wasReset: boolean; date: string }>;
   getLastResetDate(): Promise<string | null>;
+  resetQualitySixt(): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -578,6 +579,14 @@ export class DatabaseStorage implements IStorage {
         eq(todos.completed, true)
       )
     );
+    
+    // ToDoSIXT: Delete completed Bodyshop Collection tasks (treat as one-time regardless of isRecurring)
+    await db.delete(todos).where(
+      and(
+        sql`${todos.title} LIKE 'Bodyshop Collection:%'`,
+        eq(todos.completed, true)
+      )
+    );
 
     await db.delete(moduleStatus);
 
@@ -597,6 +606,15 @@ export class DatabaseStorage implements IStorage {
     await db.delete(upgradeVehicles);
     
     console.log('[storage] Daily reset completed');
+  }
+
+  async resetQualitySixt(): Promise<void> {
+    console.log('[storage] Resetting QualitySIXT...');
+    // Delete all driver tasks first (due to foreign key constraint)
+    await db.delete(driverTasks);
+    // Delete all quality checks
+    await db.delete(qualityChecks);
+    console.log('[storage] QualitySIXT reset completed');
   }
 
   async getLastResetDate(): Promise<string | null> {
