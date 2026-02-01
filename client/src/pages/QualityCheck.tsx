@@ -309,7 +309,7 @@ export default function QualityCheck() {
               <AlertDialogHeader>
                 <AlertDialogTitle>Reset QualitySIXT?</AlertDialogTitle>
                 <AlertDialogDescription>
-                  This will delete ALL quality checks and driver tasks for today.
+                  This will delete ALL quality checks and driver tasks (including old/stale data).
                   This action cannot be undone.
                 </AlertDialogDescription>
               </AlertDialogHeader>
@@ -327,7 +327,7 @@ export default function QualityCheck() {
         )}
 
         <footer className="mt-8 pt-8 border-t border-white/10 text-center space-y-1">
-          <p className="text-xs text-muted-foreground">Version v3.1.4</p>
+          <p className="text-xs text-muted-foreground">Version v3.1.5</p>
           <p className="text-xs text-muted-foreground">&copy; 2026 by Nathanael Prem</p>
         </footer>
       </div>

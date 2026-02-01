@@ -607,27 +607,14 @@ export class DatabaseStorage implements IStorage {
   }
 
   async resetQualitySixt(): Promise<void> {
-    const todayBerlin = getBerlinDateString();
-    console.log(`[storage] Resetting QualitySIXT for ${todayBerlin}...`);
+    console.log('[storage] Resetting ALL QualitySIXT data...');
     
-    // Get today's quality checks
-    const todayChecks = await db.select().from(qualityChecks).where(
-      sql`DATE(${qualityChecks.createdAt} AT TIME ZONE 'Europe/Berlin') = ${todayBerlin}`
-    );
-    const todayCheckIds = todayChecks.map(c => c.id);
+    // Delete ALL driver tasks first (due to foreign key constraint)
+    await db.delete(driverTasks);
+    // Delete ALL quality checks (including old/stale data from previous versions)
+    await db.delete(qualityChecks);
     
-    if (todayCheckIds.length > 0) {
-      // Delete driver tasks for today's quality checks (due to foreign key constraint)
-      await db.delete(driverTasks).where(
-        sql`${driverTasks.qualityCheckId} IN (${sql.join(todayCheckIds.map(id => sql`${id}`), sql`, `)})`
-      );
-      // Delete today's quality checks
-      await db.delete(qualityChecks).where(
-        sql`${qualityChecks.id} IN (${sql.join(todayCheckIds.map(id => sql`${id}`), sql`, `)})`
-      );
-    }
-    
-    console.log('[storage] QualitySIXT reset completed');
+    console.log('[storage] QualitySIXT reset completed - all data deleted');
   }
 
   async getLastResetDate(): Promise<string | null> {

@@ -1044,7 +1044,7 @@ export function ExportPreview({ open, onOpenChange }: ExportPreviewProps) {
               alignItems: "center",
             }}>
               <div style={{ color: "#666", fontSize: "14px" }}>
-                <p style={{ margin: 0 }}>Version v3.1.4</p>
+                <p style={{ margin: 0 }}>Version v3.1.5</p>
                 <p style={{ margin: "4px 0 0 0" }}>&copy; 2026 by Nathanael Prem</p>
               </div>
               <div style={{ textAlign: "right", color: "#666", fontSize: "14px" }}>
