@@ -405,8 +405,16 @@ export default function MasterDashboard() {
   const futureData = dashboardStatus?.future?.data;
 
   const handleFutureInputChange = (field: keyof typeof futureForm, value: string) => {
-    const numValue = value.replace(/\D/g, "").slice(0, 2);
-    setFutureForm(prev => ({ ...prev, [field]: numValue }));
+    // For DayMin fields, preserve the minus sign
+    if (field === 'carDayMin' || field === 'vanDayMin') {
+      const isNegative = value.startsWith('-');
+      const numPart = value.replace(/[^0-9]/g, "").slice(0, 2);
+      const finalValue = isNegative ? '-' + numPart : numPart;
+      setFutureForm(prev => ({ ...prev, [field]: finalValue }));
+    } else {
+      const numValue = value.replace(/\D/g, "").slice(0, 2);
+      setFutureForm(prev => ({ ...prev, [field]: numValue }));
+    }
     setFutureValidationError(false);
   };
 
