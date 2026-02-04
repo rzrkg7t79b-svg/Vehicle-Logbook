@@ -826,15 +826,15 @@ async function registerKpiMetricsRoutes(app: Express) {
     if (!(await requireAdmin(req, res))) return;
     try {
       const key = String(req.params.key);
-      if (key !== "irpd" && key !== "ses") {
-        return res.status(400).json({ message: "Invalid KPI key. Must be 'irpd' or 'ses'" });
+      if (key !== "irpd" && key !== "ses" && key !== "upmtd") {
+        return res.status(400).json({ message: "Invalid KPI key. Must be 'irpd', 'ses', or 'upmtd'" });
       }
       const input = api.kpiMetrics.update.input.parse(req.body);
       const adminPin = req.headers['x-admin-pin'] as string;
       const adminUser = await storage.getUserByPin(adminPin);
       
       const metric = await storage.upsertKpiMetric({
-        key: key as "irpd" | "ses",
+        key: key as "irpd" | "ses" | "upmtd",
         value: input.value,
         goal: input.goal,
         updatedBy: adminUser?.initials,
