@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { motion } from "framer-motion";
-import { Clock, Car, ClipboardCheck, CheckSquare, AlertTriangle, CheckCircle, Workflow, Share2, TrendingUp, Truck, Lock, Plane, RotateCcw, Coffee } from "lucide-react";
+import { Clock, Car, ClipboardCheck, CheckSquare, AlertTriangle, CheckCircle, Workflow, Share2, TrendingUp, Truck, Lock, Plane, RotateCcw, Coffee, ArrowUp, ArrowDown, Minus } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -80,6 +80,7 @@ export default function MasterDashboard() {
   const [editingKpi, setEditingKpi] = useState<"irpd" | "ses" | null>(null);
   const [kpiEditValue, setKpiEditValue] = useState("");
   const [kpiEditGoal, setKpiEditGoal] = useState("");
+  const [kpiEditYesterday, setKpiEditYesterday] = useState("");
 
   const futureTapTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -227,8 +228,8 @@ export default function MasterDashboard() {
   });
 
   const updateKpiMutation = useMutation({
-    mutationFn: async ({ key, value, goal }: { key: string; value: number; goal: number }) => {
-      return apiRequest("PUT", `/api/kpi-metrics/${key}`, { value, goal }, {
+    mutationFn: async ({ key, value, goal, yesterdayValue }: { key: string; value: number; goal: number; yesterdayValue: number | null }) => {
+      return apiRequest("PUT", `/api/kpi-metrics/${key}`, { value, goal, yesterdayValue }, {
         "x-admin-pin": user?.pin || "",
       });
     },
@@ -237,6 +238,7 @@ export default function MasterDashboard() {
       setEditingKpi(null);
       setKpiEditValue("");
       setKpiEditGoal("");
+      setKpiEditYesterday("");
       toast({ title: "KPI updated successfully" });
     },
     onError: (error: Error) => {
@@ -328,11 +330,33 @@ export default function MasterDashboard() {
     return "Just now";
   };
 
+  const getKpiComparison = (value: number | undefined, yesterdayValue: number | null | undefined): {
+    arrow: "up" | "down" | "same";
+    color: string;
+  } => {
+    if (value === undefined || yesterdayValue === undefined || yesterdayValue === null) {
+      return { arrow: "same", color: "text-muted-foreground" };
+    }
+    if (value > yesterdayValue) return { arrow: "up", color: "text-green-500" };
+    if (value < yesterdayValue) return { arrow: "down", color: "text-red-500" };
+    return { arrow: "same", color: "text-yellow-500" };
+  };
+
+  const getYesterdayValueColor = (key: "irpd" | "ses", yesterdayValue: number | null | undefined, goal: number): string => {
+    if (yesterdayValue === undefined || yesterdayValue === null) return "text-muted-foreground";
+    // Color based on comparison to goal: green if >= goal, yellow if within 10%, red if worse
+    if (yesterdayValue >= goal) return "text-green-500";
+    const threshold = goal * 0.9; // 10% below goal
+    if (yesterdayValue >= threshold) return "text-yellow-500";
+    return "text-red-500";
+  };
+
   const handleKpiEdit = (key: "irpd" | "ses") => {
     const metric = getKpiMetric(key);
     setEditingKpi(key);
     setKpiEditValue(metric?.value?.toString() || (key === "irpd" ? "8.00" : "92.5"));
     setKpiEditGoal(metric?.goal?.toString() || (key === "irpd" ? "8.00" : "92.5"));
+    setKpiEditYesterday(metric?.yesterdayValue?.toString() || "");
   };
 
   const handleKpiSave = () => {
@@ -340,11 +364,16 @@ export default function MasterDashboard() {
     // Support both comma and period as decimal separator (German keyboards use comma)
     const value = parseFloat(kpiEditValue.replace(',', '.'));
     const goal = parseFloat(kpiEditGoal.replace(',', '.'));
+    const yesterdayValue = kpiEditYesterday.trim() ? parseFloat(kpiEditYesterday.replace(',', '.')) : null;
     if (isNaN(value) || isNaN(goal)) {
       toast({ title: "Please enter valid numbers", variant: "destructive" });
       return;
     }
-    updateKpiMutation.mutate({ key: editingKpi, value, goal });
+    if (yesterdayValue !== null && isNaN(yesterdayValue)) {
+      toast({ title: "Please enter a valid yesterday value", variant: "destructive" });
+      return;
+    }
+    updateKpiMutation.mutate({ key: editingKpi, value, goal, yesterdayValue });
   };
 
   const getModuleStatus = (moduleId: string): boolean => {
@@ -466,6 +495,7 @@ export default function MasterDashboard() {
           {(["irpd", "ses"] as const).map((kpiKey) => {
             const metric = getKpiMetric(kpiKey);
             const value = metric?.value;
+            const yesterdayValue = metric?.yesterdayValue;
             const goal = metric?.goal ?? (kpiKey === "irpd" ? 8.0 : 92.5);
             const color = getKpiColor(kpiKey, value);
             const bgColor = getKpiBgColor(kpiKey, value);
@@ -474,6 +504,8 @@ export default function MasterDashboard() {
             
             const glowStyle = getKpiGlowStyle(kpiKey, value);
             const trafficLight = getKpiTrafficLight(kpiKey, value);
+            const comparison = getKpiComparison(value, yesterdayValue);
+            const yesterdayColor = getYesterdayValueColor(kpiKey, yesterdayValue, goal);
             
             return (
               <Card 
@@ -526,7 +558,24 @@ export default function MasterDashboard() {
                   <span className="text-xs text-muted-foreground">
                     / {kpiKey === "irpd" ? goal.toFixed(2) : `${goal.toFixed(1)}%`}
                   </span>
+                  {/* Comparison Arrow */}
+                  {yesterdayValue !== null && yesterdayValue !== undefined && value !== undefined && (
+                    <span className={`ml-1 ${comparison.color}`}>
+                      {comparison.arrow === "up" && <ArrowUp className="w-3 h-3 inline" />}
+                      {comparison.arrow === "down" && <ArrowDown className="w-3 h-3 inline" />}
+                      {comparison.arrow === "same" && <Minus className="w-3 h-3 inline" />}
+                    </span>
+                  )}
                 </div>
+                {/* Yesterday Value */}
+                {yesterdayValue !== null && yesterdayValue !== undefined && (
+                  <div className="flex items-center gap-1 mt-0.5">
+                    <span className="text-xs text-muted-foreground">Yesterday:</span>
+                    <span className={`text-xs font-medium ${yesterdayColor}`} data-testid={`kpi-yesterday-${kpiKey}`}>
+                      {kpiKey === "irpd" ? yesterdayValue.toFixed(2) : `${yesterdayValue.toFixed(1)}%`}
+                    </span>
+                  </div>
+                )}
                 <div className="flex items-center gap-1 mt-1">
                   {stale && <AlertTriangle className="w-3 h-3 text-orange-500" />}
                   <span className={`text-xs ${stale ? 'text-orange-400' : 'text-muted-foreground'}`}>
@@ -1145,6 +1194,18 @@ export default function MasterDashboard() {
                 placeholder={editingKpi === "irpd" ? "8.00" : "92.5"}
                 className="text-center text-lg"
                 data-testid="input-kpi-goal"
+              />
+            </div>
+            <div>
+              <Label className="text-xs text-muted-foreground">Yesterday Value (for comparison)</Label>
+              <Input
+                type="text"
+                inputMode="decimal"
+                value={kpiEditYesterday}
+                onChange={(e) => setKpiEditYesterday(e.target.value)}
+                placeholder={editingKpi === "irpd" ? "7.85" : "91.2"}
+                className="text-center text-lg"
+                data-testid="input-kpi-yesterday"
               />
             </div>
             <div className="flex gap-2">

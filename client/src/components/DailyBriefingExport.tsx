@@ -59,10 +59,6 @@ export function DailyBriefingExport({ open, onOpenChange }: DailyBriefingExportP
   const [briefingMessage, setBriefingMessage] = useState("");
   const todayDate = getGermanDateString();
   
-  // Yesterday values for KPIs (admin-only input)
-  const [irpdYesterday, setIrpdYesterday] = useState<string>("");
-  const [sesYesterday, setSesYesterday] = useState<string>("");
-  const [upMtdYesterday, setUpMtdYesterday] = useState<string>("");
 
   const { data: dashboardStatus } = useQuery<DashboardStatus>({
     queryKey: ["/api/dashboard/status", todayDate],
@@ -91,6 +87,11 @@ export function DailyBriefingExport({ open, onOpenChange }: DailyBriefingExportP
   const { data: kpiMetrics = [] } = useQuery<KpiMetric[]>({
     queryKey: ["/api/kpi-metrics"],
   });
+
+  // Get yesterday values directly from database
+  const irpdYesterday = kpiMetrics.find(m => m.key === "irpd")?.yesterdayValue?.toString() || "";
+  const sesYesterday = kpiMetrics.find(m => m.key === "ses")?.yesterdayValue?.toString() || "";
+  const upMtdYesterday = kpiMetrics.find(m => m.key === "upmtd")?.yesterdayValue?.toString() || "";
 
   const getKpiMetric = (key: "irpd" | "ses" | "upmtd"): KpiMetric | undefined => {
     return kpiMetrics.find(m => m.key === key);
@@ -262,45 +263,28 @@ export function DailyBriefingExport({ open, onOpenChange }: DailyBriefingExportP
             />
           </div>
           
-          {/* Yesterday KPI Values (Admin Only) */}
+          {/* Yesterday KPI Values (read from database) */}
           <div className="border border-orange-500/30 rounded-lg p-4 bg-orange-500/5">
-            <Label className="text-sm font-bold text-orange-500 mb-3 block">Yesterday KPI Values (for comparison arrows)</Label>
+            <Label className="text-sm font-bold text-orange-500 mb-3 block">Yesterday KPI Values (from database)</Label>
+            <p className="text-xs text-muted-foreground mb-2">Edit yesterday values on the main dashboard KPI tiles.</p>
             <div className="grid grid-cols-3 gap-4">
               <div>
                 <Label className="text-xs text-muted-foreground">IRPD Yesterday</Label>
-                <Input
-                  type="number"
-                  step="0.01"
-                  placeholder="e.g. 2.15"
-                  value={irpdYesterday}
-                  onChange={(e) => setIrpdYesterday(e.target.value)}
-                  className="mt-1"
-                  data-testid="input-irpd-yesterday"
-                />
+                <div className="mt-1 px-3 py-2 bg-muted/20 rounded-md text-sm" data-testid="display-irpd-yesterday">
+                  {irpdYesterday || "Not set"}
+                </div>
               </div>
               <div>
                 <Label className="text-xs text-muted-foreground">SES Yesterday</Label>
-                <Input
-                  type="number"
-                  step="0.1"
-                  placeholder="e.g. 85.5"
-                  value={sesYesterday}
-                  onChange={(e) => setSesYesterday(e.target.value)}
-                  className="mt-1"
-                  data-testid="input-ses-yesterday"
-                />
+                <div className="mt-1 px-3 py-2 bg-muted/20 rounded-md text-sm" data-testid="display-ses-yesterday">
+                  {sesYesterday ? `${sesYesterday}%` : "Not set"}
+                </div>
               </div>
               <div>
                 <Label className="text-xs text-muted-foreground">UP % MTD Yesterday</Label>
-                <Input
-                  type="number"
-                  step="0.1"
-                  placeholder="e.g. 12.5"
-                  value={upMtdYesterday}
-                  onChange={(e) => setUpMtdYesterday(e.target.value)}
-                  className="mt-1"
-                  data-testid="input-upmtd-yesterday"
-                />
+                <div className="mt-1 px-3 py-2 bg-muted/20 rounded-md text-sm" data-testid="display-upmtd-yesterday">
+                  {upMtdYesterday ? `${upMtdYesterday}%` : "Not set"}
+                </div>
               </div>
             </div>
           </div>
