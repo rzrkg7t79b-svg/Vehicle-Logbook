@@ -845,14 +845,19 @@ export default function MasterDashboard() {
                         <Label className="text-[10px] text-muted-foreground">DayMin</Label>
                         <Input
                           type="text"
-                          inputMode="text"
                           value={futureForm.carDayMin}
                           onChange={(e) => {
-                            const val = e.target.value.replace(/[^0-9-]/g, '').replace(/(?!^)-/g, '');
+                            // Convert any dash type to standard hyphen, keep only digits and one leading dash
+                            let val = e.target.value.replace(/[−–—]/g, '-');
+                            val = val.replace(/[^0-9-]/g, '');
+                            // Keep only first dash if at start
+                            const hasLeadingMinus = val.startsWith('-');
+                            val = val.replace(/-/g, '');
+                            if (hasLeadingMinus) val = '-' + val;
                             handleFutureInputChange("carDayMin", val);
                           }}
                           className={`text-center text-sm h-8 ${futureForm.carDayMin.startsWith('-') ? 'text-red-400' : futureForm.carDayMin ? 'text-green-400' : ''}`}
-                          placeholder="0"
+                          placeholder="0 or -5"
                           data-testid="input-future-car-daymin"
                         />
                       </div>
@@ -876,14 +881,19 @@ export default function MasterDashboard() {
                         <Label className="text-[10px] text-muted-foreground">DayMin</Label>
                         <Input
                           type="text"
-                          inputMode="text"
                           value={futureForm.vanDayMin}
                           onChange={(e) => {
-                            const val = e.target.value.replace(/[^0-9-]/g, '').replace(/(?!^)-/g, '');
+                            // Convert any dash type to standard hyphen, keep only digits and one leading dash
+                            let val = e.target.value.replace(/[−–—]/g, '-');
+                            val = val.replace(/[^0-9-]/g, '');
+                            // Keep only first dash if at start
+                            const hasLeadingMinus = val.startsWith('-');
+                            val = val.replace(/-/g, '');
+                            if (hasLeadingMinus) val = '-' + val;
                             handleFutureInputChange("vanDayMin", val);
                           }}
                           className={`text-center text-sm h-8 ${futureForm.vanDayMin.startsWith('-') ? 'text-red-400' : futureForm.vanDayMin ? 'text-green-400' : ''}`}
-                          placeholder="0"
+                          placeholder="0 or -5"
                           data-testid="input-future-van-daymin"
                         />
                       </div>
