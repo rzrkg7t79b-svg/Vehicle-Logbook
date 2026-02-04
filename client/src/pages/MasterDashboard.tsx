@@ -849,7 +849,9 @@ export default function MasterDashboard() {
                             size="sm"
                             variant={futureForm.carDayMin.startsWith('-') ? "default" : "outline"}
                             className="h-8 w-8 p-0 text-lg font-bold shrink-0"
-                            onClick={() => {
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              e.preventDefault();
                               const current = futureForm.carDayMin;
                               if (current.startsWith('-')) {
                                 handleFutureInputChange("carDayMin", current.slice(1));
@@ -902,7 +904,9 @@ export default function MasterDashboard() {
                             size="sm"
                             variant={futureForm.vanDayMin.startsWith('-') ? "default" : "outline"}
                             className="h-8 w-8 p-0 text-lg font-bold shrink-0"
-                            onClick={() => {
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              e.preventDefault();
                               const current = futureForm.vanDayMin;
                               if (current.startsWith('-')) {
                                 handleFutureInputChange("vanDayMin", current.slice(1));
