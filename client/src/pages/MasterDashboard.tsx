@@ -847,18 +847,19 @@ export default function MasterDashboard() {
                           <Button
                             type="button"
                             size="sm"
-                            variant={futureForm.carDayMin.startsWith('-') ? "default" : "outline"}
-                            className="h-8 w-8 p-0 text-lg font-bold shrink-0"
+                            variant="outline"
+                            className={`h-8 w-8 p-0 text-lg font-bold shrink-0 ${futureForm.carDayMin.startsWith('-') ? 'bg-red-500 border-red-500 text-white hover:bg-red-600' : 'text-muted-foreground'}`}
+                            disabled={!futureForm.carDayMin.replace('-', '')}
                             onClick={(e) => {
                               e.stopPropagation();
                               e.preventDefault();
                               const current = futureForm.carDayMin;
+                              const numPart = current.replace('-', '');
+                              if (!numPart) return;
                               if (current.startsWith('-')) {
-                                handleFutureInputChange("carDayMin", current.slice(1));
-                              } else if (current) {
-                                handleFutureInputChange("carDayMin", '-' + current);
+                                handleFutureInputChange("carDayMin", numPart);
                               } else {
-                                handleFutureInputChange("carDayMin", "-");
+                                handleFutureInputChange("carDayMin", '-' + numPart);
                               }
                             }}
                             data-testid="button-toggle-car-daymin-negative"
@@ -869,12 +870,17 @@ export default function MasterDashboard() {
                             type="text"
                             inputMode="numeric"
                             value={futureForm.carDayMin.replace('-', '')}
+                            onClick={(e) => e.stopPropagation()}
                             onChange={(e) => {
                               const val = e.target.value.replace(/[^0-9]/g, '');
                               const isNegative = futureForm.carDayMin.startsWith('-');
-                              handleFutureInputChange("carDayMin", isNegative ? '-' + val : val);
+                              if (!val) {
+                                handleFutureInputChange("carDayMin", "");
+                              } else {
+                                handleFutureInputChange("carDayMin", isNegative ? '-' + val : val);
+                              }
                             }}
-                            className={`text-center text-sm h-8 flex-1 ${futureForm.carDayMin && parseInt(futureForm.carDayMin) < 0 ? 'text-red-400' : 'text-green-400'}`}
+                            className={`text-center text-sm h-8 flex-1 ${futureForm.carDayMin.startsWith('-') ? 'text-red-400' : futureForm.carDayMin ? 'text-green-400' : ''}`}
                             placeholder="0"
                             data-testid="input-future-car-daymin"
                           />
@@ -902,18 +908,19 @@ export default function MasterDashboard() {
                           <Button
                             type="button"
                             size="sm"
-                            variant={futureForm.vanDayMin.startsWith('-') ? "default" : "outline"}
-                            className="h-8 w-8 p-0 text-lg font-bold shrink-0"
+                            variant="outline"
+                            className={`h-8 w-8 p-0 text-lg font-bold shrink-0 ${futureForm.vanDayMin.startsWith('-') ? 'bg-red-500 border-red-500 text-white hover:bg-red-600' : 'text-muted-foreground'}`}
+                            disabled={!futureForm.vanDayMin.replace('-', '')}
                             onClick={(e) => {
                               e.stopPropagation();
                               e.preventDefault();
                               const current = futureForm.vanDayMin;
+                              const numPart = current.replace('-', '');
+                              if (!numPart) return;
                               if (current.startsWith('-')) {
-                                handleFutureInputChange("vanDayMin", current.slice(1));
-                              } else if (current) {
-                                handleFutureInputChange("vanDayMin", '-' + current);
+                                handleFutureInputChange("vanDayMin", numPart);
                               } else {
-                                handleFutureInputChange("vanDayMin", "-");
+                                handleFutureInputChange("vanDayMin", '-' + numPart);
                               }
                             }}
                             data-testid="button-toggle-van-daymin-negative"
@@ -924,12 +931,17 @@ export default function MasterDashboard() {
                             type="text"
                             inputMode="numeric"
                             value={futureForm.vanDayMin.replace('-', '')}
+                            onClick={(e) => e.stopPropagation()}
                             onChange={(e) => {
                               const val = e.target.value.replace(/[^0-9]/g, '');
                               const isNegative = futureForm.vanDayMin.startsWith('-');
-                              handleFutureInputChange("vanDayMin", isNegative ? '-' + val : val);
+                              if (!val) {
+                                handleFutureInputChange("vanDayMin", "");
+                              } else {
+                                handleFutureInputChange("vanDayMin", isNegative ? '-' + val : val);
+                              }
                             }}
-                            className={`text-center text-sm h-8 flex-1 ${futureForm.vanDayMin && parseInt(futureForm.vanDayMin) < 0 ? 'text-red-400' : 'text-green-400'}`}
+                            className={`text-center text-sm h-8 flex-1 ${futureForm.vanDayMin.startsWith('-') ? 'text-red-400' : futureForm.vanDayMin ? 'text-green-400' : ''}`}
                             placeholder="0"
                             data-testid="input-future-van-daymin"
                           />
