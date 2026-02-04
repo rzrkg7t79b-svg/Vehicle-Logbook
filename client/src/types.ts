@@ -151,6 +151,7 @@ export interface KpiMetric {
   key: string;
   value: number;
   goal: number;
+  yesterdayValue: number | null;
   updatedBy: string | null;
   updatedAt: Date | null;
 }
@@ -274,6 +275,7 @@ export interface InsertKpiMetric {
   key: "irpd" | "ses" | "upmtd";
   value: number;
   goal: number;
+  yesterdayValue?: number | null;
   updatedBy?: string;
 }
 

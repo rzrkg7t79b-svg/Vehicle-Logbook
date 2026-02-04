@@ -168,6 +168,7 @@ export const kpiMetrics = pgTable("kpi_metrics", {
   key: text("key").notNull().unique(),
   value: real("value").notNull(),
   goal: real("goal").notNull(),
+  yesterdayValue: real("yesterday_value"),
   updatedBy: text("updated_by"),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -295,6 +296,7 @@ export const insertKpiMetricSchema = createInsertSchema(kpiMetrics)
     key: z.enum(["irpd", "ses", "upmtd"]),
     value: z.number().min(0),
     goal: z.number().min(0),
+    yesterdayValue: z.number().min(0).nullable().optional(),
     updatedBy: z.string().optional(),
   });
 
