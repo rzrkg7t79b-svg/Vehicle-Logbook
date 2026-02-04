@@ -844,8 +844,7 @@ export default function MasterDashboard() {
                       <div className="mt-1">
                         <Label className="text-[10px] text-muted-foreground">DayMin</Label>
                         <Input
-                          type="text"
-                          inputMode="numeric"
+                          type="number"
                           value={futureForm.carDayMin}
                           onChange={(e) => {
                             const val = e.target.value.replace(/[^0-9-]/g, '');
@@ -877,8 +876,7 @@ export default function MasterDashboard() {
                       <div className="mt-1">
                         <Label className="text-[10px] text-muted-foreground">DayMin</Label>
                         <Input
-                          type="text"
-                          inputMode="numeric"
+                          type="number"
                           value={futureForm.vanDayMin}
                           onChange={(e) => {
                             const val = e.target.value.replace(/[^0-9-]/g, '');
