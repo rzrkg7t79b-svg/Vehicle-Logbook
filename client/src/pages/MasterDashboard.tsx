@@ -844,19 +844,23 @@ export default function MasterDashboard() {
                       />
                       <div className="mt-1">
                         <Label className="text-[10px] text-muted-foreground">DayMin</Label>
-                        <div className="flex items-center gap-2">
-                          <div className="flex items-center gap-1">
-                            <Switch
-                              checked={futureForm.carDayMin.startsWith('-')}
-                              onCheckedChange={(checked) => {
-                                const numPart = futureForm.carDayMin.replace('-', '');
-                                handleFutureInputChange("carDayMin", checked ? '-' + numPart : numPart);
-                              }}
-                              className="data-[state=checked]:bg-red-500"
-                              data-testid="switch-car-daymin-negative"
-                            />
-                            <span className={`text-xs ${futureForm.carDayMin.startsWith('-') ? 'text-red-400' : 'text-muted-foreground'}`}>−</span>
-                          </div>
+                        <div className="flex items-center gap-1">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const isNegative = futureForm.carDayMin.startsWith('-');
+                              const numPart = futureForm.carDayMin.replace('-', '');
+                              handleFutureInputChange("carDayMin", isNegative ? numPart : '-' + numPart);
+                            }}
+                            className={`w-8 h-8 rounded-md font-bold text-lg flex items-center justify-center ${
+                              futureForm.carDayMin.startsWith('-') 
+                                ? 'bg-red-500 text-white' 
+                                : 'bg-green-600 text-white'
+                            }`}
+                            data-testid="button-car-daymin-toggle"
+                          >
+                            {futureForm.carDayMin.startsWith('-') ? '−' : '+'}
+                          </button>
                           <Input
                             type="text"
                             inputMode="numeric"
@@ -866,8 +870,9 @@ export default function MasterDashboard() {
                               const isNegative = futureForm.carDayMin.startsWith('-');
                               handleFutureInputChange("carDayMin", isNegative ? '-' + val : val);
                             }}
-                            className={`text-center text-sm h-8 flex-1 ${futureForm.carDayMin.startsWith('-') ? 'text-red-400' : futureForm.carDayMin.replace('-', '') ? 'text-green-400' : ''}`}
+                            className={`text-center text-base font-bold h-8 w-12 ${futureForm.carDayMin.startsWith('-') ? 'text-red-400' : futureForm.carDayMin.replace('-', '') ? 'text-green-400' : ''}`}
                             placeholder="0"
+                            maxLength={2}
                             data-testid="input-future-car-daymin"
                           />
                         </div>
@@ -890,19 +895,23 @@ export default function MasterDashboard() {
                       />
                       <div className="mt-1">
                         <Label className="text-[10px] text-muted-foreground">DayMin</Label>
-                        <div className="flex items-center gap-2">
-                          <div className="flex items-center gap-1">
-                            <Switch
-                              checked={futureForm.vanDayMin.startsWith('-')}
-                              onCheckedChange={(checked) => {
-                                const numPart = futureForm.vanDayMin.replace('-', '');
-                                handleFutureInputChange("vanDayMin", checked ? '-' + numPart : numPart);
-                              }}
-                              className="data-[state=checked]:bg-red-500"
-                              data-testid="switch-van-daymin-negative"
-                            />
-                            <span className={`text-xs ${futureForm.vanDayMin.startsWith('-') ? 'text-red-400' : 'text-muted-foreground'}`}>−</span>
-                          </div>
+                        <div className="flex items-center gap-1">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const isNegative = futureForm.vanDayMin.startsWith('-');
+                              const numPart = futureForm.vanDayMin.replace('-', '');
+                              handleFutureInputChange("vanDayMin", isNegative ? numPart : '-' + numPart);
+                            }}
+                            className={`w-8 h-8 rounded-md font-bold text-lg flex items-center justify-center ${
+                              futureForm.vanDayMin.startsWith('-') 
+                                ? 'bg-red-500 text-white' 
+                                : 'bg-green-600 text-white'
+                            }`}
+                            data-testid="button-van-daymin-toggle"
+                          >
+                            {futureForm.vanDayMin.startsWith('-') ? '−' : '+'}
+                          </button>
                           <Input
                             type="text"
                             inputMode="numeric"
@@ -912,8 +921,9 @@ export default function MasterDashboard() {
                               const isNegative = futureForm.vanDayMin.startsWith('-');
                               handleFutureInputChange("vanDayMin", isNegative ? '-' + val : val);
                             }}
-                            className={`text-center text-sm h-8 flex-1 ${futureForm.vanDayMin.startsWith('-') ? 'text-red-400' : futureForm.vanDayMin.replace('-', '') ? 'text-green-400' : ''}`}
+                            className={`text-center text-base font-bold h-8 w-12 ${futureForm.vanDayMin.startsWith('-') ? 'text-red-400' : futureForm.vanDayMin.replace('-', '') ? 'text-green-400' : ''}`}
                             placeholder="0"
+                            maxLength={2}
                             data-testid="input-future-van-daymin"
                           />
                         </div>
