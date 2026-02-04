@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "wouter";
-import { ArrowLeft, TrendingUp, Clock, AlertTriangle, CheckCircle, Plus, Loader2, Car, Truck } from "lucide-react";
+import { ArrowLeft, TrendingUp, Clock, AlertTriangle, CheckCircle, Plus, Loader2, Car, Truck, Pencil, Target, DollarSign } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,6 +11,8 @@ import { queryClient, apiRequest } from "@/lib/queryClient";
 import { getSecondsUntilGermanTime, formatCountdown, isOverdue, getGermanDateString } from "@/lib/germanTime";
 import { LicensePlateInput, buildPlateFromParts } from "@/components/LicensePlateInput";
 import { GermanPlate } from "@/components/GermanPlate";
+import { useToast } from "@/hooks/use-toast";
+import type { KpiMetric } from "@/types";
 
 type UpgradeVehicle = {
   id: number;
@@ -28,6 +30,7 @@ type UpgradeVehicle = {
 
 export default function UpgradeSIXT() {
   const { user } = useUser();
+  const { toast } = useToast();
   const isAdmin = user?.isAdmin;
   const isCounter = user?.roles?.includes("Counter");
   const canAdd = isAdmin || isCounter;
@@ -45,7 +48,42 @@ export default function UpgradeSIXT() {
   const [model, setModel] = useState("");
   const [reason, setReason] = useState("");
   
+  const [editingUpMtd, setEditingUpMtd] = useState(false);
+  const [upMtdValue, setUpMtdValue] = useState("");
+  const [upMtdGoal, setUpMtdGoal] = useState("");
+  
   const adminHeaders: Record<string, string> = user?.pin ? { "x-admin-pin": user.pin } : {};
+  
+  const { data: kpiMetrics = [] } = useQuery<KpiMetric[]>({
+    queryKey: ["/api/kpi-metrics"],
+  });
+  
+  const upMtdKpi = kpiMetrics.find(m => m.key === "upmtd");
+  
+  const getUpMtdTrafficLight = (value: number | undefined, goal: number): "green" | "yellow" | "red" => {
+    if (value === undefined) return "red";
+    if (value >= goal) return "green";
+    if (value >= goal - 1.5) return "yellow";
+    return "red";
+  };
+  
+  const updateUpMtdMutation = useMutation({
+    mutationFn: async ({ value, goal }: { value: number; goal: number }) => {
+      return apiRequest("PUT", `/api/kpi-metrics/upmtd`, { value, goal }, {
+        "x-admin-pin": user?.pin || "",
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/kpi-metrics"] });
+      setEditingUpMtd(false);
+      setUpMtdValue("");
+      setUpMtdGoal("");
+      toast({ title: "UP % MTD updated successfully" });
+    },
+    onError: (error: Error) => {
+      toast({ title: "Error updating KPI", description: error.message, variant: "destructive" });
+    },
+  });
   
   const { data: upgradeVehicles = [], isLoading } = useQuery<UpgradeVehicle[]>({
     queryKey: ["/api/upgrade-vehicles/date", todayDate],
@@ -150,6 +188,149 @@ export default function UpgradeSIXT() {
         </div>
 
       <div className="p-4 space-y-4">
+        {/* UP % MTD KPI Tile */}
+        <Card className={`p-4 ${
+          upMtdKpi ? (
+            getUpMtdTrafficLight(upMtdKpi.value, upMtdKpi.goal) === 'green' ? 'border-green-500/50 bg-green-500/10' :
+            getUpMtdTrafficLight(upMtdKpi.value, upMtdKpi.goal) === 'yellow' ? 'border-yellow-500/50 bg-yellow-500/10' :
+            'border-red-500/50 bg-red-500/10'
+          ) : ''
+        }`}>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                upMtdKpi ? (
+                  getUpMtdTrafficLight(upMtdKpi.value, upMtdKpi.goal) === 'green' ? 'bg-green-500/20' :
+                  getUpMtdTrafficLight(upMtdKpi.value, upMtdKpi.goal) === 'yellow' ? 'bg-yellow-500/20' :
+                  'bg-red-500/20'
+                ) : 'bg-primary/10'
+              }`}>
+                <Target className={`w-5 h-5 ${
+                  upMtdKpi ? (
+                    getUpMtdTrafficLight(upMtdKpi.value, upMtdKpi.goal) === 'green' ? 'text-green-500' :
+                    getUpMtdTrafficLight(upMtdKpi.value, upMtdKpi.goal) === 'yellow' ? 'text-yellow-500' :
+                    'text-red-500'
+                  ) : 'text-primary'
+                }`} />
+              </div>
+              <div>
+                <p className="font-medium text-white">UP % MTD</p>
+                <p className="text-xs text-muted-foreground">Month-to-date upsell rate</p>
+              </div>
+            </div>
+            <div className="text-right flex items-center gap-2">
+              {editingUpMtd ? (
+                <div className="flex flex-col gap-1">
+                  <div className="flex items-center gap-1">
+                    <span className="text-xs text-muted-foreground">ACT:</span>
+                    <Input
+                      type="number"
+                      step="0.1"
+                      value={upMtdValue}
+                      onChange={(e) => setUpMtdValue(e.target.value)}
+                      className="w-16 h-7 text-sm text-center"
+                      placeholder="%"
+                      data-testid="input-upmtd-value"
+                    />
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <span className="text-xs text-muted-foreground">Goal:</span>
+                    <Input
+                      type="number"
+                      step="0.1"
+                      value={upMtdGoal}
+                      onChange={(e) => setUpMtdGoal(e.target.value)}
+                      className="w-16 h-7 text-sm text-center"
+                      placeholder="%"
+                      data-testid="input-upmtd-goal"
+                    />
+                  </div>
+                  <div className="flex gap-1 mt-1">
+                    <Button 
+                      size="sm" 
+                      className="h-6 text-xs"
+                      onClick={() => {
+                        const val = parseFloat(upMtdValue);
+                        const goal = parseFloat(upMtdGoal) || 15;
+                        if (!isNaN(val)) {
+                          updateUpMtdMutation.mutate({ value: val, goal });
+                        }
+                      }}
+                      disabled={updateUpMtdMutation.isPending}
+                      data-testid="button-upmtd-save"
+                    >
+                      Save
+                    </Button>
+                    <Button 
+                      size="sm" 
+                      variant="outline" 
+                      className="h-6 text-xs"
+                      onClick={() => {
+                        setEditingUpMtd(false);
+                        setUpMtdValue("");
+                        setUpMtdGoal("");
+                      }}
+                      data-testid="button-upmtd-cancel"
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <div className="flex flex-col items-end">
+                    <span className={`text-2xl font-bold ${
+                      upMtdKpi ? (
+                        getUpMtdTrafficLight(upMtdKpi.value, upMtdKpi.goal) === 'green' ? 'text-green-400' :
+                        getUpMtdTrafficLight(upMtdKpi.value, upMtdKpi.goal) === 'yellow' ? 'text-yellow-400' :
+                        'text-red-400'
+                      ) : 'text-muted-foreground'
+                    }`} data-testid="upmtd-value">
+                      {upMtdKpi ? `${upMtdKpi.value.toFixed(1)}%` : '--'}
+                    </span>
+                    <span className="text-xs text-muted-foreground" data-testid="upmtd-goal">
+                      Goal: {upMtdKpi ? `${upMtdKpi.goal.toFixed(1)}%` : '15.0%'}
+                    </span>
+                  </div>
+                  {/* Traffic Light */}
+                  <div className="flex flex-col gap-1 ml-2">
+                    <div className={`w-3 h-3 rounded-full ${
+                      upMtdKpi && getUpMtdTrafficLight(upMtdKpi.value, upMtdKpi.goal) === 'green' 
+                        ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.8)]' 
+                        : 'bg-green-500/20'
+                    }`} />
+                    <div className={`w-3 h-3 rounded-full ${
+                      upMtdKpi && getUpMtdTrafficLight(upMtdKpi.value, upMtdKpi.goal) === 'yellow' 
+                        ? 'bg-yellow-500 shadow-[0_0_8px_rgba(234,179,8,0.8)]' 
+                        : 'bg-yellow-500/20'
+                    }`} />
+                    <div className={`w-3 h-3 rounded-full ${
+                      (!upMtdKpi || getUpMtdTrafficLight(upMtdKpi.value, upMtdKpi.goal) === 'red')
+                        ? 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.8)]' 
+                        : 'bg-red-500/20'
+                    }`} />
+                  </div>
+                  {isAdmin && (
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="ml-1 h-8 w-8"
+                      onClick={() => {
+                        setEditingUpMtd(true);
+                        setUpMtdValue(upMtdKpi ? upMtdKpi.value.toString() : "");
+                        setUpMtdGoal(upMtdKpi ? upMtdKpi.goal.toString() : "15");
+                      }}
+                      data-testid="button-upmtd-edit"
+                    >
+                      <Pencil className="w-4 h-4" />
+                    </Button>
+                  )}
+                </>
+              )}
+            </div>
+          </div>
+        </Card>
+
         <Card className={`p-4 ${isDone ? 'border-green-500/50 bg-green-500/10' : deadlineOverdue && !hasPending ? 'border-red-500/50 bg-red-500/10' : ''}`}>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">

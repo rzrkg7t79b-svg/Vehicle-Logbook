@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { getSecondsUntilGermanTime, formatCountdown, isOverdue, getGermanDateString, isAfterGermanTime } from "@/lib/germanTime";
 import { useUser } from "@/contexts/UserContext";
 import { ExportPreview } from "@/components/ExportPreview";
+import { DailyBriefingExport } from "@/components/DailyBriefingExport";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import type { Todo, DriverTask, FlowTask, FuturePlanning, KpiMetric } from "@/types";
@@ -54,6 +55,7 @@ export default function MasterDashboard() {
   const [breakCountdown, setBreakCountdown] = useState(getSecondsUntilGermanTime(13, 0));
   const [breakOverdue, setBreakOverdue] = useState(isOverdue(13, 0));
   const [showExportPreview, setShowExportPreview] = useState(false);
+  const [showDailyBriefing, setShowDailyBriefing] = useState(false);
   const [futureUnlocked, setFutureUnlocked] = useState(isAfterGermanTime(15, 0));
   const [futureAdminUnlocked, setFutureAdminUnlocked] = useState(false);
   const [futureTapCount, setFutureTapCount] = useState(0);
@@ -69,6 +71,8 @@ export default function MasterDashboard() {
     reservationsTas: "",
     deliveriesTomorrow: "",
     collectionsOpen: "",
+    carDayMin: "",
+    vanDayMin: "",
   });
   const [futureValidationError, setFutureValidationError] = useState(false);
   
@@ -184,6 +188,8 @@ export default function MasterDashboard() {
       reservationsTas: number;
       deliveriesTomorrow: number;
       collectionsOpen: number;
+      carDayMin?: number | null;
+      vanDayMin?: number | null;
       savedBy?: string;
     }) => {
       return apiRequest("POST", "/api/future-planning", data);
@@ -212,6 +218,8 @@ export default function MasterDashboard() {
         reservationsTas: "",
         deliveriesTomorrow: "",
         collectionsOpen: "",
+        carDayMin: "",
+        vanDayMin: "",
       });
       setFutureValidationError(false);
     },
@@ -424,6 +432,8 @@ export default function MasterDashboard() {
       reservationsTas: parseInt(futureForm.reservationsTas) || 0,
       deliveriesTomorrow: parseInt(futureForm.deliveriesTomorrow) || 0,
       collectionsOpen: parseInt(futureForm.collectionsOpen) || 0,
+      carDayMin: futureForm.carDayMin ? parseInt(futureForm.carDayMin) : null,
+      vanDayMin: futureForm.vanDayMin ? parseInt(futureForm.vanDayMin) : null,
       savedBy: user?.initials,
     });
   };
@@ -654,6 +664,18 @@ export default function MasterDashboard() {
           Export for Teams
         </Button>
 
+        {user?.isAdmin && (
+          <Button
+            onClick={() => setShowDailyBriefing(true)}
+            variant="outline"
+            className="w-full"
+            data-testid="button-export-briefing"
+          >
+            <Share2 className="w-4 h-4 mr-2" />
+            DailyBriefing Export
+          </Button>
+        )}
+
         {isDriver && pendingDriverTasks.length > 0 && (
           <Card className="p-5 status-pending">
             <div className="flex items-center gap-4">
@@ -819,6 +841,23 @@ export default function MasterDashboard() {
                         maxLength={2}
                         data-testid="input-future-car"
                       />
+                      <div className="mt-1">
+                        <Label className="text-[10px] text-muted-foreground">DayMin</Label>
+                        <Input
+                          type="text"
+                          inputMode="numeric"
+                          value={futureForm.carDayMin}
+                          onChange={(e) => {
+                            const val = e.target.value.replace(/[^0-9-]/g, '');
+                            if (val === '' || val === '-' || /^-?\d+$/.test(val)) {
+                              handleFutureInputChange("carDayMin", val);
+                            }
+                          }}
+                          className={`text-center text-sm h-8 ${futureForm.carDayMin && parseInt(futureForm.carDayMin) < 0 ? 'text-red-400' : 'text-green-400'}`}
+                          placeholder="±0"
+                          data-testid="input-future-car-daymin"
+                        />
+                      </div>
                     </div>
                     <div>
                       <div className="flex items-center gap-1 mb-1">
@@ -835,6 +874,23 @@ export default function MasterDashboard() {
                         maxLength={2}
                         data-testid="input-future-van"
                       />
+                      <div className="mt-1">
+                        <Label className="text-[10px] text-muted-foreground">DayMin</Label>
+                        <Input
+                          type="text"
+                          inputMode="numeric"
+                          value={futureForm.vanDayMin}
+                          onChange={(e) => {
+                            const val = e.target.value.replace(/[^0-9-]/g, '');
+                            if (val === '' || val === '-' || /^-?\d+$/.test(val)) {
+                              handleFutureInputChange("vanDayMin", val);
+                            }
+                          }}
+                          className={`text-center text-sm h-8 ${futureForm.vanDayMin && parseInt(futureForm.vanDayMin) < 0 ? 'text-red-400' : 'text-green-400'}`}
+                          placeholder="±0"
+                          data-testid="input-future-van-daymin"
+                        />
+                      </div>
                     </div>
                     <div>
                       <div className="flex items-center gap-1 mb-1">
@@ -911,10 +967,20 @@ export default function MasterDashboard() {
                   <div>
                     <p className="text-xs text-muted-foreground flex items-center justify-center gap-1"><Car className="w-3 h-3" /> Car</p>
                     <p className="text-lg font-bold text-white" data-testid="future-saved-car">{futureData.reservationsCar}</p>
+                    {futureData.carDayMin !== null && futureData.carDayMin !== undefined && (
+                      <p className={`text-xs font-medium ${futureData.carDayMin < 0 ? 'text-red-400' : 'text-green-400'}`} data-testid="future-saved-car-daymin">
+                        DayMin: {futureData.carDayMin >= 0 ? '+' : ''}{futureData.carDayMin}
+                      </p>
+                    )}
                   </div>
                   <div>
                     <p className="text-xs text-muted-foreground flex items-center justify-center gap-1"><Truck className="w-3 h-3" /> Van</p>
                     <p className="text-lg font-bold text-white" data-testid="future-saved-van">{futureData.reservationsVan}</p>
+                    {futureData.vanDayMin !== null && futureData.vanDayMin !== undefined && (
+                      <p className={`text-xs font-medium ${futureData.vanDayMin < 0 ? 'text-red-400' : 'text-green-400'}`} data-testid="future-saved-van-daymin">
+                        DayMin: {futureData.vanDayMin >= 0 ? '+' : ''}{futureData.vanDayMin}
+                      </p>
+                    )}
                   </div>
                   <div>
                     <p className="text-xs text-muted-foreground flex items-center justify-center gap-1"><Plane className="w-3 h-3" /> TAS</p>
@@ -938,6 +1004,7 @@ export default function MasterDashboard() {
       </div>
 
       <ExportPreview open={showExportPreview} onOpenChange={setShowExportPreview} />
+      <DailyBriefingExport open={showDailyBriefing} onOpenChange={setShowDailyBriefing} />
 
       <Dialog open={showFutureUnlockDialog} onOpenChange={setShowFutureUnlockDialog}>
         <DialogContent className="max-w-sm">

@@ -140,6 +140,8 @@ export interface FuturePlanning {
   reservationsTas: number;
   deliveriesTomorrow: number;
   collectionsOpen: number;
+  carDayMin: number | null;
+  vanDayMin: number | null;
   savedBy: string | null;
   savedAt: Date | null;
 }
@@ -263,11 +265,13 @@ export interface InsertFuturePlanning {
   reservationsTas: number;
   deliveriesTomorrow: number;
   collectionsOpen: number;
+  carDayMin?: number | null;
+  vanDayMin?: number | null;
   savedBy?: string;
 }
 
 export interface InsertKpiMetric {
-  key: "irpd" | "ses";
+  key: "irpd" | "ses" | "upmtd";
   value: number;
   goal: number;
   updatedBy?: string;

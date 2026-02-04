@@ -157,6 +157,8 @@ export const futurePlanning = pgTable("future_planning", {
   reservationsTas: integer("reservations_tas").notNull(),
   deliveriesTomorrow: integer("deliveries_tomorrow").notNull(),
   collectionsOpen: integer("collections_open").notNull(),
+  carDayMin: integer("car_day_min"),
+  vanDayMin: integer("van_day_min"),
   savedBy: text("saved_by"),
   savedAt: timestamp("saved_at").defaultNow(),
 });
@@ -282,13 +284,15 @@ export const insertFuturePlanningSchema = createInsertSchema(futurePlanning)
     reservationsTas: z.number().min(0).max(99),
     deliveriesTomorrow: z.number().min(0).max(99),
     collectionsOpen: z.number().min(0).max(99),
+    carDayMin: z.number().optional().nullable(),
+    vanDayMin: z.number().optional().nullable(),
     savedBy: z.string().optional(),
   });
 
 export const insertKpiMetricSchema = createInsertSchema(kpiMetrics)
   .omit({ id: true, updatedAt: true })
   .extend({
-    key: z.enum(["irpd", "ses"]),
+    key: z.enum(["irpd", "ses", "upmtd"]),
     value: z.number().min(0),
     goal: z.number().min(0),
     updatedBy: z.string().optional(),
