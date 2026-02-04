@@ -803,7 +803,7 @@ export default function MasterDashboard() {
             </div>
 
             {(futureUnlocked || futureAdminUnlocked) && !futureIsDone && (
-              <div className="space-y-4">
+              <div className="space-y-4" onClick={(e) => e.stopPropagation()} onTouchStart={(e) => e.stopPropagation()} onTouchEnd={(e) => e.stopPropagation()}>
                 <div className="space-y-2">
                   <Label className="text-sm text-muted-foreground">Overall Reservations</Label>
                   <div className="grid grid-cols-1 gap-2">
@@ -847,13 +847,26 @@ export default function MasterDashboard() {
                           <div
                             role="button"
                             tabIndex={0}
-                            className={`h-8 w-8 flex items-center justify-center rounded-md border text-lg font-bold shrink-0 cursor-pointer select-none ${
+                            style={{ touchAction: 'manipulation' }}
+                            className={`h-8 w-8 flex items-center justify-center rounded-md border text-lg font-bold shrink-0 cursor-pointer select-none active:scale-95 transition-transform ${
                               futureForm.carDayMin.startsWith('-') 
                                 ? 'bg-red-500 border-red-500 text-white' 
                                 : 'bg-background border-input text-muted-foreground'
                             }`}
-                            onPointerDown={(e) => {
+                            onTouchStart={(e) => {
                               e.stopPropagation();
+                              e.preventDefault();
+                              const current = futureForm.carDayMin;
+                              const numPart = current.replace('-', '');
+                              if (current.startsWith('-')) {
+                                handleFutureInputChange("carDayMin", numPart || "");
+                              } else {
+                                handleFutureInputChange("carDayMin", '-' + (numPart || ""));
+                              }
+                            }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              e.preventDefault();
                               const current = futureForm.carDayMin;
                               const numPart = current.replace('-', '');
                               if (current.startsWith('-')) {
@@ -905,13 +918,26 @@ export default function MasterDashboard() {
                           <div
                             role="button"
                             tabIndex={0}
-                            className={`h-8 w-8 flex items-center justify-center rounded-md border text-lg font-bold shrink-0 cursor-pointer select-none ${
+                            style={{ touchAction: 'manipulation' }}
+                            className={`h-8 w-8 flex items-center justify-center rounded-md border text-lg font-bold shrink-0 cursor-pointer select-none active:scale-95 transition-transform ${
                               futureForm.vanDayMin.startsWith('-') 
                                 ? 'bg-red-500 border-red-500 text-white' 
                                 : 'bg-background border-input text-muted-foreground'
                             }`}
-                            onPointerDown={(e) => {
+                            onTouchStart={(e) => {
                               e.stopPropagation();
+                              e.preventDefault();
+                              const current = futureForm.vanDayMin;
+                              const numPart = current.replace('-', '');
+                              if (current.startsWith('-')) {
+                                handleFutureInputChange("vanDayMin", numPart || "");
+                              } else {
+                                handleFutureInputChange("vanDayMin", '-' + (numPart || ""));
+                              }
+                            }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              e.preventDefault();
                               const current = futureForm.vanDayMin;
                               const numPart = current.replace('-', '');
                               if (current.startsWith('-')) {
