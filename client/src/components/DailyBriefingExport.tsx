@@ -232,16 +232,17 @@ export function DailyBriefingExport({ open, onOpenChange }: DailyBriefingExportP
               flexDirection: "column",
             }}
           >
-            {/* Header - No Total Progress */}
+            {/* Header - Motivational & Energetic */}
             <div style={{ 
               display: "flex", 
               justifyContent: "space-between", 
               alignItems: "center", 
               marginBottom: "30px",
-              background: "linear-gradient(135deg, rgba(255, 102, 0, 0.15) 0%, transparent 50%)",
+              background: "linear-gradient(135deg, rgba(255, 102, 0, 0.2) 0%, rgba(255, 102, 0, 0.05) 40%, transparent 70%)",
               borderRadius: "20px",
               padding: "24px 32px",
-              border: "1px solid rgba(255, 255, 255, 0.1)",
+              border: "1px solid rgba(255, 102, 0, 0.3)",
+              boxShadow: "0 0 40px rgba(255, 102, 0, 0.15)",
             }}>
               <div>
                 <h1 style={{ fontSize: "48px", fontWeight: "bold", color: "white", margin: 0 }}>
@@ -250,6 +251,35 @@ export function DailyBriefingExport({ open, onOpenChange }: DailyBriefingExportP
                 <p style={{ fontSize: "26px", color: "rgba(255,255,255,0.6)", margin: "8px 0 0 0" }}>
                   {formatWeekdayDate(todayDate)}
                 </p>
+              </div>
+              {/* Motivational Message */}
+              <div style={{ 
+                display: "flex", 
+                alignItems: "center", 
+                gap: "16px",
+                background: "linear-gradient(135deg, rgba(255, 102, 0, 0.3) 0%, rgba(255, 102, 0, 0.1) 100%)",
+                borderRadius: "16px",
+                padding: "16px 28px",
+                border: "2px solid rgba(255, 102, 0, 0.5)",
+                boxShadow: "0 0 30px rgba(255, 102, 0, 0.3)",
+              }}>
+                <span style={{ fontSize: "40px" }}>🔥</span>
+                <div>
+                  <p style={{ 
+                    margin: 0, 
+                    fontSize: "28px", 
+                    fontWeight: "900", 
+                    color: "#fff",
+                    textShadow: "0 0 20px rgba(255, 102, 0, 0.8)",
+                    letterSpacing: "1px",
+                  }}>
+                    LET'S ROCK TODAY!
+                  </p>
+                  <p style={{ margin: "4px 0 0 0", fontSize: "16px", color: "rgba(255,255,255,0.7)", fontWeight: "500" }}>
+                    Team 41137 - We make it happen!
+                  </p>
+                </div>
+                <span style={{ fontSize: "40px" }}>🚀</span>
               </div>
             </div>
 
@@ -460,50 +490,58 @@ export function DailyBriefingExport({ open, onOpenChange }: DailyBriefingExportP
                         Upgrade<span style={{ color: "#3b82f6" }}>SIXT</span>
                       </h2>
                     </div>
-                    {/* UP % MTD KPI - Big and Bold inside UpgradeSIXT */}
+                    {/* UP % MTD KPI - Bold and Glowing */}
                     <div style={{ 
-                      backgroundColor: "#262626",
+                      background: "linear-gradient(145deg, #262626 0%, #1a1a1a 100%)",
                       borderRadius: "16px",
-                      padding: "16px 24px",
+                      padding: "20px 28px",
                       border: upMtdKpi 
-                        ? `3px solid ${getKpiColor(getKpiTrafficLight("upmtd", upMtdKpi.value, upMtdKpi.goal))}`
-                        : "3px solid rgba(255, 255, 255, 0.2)",
+                        ? `4px solid ${getKpiColor(getKpiTrafficLight("upmtd", upMtdKpi.value, upMtdKpi.goal))}`
+                        : "4px solid rgba(255, 255, 255, 0.2)",
                       boxShadow: upMtdKpi 
-                        ? `0 0 20px ${getKpiColor(getKpiTrafficLight("upmtd", upMtdKpi.value, upMtdKpi.goal))}66`
+                        ? `0 0 40px ${getKpiColor(getKpiTrafficLight("upmtd", upMtdKpi.value, upMtdKpi.goal))}88, inset 0 0 20px ${getKpiColor(getKpiTrafficLight("upmtd", upMtdKpi.value, upMtdKpi.goal))}22`
                         : "none",
                       display: "flex",
                       alignItems: "center",
-                      gap: "16px",
+                      gap: "20px",
                     }}>
-                      <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                      <div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
                         <div style={{ 
-                          width: "14px", height: "14px", borderRadius: "50%", 
+                          width: "16px", height: "16px", borderRadius: "50%", 
                           backgroundColor: upMtdKpi && getKpiTrafficLight("upmtd", upMtdKpi.value, upMtdKpi.goal) === "green" ? "#22c55e" : "rgba(34, 197, 94, 0.3)",
-                          boxShadow: upMtdKpi && getKpiTrafficLight("upmtd", upMtdKpi.value, upMtdKpi.goal) === "green" ? "0 0 12px rgba(34, 197, 94, 1)" : "none",
+                          boxShadow: upMtdKpi && getKpiTrafficLight("upmtd", upMtdKpi.value, upMtdKpi.goal) === "green" ? "0 0 16px rgba(34, 197, 94, 1), 0 0 32px rgba(34, 197, 94, 0.6)" : "none",
                         }} />
                         <div style={{ 
-                          width: "14px", height: "14px", borderRadius: "50%", 
+                          width: "16px", height: "16px", borderRadius: "50%", 
                           backgroundColor: upMtdKpi && getKpiTrafficLight("upmtd", upMtdKpi.value, upMtdKpi.goal) === "yellow" ? "#eab308" : "rgba(234, 179, 8, 0.3)",
-                          boxShadow: upMtdKpi && getKpiTrafficLight("upmtd", upMtdKpi.value, upMtdKpi.goal) === "yellow" ? "0 0 12px rgba(234, 179, 8, 1)" : "none",
+                          boxShadow: upMtdKpi && getKpiTrafficLight("upmtd", upMtdKpi.value, upMtdKpi.goal) === "yellow" ? "0 0 16px rgba(234, 179, 8, 1), 0 0 32px rgba(234, 179, 8, 0.6)" : "none",
                         }} />
                         <div style={{ 
-                          width: "14px", height: "14px", borderRadius: "50%", 
+                          width: "16px", height: "16px", borderRadius: "50%", 
                           backgroundColor: !upMtdKpi || getKpiTrafficLight("upmtd", upMtdKpi.value, upMtdKpi.goal) === "red" ? "#ef4444" : "rgba(239, 68, 68, 0.3)",
-                          boxShadow: !upMtdKpi || getKpiTrafficLight("upmtd", upMtdKpi.value, upMtdKpi.goal) === "red" ? "0 0 12px rgba(239, 68, 68, 1)" : "none",
+                          boxShadow: !upMtdKpi || getKpiTrafficLight("upmtd", upMtdKpi.value, upMtdKpi.goal) === "red" ? "0 0 16px rgba(239, 68, 68, 1), 0 0 32px rgba(239, 68, 68, 0.6)" : "none",
                         }} />
                       </div>
                       <div>
-                        <p style={{ margin: 0, color: "#888", fontSize: "14px", fontWeight: "700" }}>UP % MTD</p>
                         <p style={{ 
-                          margin: "4px 0 0 0", 
+                          margin: 0, 
+                          color: "#fff", 
+                          fontSize: "16px", 
+                          fontWeight: "800", 
+                          letterSpacing: "2px",
+                          textShadow: "0 0 8px rgba(255,255,255,0.3)",
+                        }}>UP % MTD</p>
+                        <p style={{ 
+                          margin: "6px 0 0 0", 
                           color: upMtdKpi ? getKpiColor(getKpiTrafficLight("upmtd", upMtdKpi.value, upMtdKpi.goal)) : "#888", 
-                          fontSize: "36px", 
+                          fontSize: "48px", 
                           fontWeight: "900",
-                          textShadow: upMtdKpi ? `0 0 16px ${getKpiColor(getKpiTrafficLight("upmtd", upMtdKpi.value, upMtdKpi.goal))}88` : "none",
+                          lineHeight: "1",
+                          textShadow: upMtdKpi ? `0 0 30px ${getKpiColor(getKpiTrafficLight("upmtd", upMtdKpi.value, upMtdKpi.goal))}, 0 0 60px ${getKpiColor(getKpiTrafficLight("upmtd", upMtdKpi.value, upMtdKpi.goal))}66` : "none",
                         }}>
                           {upMtdKpi ? `${upMtdKpi.value.toFixed(1)}%` : "--"}
                         </p>
-                        <p style={{ margin: 0, color: "#666", fontSize: "12px" }}>Goal: {upMtdKpi ? `${upMtdKpi.goal.toFixed(1)}%` : "15.0%"}</p>
+                        <p style={{ margin: "6px 0 0 0", color: "#888", fontSize: "14px", fontWeight: "600" }}>Goal: {upMtdKpi ? `${upMtdKpi.goal.toFixed(1)}%` : "15.0%"}</p>
                       </div>
                     </div>
                   </div>
