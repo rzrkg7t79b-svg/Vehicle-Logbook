@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import { getGermanDateString } from "@/lib/germanTime";
 import { toJpeg } from "html-to-image";
 import type { TimedriverCalculation, FuturePlanning, KpiMetric } from "@/types";
@@ -57,6 +58,11 @@ export function DailyBriefingExport({ open, onOpenChange }: DailyBriefingExportP
   const [isExporting, setIsExporting] = useState(false);
   const [briefingMessage, setBriefingMessage] = useState("");
   const todayDate = getGermanDateString();
+  
+  // Yesterday values for KPIs (admin-only input)
+  const [irpdYesterday, setIrpdYesterday] = useState<string>("");
+  const [sesYesterday, setSesYesterday] = useState<string>("");
+  const [upMtdYesterday, setUpMtdYesterday] = useState<string>("");
 
   const { data: dashboardStatus } = useQuery<DashboardStatus>({
     queryKey: ["/api/dashboard/status", todayDate],
@@ -111,6 +117,50 @@ export function DailyBriefingExport({ open, onOpenChange }: DailyBriefingExportP
     if (trafficLight === "green") return "#22c55e";
     if (trafficLight === "yellow") return "#eab308";
     return "#ef4444";
+  };
+
+  // Get arrow direction comparing yesterday to today's actual value
+  // For IRPD/SES: Higher is better. For UP % MTD: Higher is better.
+  const getYesterdayArrow = (key: "irpd" | "ses" | "upmtd", yesterdayVal: number, actualVal: number): { arrow: string; color: string } => {
+    // If yesterday was BETTER than today = green up (we improved from yesterday)
+    // If yesterday was SAME as today = yellow straight
+    // If yesterday was WORSE than today = red down (we got worse from yesterday)
+    // Note: The arrow shows the CHANGE direction (yesterday → today)
+    
+    if (actualVal > yesterdayVal) {
+      // Today is better than yesterday = improvement = green up arrow
+      return { arrow: "↑", color: "#22c55e" };
+    } else if (Math.abs(actualVal - yesterdayVal) < 0.01) {
+      // Same = yellow straight arrow
+      return { arrow: "→", color: "#eab308" };
+    } else {
+      // Today is worse than yesterday = decline = red down arrow
+      return { arrow: "↓", color: "#ef4444" };
+    }
+  };
+
+  // Get yesterday value color based on comparison to GOAL
+  // Green: better than goal, Yellow: same to -10% of goal, Red: worse than -10% of goal
+  const getYesterdayValueColor = (key: "irpd" | "ses" | "upmtd", yesterdayVal: number, goal: number): string => {
+    if (key === "irpd") {
+      // IRPD: higher is better
+      if (yesterdayVal >= goal) return "#22c55e"; // Green: better than goal
+      const threshold = goal * 0.9; // -10% of goal
+      if (yesterdayVal >= threshold) return "#eab308"; // Yellow: within 10%
+      return "#ef4444"; // Red: worse than -10%
+    } else if (key === "ses") {
+      // SES: higher is better
+      if (yesterdayVal >= goal) return "#22c55e";
+      const threshold = goal * 0.9;
+      if (yesterdayVal >= threshold) return "#eab308";
+      return "#ef4444";
+    } else {
+      // UP % MTD: higher is better
+      if (yesterdayVal >= goal) return "#22c55e";
+      const threshold = goal * 0.9;
+      if (yesterdayVal >= threshold) return "#eab308";
+      return "#ef4444";
+    }
   };
 
   const formatWeekdayDate = (dateStr: string): string => {
@@ -211,6 +261,50 @@ export function DailyBriefingExport({ open, onOpenChange }: DailyBriefingExportP
               data-testid="input-briefing-message"
             />
           </div>
+          
+          {/* Yesterday KPI Values (Admin Only) */}
+          <div className="border border-orange-500/30 rounded-lg p-4 bg-orange-500/5">
+            <Label className="text-sm font-bold text-orange-500 mb-3 block">Yesterday KPI Values (for comparison arrows)</Label>
+            <div className="grid grid-cols-3 gap-4">
+              <div>
+                <Label className="text-xs text-muted-foreground">IRPD Yesterday</Label>
+                <Input
+                  type="number"
+                  step="0.01"
+                  placeholder="e.g. 2.15"
+                  value={irpdYesterday}
+                  onChange={(e) => setIrpdYesterday(e.target.value)}
+                  className="mt-1"
+                  data-testid="input-irpd-yesterday"
+                />
+              </div>
+              <div>
+                <Label className="text-xs text-muted-foreground">SES Yesterday</Label>
+                <Input
+                  type="number"
+                  step="0.1"
+                  placeholder="e.g. 85.5"
+                  value={sesYesterday}
+                  onChange={(e) => setSesYesterday(e.target.value)}
+                  className="mt-1"
+                  data-testid="input-ses-yesterday"
+                />
+              </div>
+              <div>
+                <Label className="text-xs text-muted-foreground">UP % MTD Yesterday</Label>
+                <Input
+                  type="number"
+                  step="0.1"
+                  placeholder="e.g. 12.5"
+                  value={upMtdYesterday}
+                  onChange={(e) => setUpMtdYesterday(e.target.value)}
+                  className="mt-1"
+                  data-testid="input-upmtd-yesterday"
+                />
+              </div>
+            </div>
+          </div>
+          
           <Button onClick={handleExport} disabled={isExporting} className="w-full" data-testid="button-export-briefing">
             <Download className="w-4 h-4 mr-2" />
             {isExporting ? "Exporting..." : "Export Daily Briefing"}
@@ -641,6 +735,32 @@ export function DailyBriefingExport({ open, onOpenChange }: DailyBriefingExportP
                         }}>
                           {upMtdKpi ? `${upMtdKpi.value.toFixed(1)}%` : "--"}
                         </p>
+                        {/* Yesterday Value with Arrow */}
+                        {upMtdYesterday && parseFloat(upMtdYesterday) > 0 && upMtdKpi && (() => {
+                          const yesterdayVal = parseFloat(upMtdYesterday);
+                          const arrow = getYesterdayArrow("upmtd", yesterdayVal, upMtdKpi.value);
+                          const valueColor = getYesterdayValueColor("upmtd", yesterdayVal, upMtdKpi.goal);
+                          return (
+                            <div style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "4px" }}>
+                              <span style={{ 
+                                fontSize: "18px", 
+                                fontWeight: "900",
+                                color: arrow.color,
+                                textShadow: `0 0 8px ${arrow.color}`,
+                              }}>
+                                {arrow.arrow}
+                              </span>
+                              <span style={{ 
+                                fontSize: "14px", 
+                                fontWeight: "700",
+                                color: valueColor,
+                                textShadow: `0 0 6px ${valueColor}66`,
+                              }}>
+                                Yest: {yesterdayVal.toFixed(1)}%
+                              </span>
+                            </div>
+                          );
+                        })()}
                         <p style={{ margin: "6px 0 0 0", color: "#888", fontSize: "14px", fontWeight: "600" }}>Goal: {upMtdKpi ? `${upMtdKpi.goal.toFixed(1)}%` : "15.0%"}</p>
                       </div>
                     </div>
@@ -785,6 +905,32 @@ export function DailyBriefingExport({ open, onOpenChange }: DailyBriefingExportP
                       }}>
                         {irpdKpi.value.toFixed(2)}
                       </p>
+                      {/* Yesterday Value with Arrow */}
+                      {irpdYesterday && parseFloat(irpdYesterday) > 0 && (() => {
+                        const yesterdayVal = parseFloat(irpdYesterday);
+                        const arrow = getYesterdayArrow("irpd", yesterdayVal, irpdKpi.value);
+                        const valueColor = getYesterdayValueColor("irpd", yesterdayVal, irpdKpi.goal);
+                        return (
+                          <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "8px" }}>
+                            <span style={{ 
+                              fontSize: "28px", 
+                              fontWeight: "900",
+                              color: arrow.color,
+                              textShadow: `0 0 10px ${arrow.color}`,
+                            }}>
+                              {arrow.arrow}
+                            </span>
+                            <span style={{ 
+                              fontSize: "24px", 
+                              fontWeight: "700",
+                              color: valueColor,
+                              textShadow: `0 0 8px ${valueColor}66`,
+                            }}>
+                              Yest: {yesterdayVal.toFixed(2)}
+                            </span>
+                          </div>
+                        );
+                      })()}
                       <p style={{ margin: "12px 0 0 0", color: "#888", fontSize: "20px", fontWeight: "600" }}>Goal: {irpdKpi.goal.toFixed(2)}</p>
                     </div>
                   )}
@@ -848,6 +994,32 @@ export function DailyBriefingExport({ open, onOpenChange }: DailyBriefingExportP
                       }}>
                         {sesKpi.value.toFixed(1)}%
                       </p>
+                      {/* Yesterday Value with Arrow */}
+                      {sesYesterday && parseFloat(sesYesterday) > 0 && (() => {
+                        const yesterdayVal = parseFloat(sesYesterday);
+                        const arrow = getYesterdayArrow("ses", yesterdayVal, sesKpi.value);
+                        const valueColor = getYesterdayValueColor("ses", yesterdayVal, sesKpi.goal);
+                        return (
+                          <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "8px" }}>
+                            <span style={{ 
+                              fontSize: "28px", 
+                              fontWeight: "900",
+                              color: arrow.color,
+                              textShadow: `0 0 10px ${arrow.color}`,
+                            }}>
+                              {arrow.arrow}
+                            </span>
+                            <span style={{ 
+                              fontSize: "24px", 
+                              fontWeight: "700",
+                              color: valueColor,
+                              textShadow: `0 0 8px ${valueColor}66`,
+                            }}>
+                              Yest: {yesterdayVal.toFixed(1)}%
+                            </span>
+                          </div>
+                        );
+                      })()}
                       <p style={{ margin: "12px 0 0 0", color: "#888", fontSize: "20px", fontWeight: "600" }}>Goal: {sesKpi.goal.toFixed(1)}%</p>
                     </div>
                   )}
