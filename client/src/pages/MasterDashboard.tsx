@@ -759,7 +759,7 @@ export default function MasterDashboard() {
           <Card 
             className={`p-4 ${!(futureUnlocked || futureAdminUnlocked) ? 'border-muted opacity-60 cursor-pointer' : futureIsDone ? 'border-green-500/30 bg-green-500/5' : ''}`}
             data-testid="future-sixt-card"
-            onClick={handleFutureCardTap}
+            onClick={!(futureUnlocked || futureAdminUnlocked) && !futureIsDone ? handleFutureCardTap : undefined}
           >
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
@@ -803,7 +803,7 @@ export default function MasterDashboard() {
             </div>
 
             {(futureUnlocked || futureAdminUnlocked) && !futureIsDone && (
-              <div className="space-y-4" onClick={(e) => e.stopPropagation()} onTouchStart={(e) => e.stopPropagation()} onTouchEnd={(e) => e.stopPropagation()}>
+              <div className="space-y-4">
                 <div className="space-y-2">
                   <Label className="text-sm text-muted-foreground">Overall Reservations</Label>
                   <div className="grid grid-cols-1 gap-2">
