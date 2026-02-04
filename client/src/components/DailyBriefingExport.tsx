@@ -232,7 +232,7 @@ export function DailyBriefingExport({ open, onOpenChange }: DailyBriefingExportP
               flexDirection: "column",
             }}
           >
-            {/* Header */}
+            {/* Header - No Total Progress */}
             <div style={{ 
               display: "flex", 
               justifyContent: "space-between", 
@@ -244,26 +244,12 @@ export function DailyBriefingExport({ open, onOpenChange }: DailyBriefingExportP
               border: "1px solid rgba(255, 255, 255, 0.1)",
             }}>
               <div>
-                <h1 style={{ fontSize: "42px", fontWeight: "bold", color: "white", margin: 0 }}>
+                <h1 style={{ fontSize: "48px", fontWeight: "bold", color: "white", margin: 0 }}>
                   DailyBriefing<span style={{ fontWeight: "900", color: "#f97316" }}>41137</span>
                 </h1>
-                <p style={{ fontSize: "22px", color: "rgba(255,255,255,0.6)", margin: "6px 0 0 0" }}>
+                <p style={{ fontSize: "26px", color: "rgba(255,255,255,0.6)", margin: "8px 0 0 0" }}>
                   {formatWeekdayDate(todayDate)}
                 </p>
-              </div>
-              <div style={{ 
-                display: "flex", 
-                alignItems: "center", 
-                gap: "16px",
-                backgroundColor: progress === 100 ? "rgba(34, 197, 94, 0.15)" : "rgba(249, 115, 22, 0.15)",
-                padding: "16px 28px",
-                borderRadius: "16px",
-                border: `2px solid ${progress === 100 ? "rgba(34, 197, 94, 0.6)" : "rgba(249, 115, 22, 0.6)"}`,
-              }}>
-                <span style={{ fontSize: "48px", fontWeight: "bold", color: progress === 100 ? "#22c55e" : "#f97316" }}>
-                  {progress}%
-                </span>
-                <span style={{ fontSize: "16px", color: "rgba(255,255,255,0.5)" }}>Daily<br/>Progress</span>
               </div>
             </div>
 
@@ -328,10 +314,11 @@ export function DailyBriefingExport({ open, onOpenChange }: DailyBriefingExportP
                         <p style={{ margin: 0, color: "#fff", fontSize: "36px", fontWeight: "bold" }}>{futureData.reservationsCar}</p>
                         {futureData.carDayMin !== null && futureData.carDayMin !== undefined && (
                           <p style={{ 
-                            margin: "4px 0 0 0", 
-                            fontSize: "14px", 
-                            fontWeight: "600",
-                            color: futureData.carDayMin < 0 ? "#ef4444" : "#22c55e" 
+                            margin: "8px 0 0 0", 
+                            fontSize: "22px", 
+                            fontWeight: "900",
+                            color: futureData.carDayMin < 0 ? "#ef4444" : "#22c55e",
+                            textShadow: futureData.carDayMin < 0 ? "0 0 12px rgba(239, 68, 68, 0.6)" : "0 0 12px rgba(34, 197, 94, 0.6)",
                           }}>
                             DayMin: {futureData.carDayMin >= 0 ? '+' : ''}{futureData.carDayMin}
                           </p>
@@ -344,10 +331,11 @@ export function DailyBriefingExport({ open, onOpenChange }: DailyBriefingExportP
                         <p style={{ margin: 0, color: "#fff", fontSize: "36px", fontWeight: "bold" }}>{futureData.reservationsVan}</p>
                         {futureData.vanDayMin !== null && futureData.vanDayMin !== undefined && (
                           <p style={{ 
-                            margin: "4px 0 0 0", 
-                            fontSize: "14px", 
-                            fontWeight: "600",
-                            color: futureData.vanDayMin < 0 ? "#ef4444" : "#22c55e" 
+                            margin: "8px 0 0 0", 
+                            fontSize: "22px", 
+                            fontWeight: "900",
+                            color: futureData.vanDayMin < 0 ? "#ef4444" : "#22c55e",
+                            textShadow: futureData.vanDayMin < 0 ? "0 0 12px rgba(239, 68, 68, 0.6)" : "0 0 12px rgba(34, 197, 94, 0.6)",
                           }}>
                             DayMin: {futureData.vanDayMin >= 0 ? '+' : ''}{futureData.vanDayMin}
                           </p>
@@ -448,61 +436,109 @@ export function DailyBriefingExport({ open, onOpenChange }: DailyBriefingExportP
 
               {/* Right Column */}
               <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-                {/* UpgradeSIXT */}
+                {/* UpgradeSIXT with UP % MTD inside */}
                 <div style={{ 
                   backgroundColor: "#1a1a1a",
                   borderRadius: "16px",
                   padding: "24px",
                   border: `2px solid ${soldVehicles.length > 0 ? "rgba(34, 197, 94, 0.4)" : "rgba(239, 68, 68, 0.4)"}`,
                 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "16px" }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "20px" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                      <div style={{ 
+                        width: "44px", 
+                        height: "44px", 
+                        borderRadius: "10px", 
+                        backgroundColor: soldVehicles.length > 0 ? "rgba(34, 197, 94, 0.2)" : "rgba(59, 130, 246, 0.2)",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}>
+                        <TrendingUp style={{ width: "24px", height: "24px", color: soldVehicles.length > 0 ? "#22c55e" : "#3b82f6" }} />
+                      </div>
+                      <h2 style={{ fontSize: "28px", fontWeight: "bold", color: "white", margin: 0 }}>
+                        Upgrade<span style={{ color: "#3b82f6" }}>SIXT</span>
+                      </h2>
+                    </div>
+                    {/* UP % MTD KPI - Big and Bold inside UpgradeSIXT */}
                     <div style={{ 
-                      width: "44px", 
-                      height: "44px", 
-                      borderRadius: "10px", 
-                      backgroundColor: soldVehicles.length > 0 ? "rgba(34, 197, 94, 0.2)" : "rgba(59, 130, 246, 0.2)",
+                      backgroundColor: "#262626",
+                      borderRadius: "16px",
+                      padding: "16px 24px",
+                      border: upMtdKpi 
+                        ? `3px solid ${getKpiColor(getKpiTrafficLight("upmtd", upMtdKpi.value, upMtdKpi.goal))}`
+                        : "3px solid rgba(255, 255, 255, 0.2)",
+                      boxShadow: upMtdKpi 
+                        ? `0 0 20px ${getKpiColor(getKpiTrafficLight("upmtd", upMtdKpi.value, upMtdKpi.goal))}66`
+                        : "none",
                       display: "flex",
                       alignItems: "center",
-                      justifyContent: "center",
+                      gap: "16px",
                     }}>
-                      <TrendingUp style={{ width: "24px", height: "24px", color: soldVehicles.length > 0 ? "#22c55e" : "#3b82f6" }} />
+                      <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                        <div style={{ 
+                          width: "14px", height: "14px", borderRadius: "50%", 
+                          backgroundColor: upMtdKpi && getKpiTrafficLight("upmtd", upMtdKpi.value, upMtdKpi.goal) === "green" ? "#22c55e" : "rgba(34, 197, 94, 0.3)",
+                          boxShadow: upMtdKpi && getKpiTrafficLight("upmtd", upMtdKpi.value, upMtdKpi.goal) === "green" ? "0 0 12px rgba(34, 197, 94, 1)" : "none",
+                        }} />
+                        <div style={{ 
+                          width: "14px", height: "14px", borderRadius: "50%", 
+                          backgroundColor: upMtdKpi && getKpiTrafficLight("upmtd", upMtdKpi.value, upMtdKpi.goal) === "yellow" ? "#eab308" : "rgba(234, 179, 8, 0.3)",
+                          boxShadow: upMtdKpi && getKpiTrafficLight("upmtd", upMtdKpi.value, upMtdKpi.goal) === "yellow" ? "0 0 12px rgba(234, 179, 8, 1)" : "none",
+                        }} />
+                        <div style={{ 
+                          width: "14px", height: "14px", borderRadius: "50%", 
+                          backgroundColor: !upMtdKpi || getKpiTrafficLight("upmtd", upMtdKpi.value, upMtdKpi.goal) === "red" ? "#ef4444" : "rgba(239, 68, 68, 0.3)",
+                          boxShadow: !upMtdKpi || getKpiTrafficLight("upmtd", upMtdKpi.value, upMtdKpi.goal) === "red" ? "0 0 12px rgba(239, 68, 68, 1)" : "none",
+                        }} />
+                      </div>
+                      <div>
+                        <p style={{ margin: 0, color: "#888", fontSize: "14px", fontWeight: "700" }}>UP % MTD</p>
+                        <p style={{ 
+                          margin: "4px 0 0 0", 
+                          color: upMtdKpi ? getKpiColor(getKpiTrafficLight("upmtd", upMtdKpi.value, upMtdKpi.goal)) : "#888", 
+                          fontSize: "36px", 
+                          fontWeight: "900",
+                          textShadow: upMtdKpi ? `0 0 16px ${getKpiColor(getKpiTrafficLight("upmtd", upMtdKpi.value, upMtdKpi.goal))}88` : "none",
+                        }}>
+                          {upMtdKpi ? `${upMtdKpi.value.toFixed(1)}%` : "--"}
+                        </p>
+                        <p style={{ margin: 0, color: "#666", fontSize: "12px" }}>Goal: {upMtdKpi ? `${upMtdKpi.goal.toFixed(1)}%` : "15.0%"}</p>
+                      </div>
                     </div>
-                    <h2 style={{ fontSize: "24px", fontWeight: "bold", color: "white", margin: 0 }}>
-                      Upgrade<span style={{ color: "#3b82f6" }}>SIXT</span>
-                    </h2>
                   </div>
                   
                   {upgradeVehicles.length === 0 ? (
-                    <p style={{ color: "#888", fontSize: "16px" }}>No UP vehicles defined today</p>
+                    <p style={{ color: "#888", fontSize: "18px" }}>No UP vehicles defined today</p>
                   ) : (
-                    <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
                       {upgradeVehicles.map((vehicle) => (
                         <div key={vehicle.id} style={{ 
                           display: "flex",
                           alignItems: "center",
                           justifyContent: "space-between",
-                          padding: "16px",
+                          padding: "18px 20px",
                           backgroundColor: "#262626",
                           borderRadius: "12px",
                           border: vehicle.isSold ? "2px solid rgba(34, 197, 94, 0.5)" : "2px solid rgba(234, 179, 8, 0.5)",
                         }}>
-                          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
                             {vehicle.isVan ? (
-                              <Truck style={{ width: "24px", height: "24px", color: "#888" }} />
+                              <Truck style={{ width: "28px", height: "28px", color: "#888" }} />
                             ) : (
-                              <Car style={{ width: "24px", height: "24px", color: "#888" }} />
+                              <Car style={{ width: "28px", height: "28px", color: "#888" }} />
                             )}
                             <div>
                               <p style={{ 
                                 margin: 0, 
                                 color: "#fff", 
-                                fontSize: "20px", 
+                                fontSize: "24px", 
                                 fontWeight: "bold",
                                 fontFamily: "monospace",
                               }}>
                                 {vehicle.licensePlate}
                               </p>
-                              <p style={{ margin: "2px 0 0 0", color: "#888", fontSize: "14px" }}>
+                              <p style={{ margin: "4px 0 0 0", color: "#888", fontSize: "16px" }}>
                                 {vehicle.model}
                               </p>
                             </div>
@@ -511,12 +547,18 @@ export function DailyBriefingExport({ open, onOpenChange }: DailyBriefingExportP
                             <p style={{ 
                               margin: 0, 
                               color: vehicle.isSold ? "#22c55e" : "#eab308", 
-                              fontSize: "16px",
-                              fontWeight: "600",
+                              fontSize: "18px",
+                              fontWeight: "700",
                             }}>
                               {vehicle.isSold ? "SOLD" : "PENDING"}
                             </p>
-                            <p style={{ margin: "4px 0 0 0", color: "#f97316", fontSize: "14px" }}>
+                            <p style={{ 
+                              margin: "6px 0 0 0", 
+                              color: "#f97316", 
+                              fontSize: "22px",
+                              fontWeight: "900",
+                              textShadow: "0 0 8px rgba(249, 115, 22, 0.5)",
+                            }}>
                               {vehicle.reason}
                             </p>
                           </div>
@@ -526,158 +568,115 @@ export function DailyBriefingExport({ open, onOpenChange }: DailyBriefingExportP
                   )}
                 </div>
 
-                {/* KPI Tiles */}
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "16px" }}>
-                  {/* IRPD */}
+                {/* KPI Tiles - IRPD and SES only, bigger and bolder */}
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "20px" }}>
+                  {/* IRPD - Big and Bold */}
                   {irpdKpi && (
                     <div style={{ 
                       backgroundColor: "#1a1a1a",
-                      borderRadius: "16px",
-                      padding: "20px",
-                      border: `2px solid ${getKpiColor(getKpiTrafficLight("irpd", irpdKpi.value, irpdKpi.goal))}66`,
+                      borderRadius: "20px",
+                      padding: "28px",
+                      border: `4px solid ${getKpiColor(getKpiTrafficLight("irpd", irpdKpi.value, irpdKpi.goal))}`,
+                      boxShadow: `0 0 30px ${getKpiColor(getKpiTrafficLight("irpd", irpdKpi.value, irpdKpi.goal))}66`,
                       position: "relative",
                     }}>
                       <div style={{ 
                         position: "absolute", 
-                        top: "12px", 
-                        right: "12px", 
+                        top: "20px", 
+                        right: "20px", 
                         display: "flex", 
                         flexDirection: "column", 
-                        gap: "4px" 
+                        gap: "6px" 
                       }}>
                         <div style={{ 
-                          width: "12px", 
-                          height: "12px", 
+                          width: "20px", 
+                          height: "20px", 
                           borderRadius: "50%", 
                           backgroundColor: getKpiTrafficLight("irpd", irpdKpi.value, irpdKpi.goal) === "green" ? "#22c55e" : "rgba(34, 197, 94, 0.2)",
-                          boxShadow: getKpiTrafficLight("irpd", irpdKpi.value, irpdKpi.goal) === "green" ? "0 0 8px rgba(34, 197, 94, 0.8)" : "none",
+                          boxShadow: getKpiTrafficLight("irpd", irpdKpi.value, irpdKpi.goal) === "green" ? "0 0 16px rgba(34, 197, 94, 1), 0 0 32px rgba(34, 197, 94, 0.6)" : "none",
                         }} />
                         <div style={{ 
-                          width: "12px", 
-                          height: "12px", 
+                          width: "20px", 
+                          height: "20px", 
                           borderRadius: "50%", 
                           backgroundColor: getKpiTrafficLight("irpd", irpdKpi.value, irpdKpi.goal) === "yellow" ? "#eab308" : "rgba(234, 179, 8, 0.2)",
-                          boxShadow: getKpiTrafficLight("irpd", irpdKpi.value, irpdKpi.goal) === "yellow" ? "0 0 8px rgba(234, 179, 8, 0.8)" : "none",
+                          boxShadow: getKpiTrafficLight("irpd", irpdKpi.value, irpdKpi.goal) === "yellow" ? "0 0 16px rgba(234, 179, 8, 1), 0 0 32px rgba(234, 179, 8, 0.6)" : "none",
                         }} />
                         <div style={{ 
-                          width: "12px", 
-                          height: "12px", 
+                          width: "20px", 
+                          height: "20px", 
                           borderRadius: "50%", 
                           backgroundColor: getKpiTrafficLight("irpd", irpdKpi.value, irpdKpi.goal) === "red" ? "#ef4444" : "rgba(239, 68, 68, 0.2)",
-                          boxShadow: getKpiTrafficLight("irpd", irpdKpi.value, irpdKpi.goal) === "red" ? "0 0 8px rgba(239, 68, 68, 0.8)" : "none",
+                          boxShadow: getKpiTrafficLight("irpd", irpdKpi.value, irpdKpi.goal) === "red" ? "0 0 16px rgba(239, 68, 68, 1), 0 0 32px rgba(239, 68, 68, 0.6)" : "none",
                         }} />
                       </div>
-                      <p style={{ margin: 0, color: "#888", fontSize: "12px", fontWeight: "600", letterSpacing: "1px" }}>IRPD MTD</p>
-                      <p style={{ margin: "8px 0 0 0", color: getKpiColor(getKpiTrafficLight("irpd", irpdKpi.value, irpdKpi.goal)), fontSize: "32px", fontWeight: "bold" }}>
+                      <p style={{ margin: 0, color: "#aaa", fontSize: "18px", fontWeight: "700", letterSpacing: "2px" }}>IRPD MTD</p>
+                      <p style={{ 
+                        margin: "12px 0 0 0", 
+                        color: getKpiColor(getKpiTrafficLight("irpd", irpdKpi.value, irpdKpi.goal)), 
+                        fontSize: "56px", 
+                        fontWeight: "900",
+                        textShadow: `0 0 24px ${getKpiColor(getKpiTrafficLight("irpd", irpdKpi.value, irpdKpi.goal))}88`,
+                      }}>
                         {irpdKpi.value.toFixed(2)}
                       </p>
-                      <p style={{ margin: "4px 0 0 0", color: "#666", fontSize: "14px" }}>Goal: {irpdKpi.goal.toFixed(2)}</p>
+                      <p style={{ margin: "8px 0 0 0", color: "#666", fontSize: "18px" }}>Goal: {irpdKpi.goal.toFixed(2)}</p>
                     </div>
                   )}
 
-                  {/* SES */}
+                  {/* SES - Big and Bold */}
                   {sesKpi && (
                     <div style={{ 
                       backgroundColor: "#1a1a1a",
-                      borderRadius: "16px",
-                      padding: "20px",
-                      border: `2px solid ${getKpiColor(getKpiTrafficLight("ses", sesKpi.value, sesKpi.goal))}66`,
+                      borderRadius: "20px",
+                      padding: "28px",
+                      border: `4px solid ${getKpiColor(getKpiTrafficLight("ses", sesKpi.value, sesKpi.goal))}`,
+                      boxShadow: `0 0 30px ${getKpiColor(getKpiTrafficLight("ses", sesKpi.value, sesKpi.goal))}66`,
                       position: "relative",
                     }}>
                       <div style={{ 
                         position: "absolute", 
-                        top: "12px", 
-                        right: "12px", 
+                        top: "20px", 
+                        right: "20px", 
                         display: "flex", 
                         flexDirection: "column", 
-                        gap: "4px" 
+                        gap: "6px" 
                       }}>
                         <div style={{ 
-                          width: "12px", 
-                          height: "12px", 
+                          width: "20px", 
+                          height: "20px", 
                           borderRadius: "50%", 
                           backgroundColor: getKpiTrafficLight("ses", sesKpi.value, sesKpi.goal) === "green" ? "#22c55e" : "rgba(34, 197, 94, 0.2)",
-                          boxShadow: getKpiTrafficLight("ses", sesKpi.value, sesKpi.goal) === "green" ? "0 0 8px rgba(34, 197, 94, 0.8)" : "none",
+                          boxShadow: getKpiTrafficLight("ses", sesKpi.value, sesKpi.goal) === "green" ? "0 0 16px rgba(34, 197, 94, 1), 0 0 32px rgba(34, 197, 94, 0.6)" : "none",
                         }} />
                         <div style={{ 
-                          width: "12px", 
-                          height: "12px", 
+                          width: "20px", 
+                          height: "20px", 
                           borderRadius: "50%", 
                           backgroundColor: getKpiTrafficLight("ses", sesKpi.value, sesKpi.goal) === "yellow" ? "#eab308" : "rgba(234, 179, 8, 0.2)",
-                          boxShadow: getKpiTrafficLight("ses", sesKpi.value, sesKpi.goal) === "yellow" ? "0 0 8px rgba(234, 179, 8, 0.8)" : "none",
+                          boxShadow: getKpiTrafficLight("ses", sesKpi.value, sesKpi.goal) === "yellow" ? "0 0 16px rgba(234, 179, 8, 1), 0 0 32px rgba(234, 179, 8, 0.6)" : "none",
                         }} />
                         <div style={{ 
-                          width: "12px", 
-                          height: "12px", 
+                          width: "20px", 
+                          height: "20px", 
                           borderRadius: "50%", 
                           backgroundColor: getKpiTrafficLight("ses", sesKpi.value, sesKpi.goal) === "red" ? "#ef4444" : "rgba(239, 68, 68, 0.2)",
-                          boxShadow: getKpiTrafficLight("ses", sesKpi.value, sesKpi.goal) === "red" ? "0 0 8px rgba(239, 68, 68, 0.8)" : "none",
+                          boxShadow: getKpiTrafficLight("ses", sesKpi.value, sesKpi.goal) === "red" ? "0 0 16px rgba(239, 68, 68, 1), 0 0 32px rgba(239, 68, 68, 0.6)" : "none",
                         }} />
                       </div>
-                      <p style={{ margin: 0, color: "#888", fontSize: "12px", fontWeight: "600", letterSpacing: "1px" }}>SES MTD</p>
-                      <p style={{ margin: "8px 0 0 0", color: getKpiColor(getKpiTrafficLight("ses", sesKpi.value, sesKpi.goal)), fontSize: "32px", fontWeight: "bold" }}>
+                      <p style={{ margin: 0, color: "#aaa", fontSize: "18px", fontWeight: "700", letterSpacing: "2px" }}>SES MTD</p>
+                      <p style={{ 
+                        margin: "12px 0 0 0", 
+                        color: getKpiColor(getKpiTrafficLight("ses", sesKpi.value, sesKpi.goal)), 
+                        fontSize: "56px", 
+                        fontWeight: "900",
+                        textShadow: `0 0 24px ${getKpiColor(getKpiTrafficLight("ses", sesKpi.value, sesKpi.goal))}88`,
+                      }}>
                         {sesKpi.value.toFixed(1)}%
                       </p>
-                      <p style={{ margin: "4px 0 0 0", color: "#666", fontSize: "14px" }}>Goal: {sesKpi.goal.toFixed(1)}%</p>
+                      <p style={{ margin: "8px 0 0 0", color: "#666", fontSize: "18px" }}>Goal: {sesKpi.goal.toFixed(1)}%</p>
                     </div>
                   )}
-
-                  {/* UP % MTD */}
-                  <div style={{ 
-                    backgroundColor: "#1a1a1a",
-                    borderRadius: "16px",
-                    padding: "20px",
-                    border: upMtdKpi 
-                      ? `2px solid ${getKpiColor(getKpiTrafficLight("upmtd", upMtdKpi.value, upMtdKpi.goal))}66`
-                      : "2px solid rgba(255, 255, 255, 0.1)",
-                    position: "relative",
-                  }}>
-                    <div style={{ 
-                      position: "absolute", 
-                      top: "12px", 
-                      right: "12px", 
-                      display: "flex", 
-                      flexDirection: "column", 
-                      gap: "4px" 
-                    }}>
-                      <div style={{ 
-                        width: "12px", 
-                        height: "12px", 
-                        borderRadius: "50%", 
-                        backgroundColor: upMtdKpi && getKpiTrafficLight("upmtd", upMtdKpi.value, upMtdKpi.goal) === "green" ? "#22c55e" : "rgba(34, 197, 94, 0.2)",
-                        boxShadow: upMtdKpi && getKpiTrafficLight("upmtd", upMtdKpi.value, upMtdKpi.goal) === "green" ? "0 0 8px rgba(34, 197, 94, 0.8)" : "none",
-                      }} />
-                      <div style={{ 
-                        width: "12px", 
-                        height: "12px", 
-                        borderRadius: "50%", 
-                        backgroundColor: upMtdKpi && getKpiTrafficLight("upmtd", upMtdKpi.value, upMtdKpi.goal) === "yellow" ? "#eab308" : "rgba(234, 179, 8, 0.2)",
-                        boxShadow: upMtdKpi && getKpiTrafficLight("upmtd", upMtdKpi.value, upMtdKpi.goal) === "yellow" ? "0 0 8px rgba(234, 179, 8, 0.8)" : "none",
-                      }} />
-                      <div style={{ 
-                        width: "12px", 
-                        height: "12px", 
-                        borderRadius: "50%", 
-                        backgroundColor: !upMtdKpi || getKpiTrafficLight("upmtd", upMtdKpi.value, upMtdKpi.goal) === "red" ? "#ef4444" : "rgba(239, 68, 68, 0.2)",
-                        boxShadow: !upMtdKpi || getKpiTrafficLight("upmtd", upMtdKpi.value, upMtdKpi.goal) === "red" ? "0 0 8px rgba(239, 68, 68, 0.8)" : "none",
-                      }} />
-                    </div>
-                    <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                      <Target style={{ width: "14px", height: "14px", color: "#888" }} />
-                      <p style={{ margin: 0, color: "#888", fontSize: "12px", fontWeight: "600", letterSpacing: "1px" }}>UP % MTD</p>
-                    </div>
-                    <p style={{ 
-                      margin: "8px 0 0 0", 
-                      color: upMtdKpi ? getKpiColor(getKpiTrafficLight("upmtd", upMtdKpi.value, upMtdKpi.goal)) : "#888", 
-                      fontSize: "32px", 
-                      fontWeight: "bold" 
-                    }}>
-                      {upMtdKpi ? `${upMtdKpi.value.toFixed(1)}%` : "--"}
-                    </p>
-                    <p style={{ margin: "4px 0 0 0", color: "#666", fontSize: "14px" }}>
-                      Goal: {upMtdKpi ? `${upMtdKpi.goal.toFixed(1)}%` : "15.0%"}
-                    </p>
-                  </div>
                 </div>
               </div>
             </div>

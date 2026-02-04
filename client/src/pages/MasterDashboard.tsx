@@ -956,7 +956,7 @@ export default function MasterDashboard() {
                     <p className="text-xs text-muted-foreground flex items-center justify-center gap-1"><Car className="w-3 h-3" /> Car</p>
                     <p className="text-lg font-bold text-white" data-testid="future-saved-car">{futureData.reservationsCar}</p>
                     {futureData.carDayMin !== null && futureData.carDayMin !== undefined && (
-                      <p className={`text-xs font-medium ${futureData.carDayMin < 0 ? 'text-red-400' : 'text-green-400'}`} data-testid="future-saved-car-daymin">
+                      <p className={`text-base font-black ${futureData.carDayMin < 0 ? 'text-red-400' : 'text-green-400'}`} style={{ textShadow: futureData.carDayMin < 0 ? '0 0 8px rgba(248, 113, 113, 0.6)' : '0 0 8px rgba(74, 222, 128, 0.6)' }} data-testid="future-saved-car-daymin">
                         DayMin: {futureData.carDayMin >= 0 ? '+' : ''}{futureData.carDayMin}
                       </p>
                     )}
@@ -965,7 +965,7 @@ export default function MasterDashboard() {
                     <p className="text-xs text-muted-foreground flex items-center justify-center gap-1"><Truck className="w-3 h-3" /> Van</p>
                     <p className="text-lg font-bold text-white" data-testid="future-saved-van">{futureData.reservationsVan}</p>
                     {futureData.vanDayMin !== null && futureData.vanDayMin !== undefined && (
-                      <p className={`text-xs font-medium ${futureData.vanDayMin < 0 ? 'text-red-400' : 'text-green-400'}`} data-testid="future-saved-van-daymin">
+                      <p className={`text-base font-black ${futureData.vanDayMin < 0 ? 'text-red-400' : 'text-green-400'}`} style={{ textShadow: futureData.vanDayMin < 0 ? '0 0 8px rgba(248, 113, 113, 0.6)' : '0 0 8px rgba(74, 222, 128, 0.6)' }} data-testid="future-saved-van-daymin">
                         DayMin: {futureData.vanDayMin >= 0 ? '+' : ''}{futureData.vanDayMin}
                       </p>
                     )}
