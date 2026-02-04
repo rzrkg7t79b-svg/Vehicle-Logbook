@@ -568,16 +568,16 @@ export function DailyBriefingExport({ open, onOpenChange }: DailyBriefingExportP
                   )}
                 </div>
 
-                {/* KPI Tiles - IRPD and SES only, bigger and bolder */}
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "20px" }}>
-                  {/* IRPD - Big and Bold */}
+                {/* KPI Tiles - IRPD and SES - ULTRA BOLD EYE CATCHERS */}
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "24px" }}>
+                  {/* IRPD - MEGA Eye Catcher */}
                   {irpdKpi && (
                     <div style={{ 
-                      backgroundColor: "#1a1a1a",
-                      borderRadius: "20px",
-                      padding: "28px",
-                      border: `4px solid ${getKpiColor(getKpiTrafficLight("irpd", irpdKpi.value, irpdKpi.goal))}`,
-                      boxShadow: `0 0 30px ${getKpiColor(getKpiTrafficLight("irpd", irpdKpi.value, irpdKpi.goal))}66`,
+                      background: `linear-gradient(145deg, #1a1a1a 0%, #0d0d0d 100%)`,
+                      borderRadius: "24px",
+                      padding: "32px",
+                      border: `6px solid ${getKpiColor(getKpiTrafficLight("irpd", irpdKpi.value, irpdKpi.goal))}`,
+                      boxShadow: `0 0 60px ${getKpiColor(getKpiTrafficLight("irpd", irpdKpi.value, irpdKpi.goal))}99, inset 0 0 40px ${getKpiColor(getKpiTrafficLight("irpd", irpdKpi.value, irpdKpi.goal))}22`,
                       position: "relative",
                     }}>
                       <div style={{ 
@@ -610,28 +610,37 @@ export function DailyBriefingExport({ open, onOpenChange }: DailyBriefingExportP
                           boxShadow: getKpiTrafficLight("irpd", irpdKpi.value, irpdKpi.goal) === "red" ? "0 0 16px rgba(239, 68, 68, 1), 0 0 32px rgba(239, 68, 68, 0.6)" : "none",
                         }} />
                       </div>
-                      <p style={{ margin: 0, color: "#aaa", fontSize: "18px", fontWeight: "700", letterSpacing: "2px" }}>IRPD MTD</p>
                       <p style={{ 
-                        margin: "12px 0 0 0", 
+                        margin: 0, 
+                        color: "#fff", 
+                        fontSize: "24px", 
+                        fontWeight: "800", 
+                        letterSpacing: "3px",
+                        textTransform: "uppercase",
+                        textShadow: "0 0 10px rgba(255,255,255,0.3)",
+                      }}>IRPD MTD</p>
+                      <p style={{ 
+                        margin: "16px 0 0 0", 
                         color: getKpiColor(getKpiTrafficLight("irpd", irpdKpi.value, irpdKpi.goal)), 
-                        fontSize: "56px", 
+                        fontSize: "80px", 
                         fontWeight: "900",
-                        textShadow: `0 0 24px ${getKpiColor(getKpiTrafficLight("irpd", irpdKpi.value, irpdKpi.goal))}88`,
+                        lineHeight: "1",
+                        textShadow: `0 0 40px ${getKpiColor(getKpiTrafficLight("irpd", irpdKpi.value, irpdKpi.goal))}, 0 0 80px ${getKpiColor(getKpiTrafficLight("irpd", irpdKpi.value, irpdKpi.goal))}88`,
                       }}>
                         {irpdKpi.value.toFixed(2)}
                       </p>
-                      <p style={{ margin: "8px 0 0 0", color: "#666", fontSize: "18px" }}>Goal: {irpdKpi.goal.toFixed(2)}</p>
+                      <p style={{ margin: "12px 0 0 0", color: "#888", fontSize: "20px", fontWeight: "600" }}>Goal: {irpdKpi.goal.toFixed(2)}</p>
                     </div>
                   )}
 
-                  {/* SES - Big and Bold */}
+                  {/* SES - MEGA Eye Catcher */}
                   {sesKpi && (
                     <div style={{ 
-                      backgroundColor: "#1a1a1a",
-                      borderRadius: "20px",
-                      padding: "28px",
-                      border: `4px solid ${getKpiColor(getKpiTrafficLight("ses", sesKpi.value, sesKpi.goal))}`,
-                      boxShadow: `0 0 30px ${getKpiColor(getKpiTrafficLight("ses", sesKpi.value, sesKpi.goal))}66`,
+                      background: `linear-gradient(145deg, #1a1a1a 0%, #0d0d0d 100%)`,
+                      borderRadius: "24px",
+                      padding: "32px",
+                      border: `6px solid ${getKpiColor(getKpiTrafficLight("ses", sesKpi.value, sesKpi.goal))}`,
+                      boxShadow: `0 0 60px ${getKpiColor(getKpiTrafficLight("ses", sesKpi.value, sesKpi.goal))}99, inset 0 0 40px ${getKpiColor(getKpiTrafficLight("ses", sesKpi.value, sesKpi.goal))}22`,
                       position: "relative",
                     }}>
                       <div style={{ 
@@ -664,17 +673,26 @@ export function DailyBriefingExport({ open, onOpenChange }: DailyBriefingExportP
                           boxShadow: getKpiTrafficLight("ses", sesKpi.value, sesKpi.goal) === "red" ? "0 0 16px rgba(239, 68, 68, 1), 0 0 32px rgba(239, 68, 68, 0.6)" : "none",
                         }} />
                       </div>
-                      <p style={{ margin: 0, color: "#aaa", fontSize: "18px", fontWeight: "700", letterSpacing: "2px" }}>SES MTD</p>
                       <p style={{ 
-                        margin: "12px 0 0 0", 
+                        margin: 0, 
+                        color: "#fff", 
+                        fontSize: "24px", 
+                        fontWeight: "800", 
+                        letterSpacing: "3px",
+                        textTransform: "uppercase",
+                        textShadow: "0 0 10px rgba(255,255,255,0.3)",
+                      }}>SES MTD</p>
+                      <p style={{ 
+                        margin: "16px 0 0 0", 
                         color: getKpiColor(getKpiTrafficLight("ses", sesKpi.value, sesKpi.goal)), 
-                        fontSize: "56px", 
+                        fontSize: "80px", 
                         fontWeight: "900",
-                        textShadow: `0 0 24px ${getKpiColor(getKpiTrafficLight("ses", sesKpi.value, sesKpi.goal))}88`,
+                        lineHeight: "1",
+                        textShadow: `0 0 40px ${getKpiColor(getKpiTrafficLight("ses", sesKpi.value, sesKpi.goal))}, 0 0 80px ${getKpiColor(getKpiTrafficLight("ses", sesKpi.value, sesKpi.goal))}88`,
                       }}>
                         {sesKpi.value.toFixed(1)}%
                       </p>
-                      <p style={{ margin: "8px 0 0 0", color: "#666", fontSize: "18px" }}>Goal: {sesKpi.goal.toFixed(1)}%</p>
+                      <p style={{ margin: "12px 0 0 0", color: "#888", fontSize: "20px", fontWeight: "600" }}>Goal: {sesKpi.goal.toFixed(1)}%</p>
                     </div>
                   )}
                 </div>
