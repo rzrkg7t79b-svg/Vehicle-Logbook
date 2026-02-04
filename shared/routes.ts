@@ -522,6 +522,7 @@ export const api = {
       input: z.object({
         value: z.number().min(0),
         goal: z.number().min(0),
+        yesterdayValue: z.number().min(0).nullable().optional(),
       }),
       responses: {
         200: z.custom<typeof kpiMetrics.$inferSelect>(),

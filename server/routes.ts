@@ -837,6 +837,7 @@ async function registerKpiMetricsRoutes(app: Express) {
         key: key as "irpd" | "ses" | "upmtd",
         value: input.value,
         goal: input.goal,
+        yesterdayValue: input.yesterdayValue,
         updatedBy: adminUser?.initials,
       });
       broadcastUpdate("kpi-metrics");

@@ -549,6 +549,7 @@ export class DatabaseStorage implements IStorage {
         .set({ 
           value: data.value, 
           goal: data.goal, 
+          yesterdayValue: data.yesterdayValue ?? existing.yesterdayValue,
           updatedBy: data.updatedBy, 
           updatedAt: new Date() 
         })
