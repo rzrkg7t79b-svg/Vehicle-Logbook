@@ -846,12 +846,7 @@ export default function MasterDashboard() {
                         <Input
                           type="number"
                           value={futureForm.carDayMin}
-                          onChange={(e) => {
-                            const val = e.target.value.replace(/[^0-9-]/g, '');
-                            if (val === '' || val === '-' || /^-?\d+$/.test(val)) {
-                              handleFutureInputChange("carDayMin", val);
-                            }
-                          }}
+                          onChange={(e) => handleFutureInputChange("carDayMin", e.target.value)}
                           className={`text-center text-sm h-8 ${futureForm.carDayMin && parseInt(futureForm.carDayMin) < 0 ? 'text-red-400' : 'text-green-400'}`}
                           placeholder="±0"
                           data-testid="input-future-car-daymin"
@@ -878,12 +873,7 @@ export default function MasterDashboard() {
                         <Input
                           type="number"
                           value={futureForm.vanDayMin}
-                          onChange={(e) => {
-                            const val = e.target.value.replace(/[^0-9-]/g, '');
-                            if (val === '' || val === '-' || /^-?\d+$/.test(val)) {
-                              handleFutureInputChange("vanDayMin", val);
-                            }
-                          }}
+                          onChange={(e) => handleFutureInputChange("vanDayMin", e.target.value)}
                           className={`text-center text-sm h-8 ${futureForm.vanDayMin && parseInt(futureForm.vanDayMin) < 0 ? 'text-red-400' : 'text-green-400'}`}
                           placeholder="±0"
                           data-testid="input-future-van-daymin"
