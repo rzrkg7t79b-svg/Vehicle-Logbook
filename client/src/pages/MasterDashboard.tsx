@@ -330,16 +330,21 @@ export default function MasterDashboard() {
     return "Just now";
   };
 
-  const getKpiComparison = (value: number | undefined, yesterdayValue: number | null | undefined): {
+  const getKpiComparison = (yesterdayValue: number | null | undefined, goal: number): {
     arrow: "up" | "down" | "same";
     color: string;
   } => {
-    if (value === undefined || yesterdayValue === undefined || yesterdayValue === null) {
+    // Arrow shows whether YESTERDAY was good (helped toward goal)
+    // Up green: yesterday >= goal (great day!)
+    // Same yellow: yesterday was close to goal (within 10%)
+    // Down red: yesterday was below goal
+    if (yesterdayValue === undefined || yesterdayValue === null) {
       return { arrow: "same", color: "text-muted-foreground" };
     }
-    if (value > yesterdayValue) return { arrow: "up", color: "text-green-500" };
-    if (value < yesterdayValue) return { arrow: "down", color: "text-red-500" };
-    return { arrow: "same", color: "text-yellow-500" };
+    if (yesterdayValue >= goal) return { arrow: "up", color: "text-green-500" };
+    const threshold = goal * 0.9; // 10% below goal
+    if (yesterdayValue >= threshold) return { arrow: "same", color: "text-yellow-500" };
+    return { arrow: "down", color: "text-red-500" };
   };
 
   const getYesterdayValueColor = (key: "irpd" | "ses", yesterdayValue: number | null | undefined, goal: number): string => {
@@ -504,7 +509,7 @@ export default function MasterDashboard() {
             
             const glowStyle = getKpiGlowStyle(kpiKey, value);
             const trafficLight = getKpiTrafficLight(kpiKey, value);
-            const comparison = getKpiComparison(value, yesterdayValue);
+            const comparison = getKpiComparison(yesterdayValue, goal);
             const yesterdayColor = getYesterdayValueColor(kpiKey, yesterdayValue, goal);
             
             return (
