@@ -121,21 +121,19 @@ export function DailyBriefingExport({ open, onOpenChange }: DailyBriefingExportP
   };
 
   // Get arrow direction comparing yesterday to today's actual value
-  // For IRPD/SES: Higher is better. For UP % MTD: Higher is better.
+  // Arrow shows whether yesterday helped reach the goal compared to today's ACT
+  // Yesterday > Today = Green ↑ (yesterday was better, helped toward goal)
+  // Yesterday = Today = Yellow → (same performance)
+  // Yesterday < Today = Red ↓ (yesterday was worse than today)
   const getYesterdayArrow = (key: "irpd" | "ses" | "upmtd", yesterdayVal: number, actualVal: number): { arrow: string; color: string } => {
-    // If yesterday was BETTER than today = green up (we improved from yesterday)
-    // If yesterday was SAME as today = yellow straight
-    // If yesterday was WORSE than today = red down (we got worse from yesterday)
-    // Note: The arrow shows the CHANGE direction (yesterday → today)
-    
-    if (actualVal > yesterdayVal) {
-      // Today is better than yesterday = improvement = green up arrow
+    if (yesterdayVal > actualVal) {
+      // Yesterday was better than today = green up arrow
       return { arrow: "↑", color: "#22c55e" };
     } else if (Math.abs(actualVal - yesterdayVal) < 0.01) {
       // Same = yellow straight arrow
       return { arrow: "→", color: "#eab308" };
     } else {
-      // Today is worse than yesterday = decline = red down arrow
+      // Yesterday was worse than today = red down arrow
       return { arrow: "↓", color: "#ef4444" };
     }
   };
