@@ -158,28 +158,11 @@ export function DailyBriefingExport({ open, onOpenChange }: DailyBriefingExportP
     }
   };
 
-  // Get yesterday value color based on comparison to GOAL
-  // Green: better than goal, Yellow: same to -10% of goal, Red: worse than -10% of goal
-  const getYesterdayValueColor = (key: "irpd" | "ses" | "upmtd", yesterdayVal: number, goal: number): string => {
-    if (key === "irpd") {
-      // IRPD: higher is better
-      if (yesterdayVal >= goal) return "#22c55e"; // Green: better than goal
-      const threshold = goal * 0.9; // -10% of goal
-      if (yesterdayVal >= threshold) return "#eab308"; // Yellow: within 10%
-      return "#ef4444"; // Red: worse than -10%
-    } else if (key === "ses") {
-      // SES: higher is better
-      if (yesterdayVal >= goal) return "#22c55e";
-      const threshold = goal * 0.9;
-      if (yesterdayVal >= threshold) return "#eab308";
-      return "#ef4444";
-    } else {
-      // UP % MTD: higher is better
-      if (yesterdayVal >= goal) return "#22c55e";
-      const threshold = goal * 0.9;
-      if (yesterdayVal >= threshold) return "#eab308";
-      return "#ef4444";
-    }
+  const getYesterdayValueColor = (_key: "irpd" | "ses" | "upmtd", yesterdayVal: number, goal: number): string => {
+    if (yesterdayVal >= goal) return "#22c55e";
+    const threshold = goal * 0.9;
+    if (yesterdayVal >= threshold) return "#eab308";
+    return "#ef4444";
   };
 
   const formatWeekdayDate = (dateStr: string): string => {

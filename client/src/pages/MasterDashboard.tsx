@@ -346,11 +346,10 @@ export default function MasterDashboard() {
     return { arrow: "same", color: "text-yellow-500" };
   };
 
-  const getYesterdayValueColor = (key: "irpd" | "ses", yesterdayValue: number | null | undefined, goal: number): string => {
+  const getYesterdayValueColor = (_key: "irpd" | "ses", yesterdayValue: number | null | undefined, goal: number): string => {
     if (yesterdayValue === undefined || yesterdayValue === null) return "text-muted-foreground";
-    // Color based on comparison to goal: green if >= goal, yellow if within 10%, red if worse
     if (yesterdayValue >= goal) return "text-green-500";
-    const threshold = goal * 0.9; // 10% below goal
+    const threshold = goal * 0.9;
     if (yesterdayValue >= threshold) return "text-yellow-500";
     return "text-red-500";
   };
@@ -1235,7 +1234,7 @@ export default function MasterDashboard() {
 
       <footer className="pb-24 pt-8 border-t border-white/10 text-center space-y-1 mx-4">
         <p className="text-xs text-muted-foreground">
-          Version v3.1.8
+          Version v3.2.2
         </p>
         <p className="text-xs text-muted-foreground">
           &copy; 2026 by Nathanael Prem
