@@ -460,6 +460,21 @@ export async function registerRoutes(
     res.json({ success: true, message: "QualitySIXT reset completed" });
   });
 
+  app.get("/api/quality-checks/date/:date", async (req, res) => {
+    const date = req.params.date;
+    const checks = await storage.getQualityChecksForDate(date);
+    const allDriverTasks = await storage.getDriverTasks();
+    const checksWithStatus = checks.map(check => {
+      const driverTask = allDriverTasks.find(t => t.qualityCheckId === check.id);
+      return {
+        ...check,
+        driverTaskCompleted: driverTask?.completed ?? null,
+        driverTaskCompletedBy: driverTask?.completedBy ?? null,
+      };
+    });
+    res.json(checksWithStatus);
+  });
+
   // Driver task routes
   app.get(api.driverTasks.list.path, async (req, res) => {
     const tasks = await storage.getDriverTasks();
@@ -558,6 +573,9 @@ export async function registerRoutes(
   // Dashboard status route
   app.get(api.dashboard.status.path, async (req, res) => {
     const date = req.query.date as string || new Date().toISOString().split('T')[0];
+    
+    // Cleanup old completed flow tasks from previous days (runs on each dashboard load)
+    await storage.cleanupOldCompletedFlowTasks(date);
     
     // TimeDriver status - done if calculation exists OR module status is set
     const timedriverCalc = await storage.getTimedriverCalculation(date);

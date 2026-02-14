@@ -75,6 +75,8 @@ export interface IStorage {
 
   getDriverTasks(): Promise<DriverTask[]>;
   getDriverTask(id: number): Promise<DriverTask | undefined>;
+  getDriverTasksForDate(date: string): Promise<DriverTask[]>;
+  cleanupOldCompletedFlowTasks(todayDate: string): Promise<void>;
   createDriverTask(task: InsertDriverTask): Promise<DriverTask>;
   updateDriverTask(id: number, data: Partial<DriverTask>): Promise<DriverTask | undefined>;
   getIncompleteDriverTasks(): Promise<DriverTask[]>;
@@ -302,6 +304,24 @@ class DatabaseStorage implements IStorage {
 
   async getIncompleteDriverTasks(): Promise<DriverTask[]> {
     return db.select().from(driverTasks).where(eq(driverTasks.completed, false));
+  }
+
+  async getDriverTasksForDate(date: string): Promise<DriverTask[]> {
+    return await db.select().from(driverTasks)
+      .where(sql`DATE(${driverTasks.createdAt} AT TIME ZONE 'Europe/Berlin') = ${date}`)
+      .orderBy(desc(driverTasks.createdAt));
+  }
+
+  async cleanupOldCompletedFlowTasks(todayDate: string): Promise<void> {
+    const result = await db.delete(flowTasks).where(
+      and(
+        eq(flowTasks.completed, true),
+        sql`DATE(${flowTasks.createdAt} AT TIME ZONE 'Europe/Berlin') < ${todayDate}`
+      )
+    ).returning();
+    if (result.length > 0) {
+      console.log(`[storage] Cleaned up ${result.length} old completed flow tasks`);
+    }
   }
 
   async getModuleStatus(date: string): Promise<ModuleStatus[]> {

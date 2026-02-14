@@ -88,6 +88,26 @@ export function DailyBriefingExport({ open, onOpenChange }: DailyBriefingExportP
     queryKey: ["/api/kpi-metrics"],
   });
 
+  type QualityCheckWithStatus = {
+    id: number;
+    licensePlate: string;
+    isEv: boolean;
+    passed: boolean;
+    comment: string | null;
+    checkedBy: string | null;
+    createdAt: string;
+    driverTaskCompleted: boolean | null;
+    driverTaskCompletedBy: string | null;
+  };
+
+  const { data: qualityChecks = [] } = useQuery<QualityCheckWithStatus[]>({
+    queryKey: ["/api/quality-checks/date", todayDate],
+    queryFn: async () => {
+      const res = await fetch(`/api/quality-checks/date/${todayDate}`);
+      return res.json();
+    },
+  });
+
   // Get yesterday values directly from database
   const irpdYesterday = kpiMetrics.find(m => m.key === "irpd")?.yesterdayValue?.toString() || "";
   const sesYesterday = kpiMetrics.find(m => m.key === "ses")?.yesterdayValue?.toString() || "";
@@ -836,6 +856,92 @@ export function DailyBriefingExport({ open, onOpenChange }: DailyBriefingExportP
                     </div>
                   )}
                 </div>
+
+                {/* QualitySIXT - Quality Checks Summary */}
+                {qualityChecks.length > 0 && (
+                  <div style={{ 
+                    background: "linear-gradient(145deg, #1a1a1a 0%, #0d1a0d 100%)",
+                    borderRadius: "16px",
+                    padding: "20px",
+                    border: "3px solid rgba(34, 197, 94, 0.5)",
+                    boxShadow: "0 0 30px rgba(34, 197, 94, 0.2), inset 0 0 40px rgba(34, 197, 94, 0.05)",
+                  }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "14px" }}>
+                      <div style={{ 
+                        width: "40px", 
+                        height: "40px", 
+                        borderRadius: "10px", 
+                        background: "linear-gradient(135deg, rgba(34, 197, 94, 0.4) 0%, rgba(34, 197, 94, 0.15) 100%)",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        boxShadow: "0 0 20px rgba(34, 197, 94, 0.4)",
+                      }}>
+                        <Target style={{ width: "22px", height: "22px", color: "#22c55e" }} />
+                      </div>
+                      <div>
+                        <h2 style={{ fontSize: "22px", fontWeight: "bold", color: "white", margin: 0 }}>
+                          Quality<span style={{ color: "#22c55e" }}>SIXT</span>
+                        </h2>
+                        <p style={{ margin: 0, color: "#22c55e", fontSize: "12px", fontWeight: "600" }}>
+                          {qualityChecks.filter(c => c.passed).length} passed / {qualityChecks.filter(c => !c.passed).length} failed
+                        </p>
+                      </div>
+                    </div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                      {qualityChecks.filter(c => !c.passed).map((check) => (
+                        <div key={check.id} style={{ 
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                          padding: "10px 14px",
+                          background: check.driverTaskCompleted 
+                            ? "linear-gradient(135deg, rgba(34, 197, 94, 0.15) 0%, #262626 100%)"
+                            : "linear-gradient(135deg, rgba(239, 68, 68, 0.15) 0%, #262626 100%)",
+                          borderRadius: "10px",
+                          border: check.driverTaskCompleted 
+                            ? "2px solid rgba(34, 197, 94, 0.5)"
+                            : "2px solid rgba(239, 68, 68, 0.5)",
+                        }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                            <span style={{ 
+                              fontSize: "18px", 
+                              fontWeight: "900", 
+                              fontFamily: "monospace",
+                              color: "#fff",
+                            }}>
+                              {check.licensePlate}
+                            </span>
+                            {check.comment && (
+                              <span style={{ color: "#999", fontSize: "13px", maxWidth: "200px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                {check.comment}
+                              </span>
+                            )}
+                          </div>
+                          <div style={{ 
+                            display: "inline-block",
+                            padding: "4px 12px",
+                            borderRadius: "16px",
+                            background: check.driverTaskCompleted 
+                              ? "linear-gradient(135deg, #22c55e 0%, #16a34a 100%)"
+                              : "linear-gradient(135deg, #ef4444 0%, #dc2626 100%)",
+                            boxShadow: check.driverTaskCompleted 
+                              ? "0 0 10px rgba(34, 197, 94, 0.5)"
+                              : "0 0 10px rgba(239, 68, 68, 0.5)",
+                          }}>
+                            <span style={{ 
+                              color: "#fff", 
+                              fontSize: "13px",
+                              fontWeight: "800",
+                            }}>
+                              {check.driverTaskCompleted ? "SOLVED" : "OPEN"}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 {/* KPI Tiles - IRPD and SES - ULTRA BOLD EYE CATCHERS */}
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "24px" }}>

@@ -114,7 +114,9 @@ export interface IStorage {
   
   getQualityChecksForDate(date: string): Promise<QualityCheck[]>;
   getIncompleteDriverTasks(): Promise<DriverTask[]>;
+  getDriverTasksForDate(date: string): Promise<DriverTask[]>;
   getTodosForCounter(): Promise<Todo[]>;
+  cleanupOldCompletedFlowTasks(todayDate: string): Promise<void>;
 
   getUpgradeVehicles(): Promise<UpgradeVehicle[]>;
   getUpgradeVehiclesForDate(date: string): Promise<UpgradeVehicle[]>;
@@ -463,6 +465,24 @@ export class DatabaseStorage implements IStorage {
 
   async getIncompleteDriverTasks(): Promise<DriverTask[]> {
     return await db.select().from(driverTasks).where(eq(driverTasks.completed, false));
+  }
+
+  async getDriverTasksForDate(date: string): Promise<DriverTask[]> {
+    return await db.select().from(driverTasks)
+      .where(sql`DATE(${driverTasks.createdAt} AT TIME ZONE 'Europe/Berlin') = ${date}`)
+      .orderBy(desc(driverTasks.createdAt));
+  }
+
+  async cleanupOldCompletedFlowTasks(todayDate: string): Promise<void> {
+    const result = await db.delete(flowTasks).where(
+      and(
+        eq(flowTasks.completed, true),
+        sql`DATE(${flowTasks.createdAt} AT TIME ZONE 'Europe/Berlin') < ${todayDate}`
+      )
+    ).returning();
+    if (result.length > 0) {
+      console.log(`[storage] Cleaned up ${result.length} old completed flow tasks`);
+    }
   }
 
   async getTodosForCounter(): Promise<Todo[]> {

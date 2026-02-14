@@ -386,6 +386,21 @@ export async function registerApiRoutes(app: Express): Promise<void> {
     }
   });
 
+  app.get("/api/quality-checks/date/:date", async (req, res) => {
+    const date = req.params.date;
+    const checks = await storage.getQualityChecksForDate(date);
+    const allDriverTasks = await storage.getDriverTasks();
+    const checksWithStatus = checks.map(check => {
+      const driverTask = allDriverTasks.find(t => t.qualityCheckId === check.id);
+      return {
+        ...check,
+        driverTaskCompleted: driverTask?.completed ?? null,
+        driverTaskCompletedBy: driverTask?.completedBy ?? null,
+      };
+    });
+    res.json(checksWithStatus);
+  });
+
   app.get(api.driverTasks.list.path, async (req, res) => {
     const tasks = await storage.getDriverTasks();
     res.json(tasks);
@@ -470,6 +485,9 @@ export async function registerApiRoutes(app: Express): Promise<void> {
 
   app.get(api.dashboard.status.path, async (req, res) => {
     const date = req.query.date as string || new Date().toISOString().split('T')[0];
+    
+    // Cleanup old completed flow tasks from previous days
+    await storage.cleanupOldCompletedFlowTasks(date);
     
     const timedriverCalc = await storage.getTimedriverCalculation(date);
     const timedriverStatus = await storage.getModuleStatus(date);
