@@ -592,9 +592,7 @@ export async function registerRoutes(
     const deadline = new Date(berlinTime);
     deadline.setHours(8, 30, 0, 0);
     const isOverdue = berlinTime > deadline && todayUpgrades.length === 0;
-    // Upgrade is done if there's at least one sold vehicle today, or if a vehicle is defined (pending sale is still progress)
-    const hasSoldToday = todayUpgrades.some(v => v.isSold);
-    const upgradeIsDone = hasSoldToday;
+    const upgradeIsDone = todayUpgrades.length > 0;
     
     // Todo status - filter out postponed todos that are for future dates
     const allTodos = await storage.getTodos();
@@ -642,17 +640,51 @@ export async function registerRoutes(
     // Check if past 13:00 German time (overdue if not done)
     const breaksixtIsOverdue = berlinHour >= 13 && !breaksixtIsDone;
     
-    // Calculate overall progress (7 modules now, each worth ~14.3%)
-    let completedModules = 0;
-    if (timedriverIsDone) completedModules++;
-    if (upgradeIsDone) completedModules++;
-    if (flowIsDone) completedModules++;
-    if (todoIsDone) completedModules++;
-    if (qualityIsDone) completedModules++;
-    if (bodyshopIsDone) completedModules++;
-    if (futureIsDone) completedModules++;
-    
-    const overallProgress = Math.round((completedModules / 7) * 100);
+    // Calculate overall progress with granular per-task contributions
+    // Each of 7 modules contributes up to 1/7 of the total (≈14.3% each)
+    let totalProgress = 0;
+    const moduleWeight = 1 / 7;
+
+    // TimeDriver: binary (done or not)
+    if (timedriverIsDone) totalProgress += moduleWeight;
+
+    // Upgrade: binary (done when vehicle added)
+    if (upgradeIsDone) totalProgress += moduleWeight;
+
+    // Flow: proportional to completed tasks
+    if (allFlowTasks.length === 0) {
+      if (flowIsDone) totalProgress += moduleWeight;
+    } else {
+      const flowCompleted = allFlowTasks.filter(t => t.completed).length;
+      totalProgress += moduleWeight * (flowCompleted / allFlowTasks.length);
+    }
+
+    // Todo: proportional to completed tasks
+    if (todaysTodos.length === 0) {
+      totalProgress += moduleWeight;
+    } else {
+      totalProgress += moduleWeight * (completed / todaysTodos.length);
+    }
+
+    // Quality: proportional to checks done (target: 5 checks)
+    if (qualityIsDone) {
+      totalProgress += moduleWeight;
+    } else {
+      totalProgress += moduleWeight * Math.min(totalChecks / 5, 1);
+    }
+
+    // Bodyshop: proportional to vehicles with daily comment
+    if (activeVehicles.length === 0) {
+      totalProgress += moduleWeight;
+    } else {
+      const vehiclesWithComment = activeVehicles.length - vehiclesWithoutComment.length;
+      totalProgress += moduleWeight * (vehiclesWithComment / activeVehicles.length);
+    }
+
+    // Future: binary (done or not)
+    if (futureIsDone) totalProgress += moduleWeight;
+
+    const overallProgress = Math.round(totalProgress * 100);
     
     res.json({
       timedriver: { isDone: timedriverIsDone, details: timedriverCalc ? "Calculated" : undefined },

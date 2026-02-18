@@ -501,8 +501,7 @@ export async function registerApiRoutes(app: Express): Promise<void> {
     const deadline = new Date(berlinTime);
     deadline.setHours(8, 30, 0, 0);
     const isOverdue = berlinTime > deadline && todayUpgrades.length === 0;
-    const hasSoldToday = todayUpgrades.some(v => v.isSold);
-    const upgradeIsDone = hasSoldToday;
+    const upgradeIsDone = todayUpgrades.length > 0;
     
     const allTodos = await storage.getTodos();
     const todaysTodos = allTodos.filter(t => !t.postponedToDate || t.postponedToDate <= date);
@@ -533,16 +532,41 @@ export async function registerApiRoutes(app: Express): Promise<void> {
     const berlinHour = berlinTime.getHours();
     const futureIsLocked = berlinHour < 15;
     
-    let completedModules = 0;
-    if (timedriverIsDone) completedModules++;
-    if (upgradeIsDone) completedModules++;
-    if (flowIsDone) completedModules++;
-    if (todoIsDone) completedModules++;
-    if (qualityIsDone) completedModules++;
-    if (bodyshopIsDone) completedModules++;
-    if (futureIsDone) completedModules++;
-    
-    const overallProgress = Math.round((completedModules / 7) * 100);
+    let totalProgress = 0;
+    const moduleWeight = 1 / 7;
+
+    if (timedriverIsDone) totalProgress += moduleWeight;
+    if (upgradeIsDone) totalProgress += moduleWeight;
+
+    if (allFlowTasks.length === 0) {
+      if (flowIsDone) totalProgress += moduleWeight;
+    } else {
+      const flowCompleted = allFlowTasks.filter(t => t.completed).length;
+      totalProgress += moduleWeight * (flowCompleted / allFlowTasks.length);
+    }
+
+    if (todaysTodos.length === 0) {
+      totalProgress += moduleWeight;
+    } else {
+      totalProgress += moduleWeight * (completed / todaysTodos.length);
+    }
+
+    if (qualityIsDone) {
+      totalProgress += moduleWeight;
+    } else {
+      totalProgress += moduleWeight * Math.min(totalChecks / 5, 1);
+    }
+
+    if (activeVehicles.length === 0) {
+      totalProgress += moduleWeight;
+    } else {
+      const vehiclesWithComment = activeVehicles.length - vehiclesWithoutComment.length;
+      totalProgress += moduleWeight * (vehiclesWithComment / activeVehicles.length);
+    }
+
+    if (futureIsDone) totalProgress += moduleWeight;
+
+    const overallProgress = Math.round(totalProgress * 100);
     
     res.json({
       timedriver: { isDone: timedriverIsDone, details: timedriverCalc ? "Calculated" : undefined },
