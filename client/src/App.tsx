@@ -17,6 +17,7 @@ import UpgradeSIXT from "@/pages/UpgradeSIXT";
 import FlowSIXT from "@/pages/FlowSIXT";
 import TodoList from "@/pages/TodoList";
 import QualityCheck from "@/pages/QualityCheck";
+import StreakDemo from "@/pages/StreakDemo";
 import NotFound from "@/pages/not-found";
 
 function HomeRedirect() {
@@ -49,6 +50,7 @@ function Router() {
         <Route path="/flow" component={FlowSIXT} />
         <Route path="/todo" component={TodoList} />
         <Route path="/quality" component={QualityCheck} />
+        <Route path="/streak-demo" component={StreakDemo} />
         <Route component={NotFound} />
       </Switch>
       {showNavigation && <Navigation />}
