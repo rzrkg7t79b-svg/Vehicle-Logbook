@@ -240,6 +240,7 @@ export function DailyBriefingExport({ open, onOpenChange }: DailyBriefingExportP
   const soldVehicles = upgradeVehicles.filter(v => v.isSold);
   const progress = dashboardStatus?.overallProgress ?? 0;
 
+  const hasMultipleUpgrades = upgradeVehicles.length >= 2;
   const irpdKpi = getKpiMetric("irpd");
   const sesKpi = getKpiMetric("ses");
   const upMtdKpi = getKpiMetric("upmtd");
@@ -384,9 +385,9 @@ export function DailyBriefingExport({ open, onOpenChange }: DailyBriefingExportP
             )}
 
             {/* Main Content Grid */}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px", flex: 1 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: hasMultipleUpgrades ? "18px" : "24px", flex: 1 }}>
               {/* Left Column */}
-              <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: hasMultipleUpgrades ? "14px" : "20px" }}>
                 {/* TodaySIXT (FutureSIXT data relabeled) - Colorful & Motivational */}
                 {futureData && (
                   <div style={{ 
@@ -513,21 +514,21 @@ export function DailyBriefingExport({ open, onOpenChange }: DailyBriefingExportP
 
                 {/* TimeDriverSIXT - Compact when many drivers */}
                 {driversData.length > 0 && (() => {
-                  const isCompact = driversData.length > 2;
+                  const isCompact = driversData.length > 2 || hasMultipleUpgrades;
                   const useGrid = driversData.length > 3;
                   return (
                   <div style={{ 
                     background: "linear-gradient(145deg, #1a1a1a 0%, #1a0d0d 100%)",
                     borderRadius: "16px",
-                    padding: isCompact ? "16px" : "24px",
+                    padding: hasMultipleUpgrades ? "12px" : (isCompact ? "16px" : "24px"),
                     border: "3px solid rgba(249, 115, 22, 0.5)",
                     boxShadow: "0 0 30px rgba(249, 115, 22, 0.2), inset 0 0 40px rgba(249, 115, 22, 0.05)",
                     flex: 1,
                   }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: isCompact ? "12px" : "20px" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: hasMultipleUpgrades ? "8px" : "12px", marginBottom: hasMultipleUpgrades ? "8px" : (isCompact ? "12px" : "20px") }}>
                       <div style={{ 
-                        width: isCompact ? "36px" : "50px", 
-                        height: isCompact ? "36px" : "50px", 
+                        width: hasMultipleUpgrades ? "30px" : (isCompact ? "36px" : "50px"), 
+                        height: hasMultipleUpgrades ? "30px" : (isCompact ? "36px" : "50px"), 
                         borderRadius: "12px", 
                         background: "linear-gradient(135deg, rgba(249, 115, 22, 0.4) 0%, rgba(249, 115, 22, 0.15) 100%)",
                         display: "flex",
@@ -535,13 +536,13 @@ export function DailyBriefingExport({ open, onOpenChange }: DailyBriefingExportP
                         justifyContent: "center",
                         boxShadow: "0 0 20px rgba(249, 115, 22, 0.4)",
                       }}>
-                        <span style={{ fontSize: isCompact ? "18px" : "28px" }}>👥</span>
+                        <span style={{ fontSize: hasMultipleUpgrades ? "16px" : (isCompact ? "18px" : "28px") }}>👥</span>
                       </div>
                       <div>
-                        <h2 style={{ fontSize: isCompact ? "20px" : "28px", fontWeight: "bold", color: "white", margin: 0 }}>
+                        <h2 style={{ fontSize: hasMultipleUpgrades ? "18px" : (isCompact ? "20px" : "28px"), fontWeight: "bold", color: "white", margin: 0 }}>
                           TimeDriver<span style={{ color: "#f97316" }}>SIXT</span>
                         </h2>
-                        <p style={{ margin: 0, color: "#f97316", fontSize: isCompact ? "12px" : "14px", fontWeight: "600" }}>
+                        <p style={{ margin: 0, color: "#f97316", fontSize: hasMultipleUpgrades ? "11px" : (isCompact ? "12px" : "14px"), fontWeight: "600" }}>
                           {timedriverCalc?.rentals} rentals × €{timedriverCalc?.budgetPerRental.toFixed(2)} = €{timedriverCalc?.totalBudget.toFixed(2)} Budget
                         </p>
                       </div>
@@ -550,38 +551,38 @@ export function DailyBriefingExport({ open, onOpenChange }: DailyBriefingExportP
                       display: useGrid ? "grid" : "flex", 
                       gridTemplateColumns: useGrid ? "1fr 1fr" : undefined,
                       flexDirection: useGrid ? undefined : "column", 
-                      gap: isCompact ? "8px" : "14px",
+                      gap: hasMultipleUpgrades ? "6px" : (isCompact ? "8px" : "14px"),
                     }}>
                       {driversData.map((driver) => {
                         const barColor = driver.percent >= 100 ? "#ef4444" : driver.percent >= 80 ? "#eab308" : "#22c55e";
                         return (
                           <div key={driver.id} style={{ 
-                            padding: isCompact ? "8px 12px" : "14px 16px", 
+                            padding: hasMultipleUpgrades ? "6px 10px" : (isCompact ? "8px 12px" : "14px 16px"), 
                             background: "linear-gradient(135deg, #262626 0%, #1a1a1a 100%)", 
                             borderRadius: isCompact ? "8px" : "12px",
                             border: driver.percent >= 100 ? "2px solid rgba(239, 68, 68, 0.5)" : "1px solid rgba(255,255,255,0.1)",
                             boxShadow: driver.percent >= 100 ? "0 0 20px rgba(239, 68, 68, 0.3)" : "none",
                           }}>
-                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: isCompact ? "6px" : "10px" }}>
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: hasMultipleUpgrades ? "4px" : (isCompact ? "6px" : "10px") }}>
                               <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                                <span style={{ color: "#f97316", fontSize: isCompact ? "16px" : "22px", fontWeight: "900" }}>{driver.initials}</span>
-                                <span style={{ color: "#666", fontSize: isCompact ? "11px" : "14px" }}>(max {driver.maxHours}h)</span>
-                                {isCompact && (driver.overflowHours !== undefined && driver.overflowHours > 0) && (
-                                  <span style={{ color: "#f97316", fontSize: "11px", fontWeight: "600" }}>
+                                <span style={{ color: "#f97316", fontSize: hasMultipleUpgrades ? "14px" : (isCompact ? "16px" : "22px"), fontWeight: "900" }}>{driver.initials}</span>
+                                <span style={{ color: "#666", fontSize: hasMultipleUpgrades ? "10px" : (isCompact ? "11px" : "14px") }}>(max {driver.maxHours}h)</span>
+                                {(isCompact || hasMultipleUpgrades) && (driver.overflowHours !== undefined && driver.overflowHours > 0) && (
+                                  <span style={{ color: "#f97316", fontSize: hasMultipleUpgrades ? "10px" : "11px", fontWeight: "600" }}>
                                     +{driver.overflowHours}h{driver.overflowMinutes}m
                                   </span>
                                 )}
                               </div>
                               <span style={{ 
                                 color: "#22c55e", 
-                                fontSize: isCompact ? "16px" : "24px", 
+                                fontSize: hasMultipleUpgrades ? "14px" : (isCompact ? "16px" : "24px"), 
                                 fontWeight: "900",
                                 textShadow: "0 0 10px rgba(34, 197, 94, 0.5)",
                               }}>
                                 {driver.assignedHours}h {driver.assignedMinutes}min
                               </span>
                             </div>
-                            {!isCompact && (driver.overflowHours !== undefined && driver.overflowHours > 0) && (
+                            {!isCompact && !hasMultipleUpgrades && (driver.overflowHours !== undefined && driver.overflowHours > 0) && (
                               <p style={{ 
                                 margin: "0 0 8px 0", 
                                 color: "#f97316", 
@@ -593,9 +594,9 @@ export function DailyBriefingExport({ open, onOpenChange }: DailyBriefingExportP
                             )}
                             <div style={{ 
                               position: "relative",
-                              height: isCompact ? "18px" : "28px", 
+                              height: hasMultipleUpgrades ? "14px" : (isCompact ? "18px" : "28px"), 
                               backgroundColor: "rgba(255,255,255,0.1)", 
-                              borderRadius: isCompact ? "9px" : "14px",
+                              borderRadius: hasMultipleUpgrades ? "7px" : (isCompact ? "9px" : "14px"),
                               overflow: "hidden",
                             }}>
                               <div style={{ 
@@ -605,7 +606,7 @@ export function DailyBriefingExport({ open, onOpenChange }: DailyBriefingExportP
                                 width: `${Math.min(driver.percent, 100)}%`, 
                                 height: "100%", 
                                 background: `linear-gradient(90deg, ${barColor} 0%, ${barColor}cc 100%)`,
-                                borderRadius: isCompact ? "9px" : "14px",
+                                borderRadius: hasMultipleUpgrades ? "7px" : (isCompact ? "9px" : "14px"),
                                 boxShadow: `0 0 15px ${barColor}88`,
                               }} />
                               <div style={{
@@ -620,7 +621,7 @@ export function DailyBriefingExport({ open, onOpenChange }: DailyBriefingExportP
                               }}>
                                 <span style={{ 
                                   color: "#fff", 
-                                  fontSize: isCompact ? "11px" : "14px", 
+                                  fontSize: hasMultipleUpgrades ? "10px" : (isCompact ? "11px" : "14px"), 
                                   fontWeight: "900",
                                   textShadow: "0 1px 3px rgba(0,0,0,0.8)",
                                 }}>
@@ -638,14 +639,14 @@ export function DailyBriefingExport({ open, onOpenChange }: DailyBriefingExportP
               </div>
 
               {/* Right Column */}
-              <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: hasMultipleUpgrades ? "14px" : "20px" }}>
                 {/* UpgradeSIXT with UP % MTD inside - Colorful & Motivational */}
                 <div style={{ 
                   background: soldVehicles.length > 0 
                     ? "linear-gradient(145deg, #1a1a1a 0%, #0d1f0d 100%)"
                     : "linear-gradient(145deg, #1a1a1a 0%, #1f0d1a 100%)",
                   borderRadius: "16px",
-                  padding: "24px",
+                  padding: hasMultipleUpgrades ? "16px" : "24px",
                   border: soldVehicles.length > 0 
                     ? "3px solid rgba(34, 197, 94, 0.5)" 
                     : "3px solid rgba(59, 130, 246, 0.5)",
@@ -653,7 +654,7 @@ export function DailyBriefingExport({ open, onOpenChange }: DailyBriefingExportP
                     ? "0 0 30px rgba(34, 197, 94, 0.2), inset 0 0 40px rgba(34, 197, 94, 0.05)"
                     : "0 0 30px rgba(59, 130, 246, 0.2), inset 0 0 40px rgba(59, 130, 246, 0.05)",
                 }}>
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "20px" }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: hasMultipleUpgrades ? "14px" : "20px" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
                       <div style={{ 
                         width: "50px", 
@@ -684,7 +685,7 @@ export function DailyBriefingExport({ open, onOpenChange }: DailyBriefingExportP
                     <div style={{ 
                       background: "linear-gradient(145deg, #262626 0%, #1a1a1a 100%)",
                       borderRadius: "16px",
-                      padding: "20px 28px",
+                      padding: hasMultipleUpgrades ? "14px 20px" : "20px 28px",
                       border: upMtdKpi 
                         ? `4px solid ${getKpiColor(getKpiTrafficLight("upmtd", upMtdKpi.value, upMtdKpi.goal))}`
                         : "4px solid rgba(255, 255, 255, 0.2)",
@@ -722,9 +723,9 @@ export function DailyBriefingExport({ open, onOpenChange }: DailyBriefingExportP
                           textShadow: "0 0 8px rgba(255,255,255,0.3)",
                         }}>UP % MTD</p>
                         <p style={{ 
-                          margin: "6px 0 0 0", 
+                          margin: `${hasMultipleUpgrades ? "4px" : "6px"} 0 0 0`, 
                           color: upMtdKpi ? getKpiColor(getKpiTrafficLight("upmtd", upMtdKpi.value, upMtdKpi.goal)) : "#888", 
-                          fontSize: "48px", 
+                          fontSize: hasMultipleUpgrades ? "36px" : "48px", 
                           fontWeight: "900",
                           lineHeight: "1",
                           textShadow: upMtdKpi ? `0 0 30px ${getKpiColor(getKpiTrafficLight("upmtd", upMtdKpi.value, upMtdKpi.goal))}, 0 0 60px ${getKpiColor(getKpiTrafficLight("upmtd", upMtdKpi.value, upMtdKpi.goal))}66` : "none",
@@ -765,13 +766,13 @@ export function DailyBriefingExport({ open, onOpenChange }: DailyBriefingExportP
                   {upgradeVehicles.length === 0 ? (
                     <p style={{ color: "#888", fontSize: "18px", fontStyle: "italic" }}>No UP vehicles defined today - Time to find some!</p>
                   ) : (
-                    <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+                    <div style={{ display: "flex", flexDirection: "column", gap: hasMultipleUpgrades ? "10px" : "14px" }}>
                       {upgradeVehicles.map((vehicle) => (
                         <div key={vehicle.id} style={{ 
                           display: "flex",
                           alignItems: "center",
                           justifyContent: "space-between",
-                          padding: "18px 20px",
+                          padding: hasMultipleUpgrades ? "12px 16px" : "18px 20px",
                           background: vehicle.isSold 
                             ? "linear-gradient(135deg, rgba(34, 197, 94, 0.15) 0%, #262626 100%)"
                             : "linear-gradient(135deg, rgba(234, 179, 8, 0.15) 0%, #262626 100%)",
@@ -781,23 +782,23 @@ export function DailyBriefingExport({ open, onOpenChange }: DailyBriefingExportP
                             ? "0 0 20px rgba(34, 197, 94, 0.3)" 
                             : "0 0 20px rgba(234, 179, 8, 0.2)",
                         }}>
-                          <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: hasMultipleUpgrades ? "10px" : "14px" }}>
                             {vehicle.isVan ? (
-                              <Truck style={{ width: "32px", height: "32px", color: vehicle.isSold ? "#22c55e" : "#eab308" }} />
+                              <Truck style={{ width: hasMultipleUpgrades ? "24px" : "32px", height: hasMultipleUpgrades ? "24px" : "32px", color: vehicle.isSold ? "#22c55e" : "#eab308" }} />
                             ) : (
-                              <Car style={{ width: "32px", height: "32px", color: vehicle.isSold ? "#22c55e" : "#eab308" }} />
+                              <Car style={{ width: hasMultipleUpgrades ? "24px" : "32px", height: hasMultipleUpgrades ? "24px" : "32px", color: vehicle.isSold ? "#22c55e" : "#eab308" }} />
                             )}
                             <div>
                               <p style={{ 
                                 margin: 0, 
                                 color: "#fff", 
-                                fontSize: "24px", 
+                                fontSize: hasMultipleUpgrades ? "18px" : "24px", 
                                 fontWeight: "bold",
                                 fontFamily: "monospace",
                               }}>
                                 {vehicle.licensePlate}
                               </p>
-                              <p style={{ margin: "4px 0 0 0", color: "#aaa", fontSize: "16px" }}>
+                              <p style={{ margin: "2px 0 0 0", color: "#aaa", fontSize: hasMultipleUpgrades ? "13px" : "16px" }}>
                                 {vehicle.model}
                               </p>
                             </div>
@@ -805,7 +806,7 @@ export function DailyBriefingExport({ open, onOpenChange }: DailyBriefingExportP
                           <div style={{ textAlign: "right" }}>
                             <div style={{ 
                               display: "inline-block",
-                              padding: "6px 16px",
+                              padding: hasMultipleUpgrades ? "4px 12px" : "6px 16px",
                               borderRadius: "20px",
                               background: vehicle.isSold 
                                 ? "linear-gradient(135deg, #22c55e 0%, #16a34a 100%)"
@@ -816,7 +817,7 @@ export function DailyBriefingExport({ open, onOpenChange }: DailyBriefingExportP
                             }}>
                               <span style={{ 
                                 color: "#fff", 
-                                fontSize: "16px",
+                                fontSize: hasMultipleUpgrades ? "13px" : "16px",
                                 fontWeight: "900",
                                 letterSpacing: "1px",
                                 textShadow: "0 1px 2px rgba(0,0,0,0.3)",
@@ -825,9 +826,9 @@ export function DailyBriefingExport({ open, onOpenChange }: DailyBriefingExportP
                               </span>
                             </div>
                             <p style={{ 
-                              margin: "8px 0 0 0", 
+                              margin: `${hasMultipleUpgrades ? "4px" : "8px"} 0 0 0`, 
                               color: "#f97316", 
-                              fontSize: "22px",
+                              fontSize: hasMultipleUpgrades ? "16px" : "22px",
                               fontWeight: "900",
                               textShadow: "0 0 12px rgba(249, 115, 22, 0.6)",
                             }}>
@@ -927,42 +928,42 @@ export function DailyBriefingExport({ open, onOpenChange }: DailyBriefingExportP
                 )}
 
                 {/* KPI Tiles - IRPD and SES - ULTRA BOLD EYE CATCHERS */}
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "24px" }}>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: hasMultipleUpgrades ? "16px" : "24px" }}>
                   {/* IRPD - MEGA Eye Catcher */}
                   {irpdKpi && (
                     <div style={{ 
                       background: `linear-gradient(145deg, #1a1a1a 0%, #0d0d0d 100%)`,
-                      borderRadius: "24px",
-                      padding: "32px",
-                      border: `6px solid ${getKpiColor(getKpiTrafficLight("irpd", irpdKpi.value, irpdKpi.goal))}`,
-                      boxShadow: `0 0 60px ${getKpiColor(getKpiTrafficLight("irpd", irpdKpi.value, irpdKpi.goal))}99, inset 0 0 40px ${getKpiColor(getKpiTrafficLight("irpd", irpdKpi.value, irpdKpi.goal))}22`,
+                      borderRadius: hasMultipleUpgrades ? "16px" : "24px",
+                      padding: hasMultipleUpgrades ? "18px" : "32px",
+                      border: `${hasMultipleUpgrades ? "4px" : "6px"} solid ${getKpiColor(getKpiTrafficLight("irpd", irpdKpi.value, irpdKpi.goal))}`,
+                      boxShadow: `0 0 ${hasMultipleUpgrades ? "40px" : "60px"} ${getKpiColor(getKpiTrafficLight("irpd", irpdKpi.value, irpdKpi.goal))}99, inset 0 0 ${hasMultipleUpgrades ? "20px" : "40px"} ${getKpiColor(getKpiTrafficLight("irpd", irpdKpi.value, irpdKpi.goal))}22`,
                       position: "relative",
                     }}>
                       <div style={{ 
                         position: "absolute", 
-                        top: "20px", 
-                        right: "20px", 
+                        top: hasMultipleUpgrades ? "12px" : "20px", 
+                        right: hasMultipleUpgrades ? "12px" : "20px", 
                         display: "flex", 
                         flexDirection: "column", 
-                        gap: "6px" 
+                        gap: hasMultipleUpgrades ? "4px" : "6px" 
                       }}>
                         <div style={{ 
-                          width: "20px", 
-                          height: "20px", 
+                          width: hasMultipleUpgrades ? "14px" : "20px", 
+                          height: hasMultipleUpgrades ? "14px" : "20px", 
                           borderRadius: "50%", 
                           backgroundColor: getKpiTrafficLight("irpd", irpdKpi.value, irpdKpi.goal) === "green" ? "#22c55e" : "rgba(34, 197, 94, 0.2)",
                           boxShadow: getKpiTrafficLight("irpd", irpdKpi.value, irpdKpi.goal) === "green" ? "0 0 16px rgba(34, 197, 94, 1), 0 0 32px rgba(34, 197, 94, 0.6)" : "none",
                         }} />
                         <div style={{ 
-                          width: "20px", 
-                          height: "20px", 
+                          width: hasMultipleUpgrades ? "14px" : "20px", 
+                          height: hasMultipleUpgrades ? "14px" : "20px", 
                           borderRadius: "50%", 
                           backgroundColor: getKpiTrafficLight("irpd", irpdKpi.value, irpdKpi.goal) === "yellow" ? "#eab308" : "rgba(234, 179, 8, 0.2)",
                           boxShadow: getKpiTrafficLight("irpd", irpdKpi.value, irpdKpi.goal) === "yellow" ? "0 0 16px rgba(234, 179, 8, 1), 0 0 32px rgba(234, 179, 8, 0.6)" : "none",
                         }} />
                         <div style={{ 
-                          width: "20px", 
-                          height: "20px", 
+                          width: hasMultipleUpgrades ? "14px" : "20px", 
+                          height: hasMultipleUpgrades ? "14px" : "20px", 
                           borderRadius: "50%", 
                           backgroundColor: getKpiTrafficLight("irpd", irpdKpi.value, irpdKpi.goal) === "red" ? "#ef4444" : "rgba(239, 68, 68, 0.2)",
                           boxShadow: getKpiTrafficLight("irpd", irpdKpi.value, irpdKpi.goal) === "red" ? "0 0 16px rgba(239, 68, 68, 1), 0 0 32px rgba(239, 68, 68, 0.6)" : "none",
@@ -971,31 +972,30 @@ export function DailyBriefingExport({ open, onOpenChange }: DailyBriefingExportP
                       <p style={{ 
                         margin: 0, 
                         color: "#fff", 
-                        fontSize: "24px", 
+                        fontSize: hasMultipleUpgrades ? "18px" : "24px", 
                         fontWeight: "800", 
                         letterSpacing: "3px",
                         textTransform: "uppercase",
                         textShadow: "0 0 10px rgba(255,255,255,0.3)",
                       }}>IRPD MTD</p>
                       <p style={{ 
-                        margin: "16px 0 0 0", 
+                        margin: `${hasMultipleUpgrades ? "8px" : "16px"} 0 0 0`, 
                         color: getKpiColor(getKpiTrafficLight("irpd", irpdKpi.value, irpdKpi.goal)), 
-                        fontSize: "80px", 
+                        fontSize: hasMultipleUpgrades ? "52px" : "80px", 
                         fontWeight: "900",
                         lineHeight: "1",
                         textShadow: `0 0 40px ${getKpiColor(getKpiTrafficLight("irpd", irpdKpi.value, irpdKpi.goal))}, 0 0 80px ${getKpiColor(getKpiTrafficLight("irpd", irpdKpi.value, irpdKpi.goal))}88`,
                       }}>
                         {irpdKpi.value.toFixed(2)}
                       </p>
-                      {/* Yesterday Value with Arrow */}
                       {irpdYesterday && parseFloat(irpdYesterday) > 0 && (() => {
                         const yesterdayVal = parseFloat(irpdYesterday);
                         const arrow = getYesterdayArrow("irpd", yesterdayVal, irpdKpi.value);
                         const valueColor = getYesterdayValueColor("irpd", yesterdayVal, irpdKpi.goal);
                         return (
-                          <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "8px" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: hasMultipleUpgrades ? "6px" : "8px", marginTop: hasMultipleUpgrades ? "4px" : "8px" }}>
                             <span style={{ 
-                              fontSize: "28px", 
+                              fontSize: hasMultipleUpgrades ? "20px" : "28px", 
                               fontWeight: "900",
                               color: arrow.color,
                               textShadow: `0 0 10px ${arrow.color}`,
@@ -1003,7 +1003,7 @@ export function DailyBriefingExport({ open, onOpenChange }: DailyBriefingExportP
                               {arrow.arrow}
                             </span>
                             <span style={{ 
-                              fontSize: "24px", 
+                              fontSize: hasMultipleUpgrades ? "16px" : "24px", 
                               fontWeight: "700",
                               color: valueColor,
                               textShadow: `0 0 8px ${valueColor}66`,
@@ -1013,7 +1013,7 @@ export function DailyBriefingExport({ open, onOpenChange }: DailyBriefingExportP
                           </div>
                         );
                       })()}
-                      <p style={{ margin: "12px 0 0 0", color: "#888", fontSize: "20px", fontWeight: "600" }}>Goal: {irpdKpi.goal.toFixed(2)}</p>
+                      <p style={{ margin: `${hasMultipleUpgrades ? "6px" : "12px"} 0 0 0`, color: "#888", fontSize: hasMultipleUpgrades ? "14px" : "20px", fontWeight: "600" }}>Goal: {irpdKpi.goal.toFixed(2)}</p>
                     </div>
                   )}
 
@@ -1021,37 +1021,37 @@ export function DailyBriefingExport({ open, onOpenChange }: DailyBriefingExportP
                   {sesKpi && (
                     <div style={{ 
                       background: `linear-gradient(145deg, #1a1a1a 0%, #0d0d0d 100%)`,
-                      borderRadius: "24px",
-                      padding: "32px",
-                      border: `6px solid ${getKpiColor(getKpiTrafficLight("ses", sesKpi.value, sesKpi.goal))}`,
-                      boxShadow: `0 0 60px ${getKpiColor(getKpiTrafficLight("ses", sesKpi.value, sesKpi.goal))}99, inset 0 0 40px ${getKpiColor(getKpiTrafficLight("ses", sesKpi.value, sesKpi.goal))}22`,
+                      borderRadius: hasMultipleUpgrades ? "16px" : "24px",
+                      padding: hasMultipleUpgrades ? "18px" : "32px",
+                      border: `${hasMultipleUpgrades ? "4px" : "6px"} solid ${getKpiColor(getKpiTrafficLight("ses", sesKpi.value, sesKpi.goal))}`,
+                      boxShadow: `0 0 ${hasMultipleUpgrades ? "40px" : "60px"} ${getKpiColor(getKpiTrafficLight("ses", sesKpi.value, sesKpi.goal))}99, inset 0 0 ${hasMultipleUpgrades ? "20px" : "40px"} ${getKpiColor(getKpiTrafficLight("ses", sesKpi.value, sesKpi.goal))}22`,
                       position: "relative",
                     }}>
                       <div style={{ 
                         position: "absolute", 
-                        top: "20px", 
-                        right: "20px", 
+                        top: hasMultipleUpgrades ? "12px" : "20px", 
+                        right: hasMultipleUpgrades ? "12px" : "20px", 
                         display: "flex", 
                         flexDirection: "column", 
-                        gap: "6px" 
+                        gap: hasMultipleUpgrades ? "4px" : "6px" 
                       }}>
                         <div style={{ 
-                          width: "20px", 
-                          height: "20px", 
+                          width: hasMultipleUpgrades ? "14px" : "20px", 
+                          height: hasMultipleUpgrades ? "14px" : "20px", 
                           borderRadius: "50%", 
                           backgroundColor: getKpiTrafficLight("ses", sesKpi.value, sesKpi.goal) === "green" ? "#22c55e" : "rgba(34, 197, 94, 0.2)",
                           boxShadow: getKpiTrafficLight("ses", sesKpi.value, sesKpi.goal) === "green" ? "0 0 16px rgba(34, 197, 94, 1), 0 0 32px rgba(34, 197, 94, 0.6)" : "none",
                         }} />
                         <div style={{ 
-                          width: "20px", 
-                          height: "20px", 
+                          width: hasMultipleUpgrades ? "14px" : "20px", 
+                          height: hasMultipleUpgrades ? "14px" : "20px", 
                           borderRadius: "50%", 
                           backgroundColor: getKpiTrafficLight("ses", sesKpi.value, sesKpi.goal) === "yellow" ? "#eab308" : "rgba(234, 179, 8, 0.2)",
                           boxShadow: getKpiTrafficLight("ses", sesKpi.value, sesKpi.goal) === "yellow" ? "0 0 16px rgba(234, 179, 8, 1), 0 0 32px rgba(234, 179, 8, 0.6)" : "none",
                         }} />
                         <div style={{ 
-                          width: "20px", 
-                          height: "20px", 
+                          width: hasMultipleUpgrades ? "14px" : "20px", 
+                          height: hasMultipleUpgrades ? "14px" : "20px", 
                           borderRadius: "50%", 
                           backgroundColor: getKpiTrafficLight("ses", sesKpi.value, sesKpi.goal) === "red" ? "#ef4444" : "rgba(239, 68, 68, 0.2)",
                           boxShadow: getKpiTrafficLight("ses", sesKpi.value, sesKpi.goal) === "red" ? "0 0 16px rgba(239, 68, 68, 1), 0 0 32px rgba(239, 68, 68, 0.6)" : "none",
@@ -1060,31 +1060,30 @@ export function DailyBriefingExport({ open, onOpenChange }: DailyBriefingExportP
                       <p style={{ 
                         margin: 0, 
                         color: "#fff", 
-                        fontSize: "24px", 
+                        fontSize: hasMultipleUpgrades ? "18px" : "24px", 
                         fontWeight: "800", 
                         letterSpacing: "3px",
                         textTransform: "uppercase",
                         textShadow: "0 0 10px rgba(255,255,255,0.3)",
                       }}>SES MTD</p>
                       <p style={{ 
-                        margin: "16px 0 0 0", 
+                        margin: `${hasMultipleUpgrades ? "8px" : "16px"} 0 0 0`, 
                         color: getKpiColor(getKpiTrafficLight("ses", sesKpi.value, sesKpi.goal)), 
-                        fontSize: "80px", 
+                        fontSize: hasMultipleUpgrades ? "52px" : "80px", 
                         fontWeight: "900",
                         lineHeight: "1",
                         textShadow: `0 0 40px ${getKpiColor(getKpiTrafficLight("ses", sesKpi.value, sesKpi.goal))}, 0 0 80px ${getKpiColor(getKpiTrafficLight("ses", sesKpi.value, sesKpi.goal))}88`,
                       }}>
                         {sesKpi.value.toFixed(1)}%
                       </p>
-                      {/* Yesterday Value with Arrow */}
                       {sesYesterday && parseFloat(sesYesterday) > 0 && (() => {
                         const yesterdayVal = parseFloat(sesYesterday);
                         const arrow = getYesterdayArrow("ses", yesterdayVal, sesKpi.value);
                         const valueColor = getYesterdayValueColor("ses", yesterdayVal, sesKpi.goal);
                         return (
-                          <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "8px" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: hasMultipleUpgrades ? "6px" : "8px", marginTop: hasMultipleUpgrades ? "4px" : "8px" }}>
                             <span style={{ 
-                              fontSize: "28px", 
+                              fontSize: hasMultipleUpgrades ? "20px" : "28px", 
                               fontWeight: "900",
                               color: arrow.color,
                               textShadow: `0 0 10px ${arrow.color}`,
@@ -1092,7 +1091,7 @@ export function DailyBriefingExport({ open, onOpenChange }: DailyBriefingExportP
                               {arrow.arrow}
                             </span>
                             <span style={{ 
-                              fontSize: "24px", 
+                              fontSize: hasMultipleUpgrades ? "16px" : "24px", 
                               fontWeight: "700",
                               color: valueColor,
                               textShadow: `0 0 8px ${valueColor}66`,
@@ -1102,7 +1101,7 @@ export function DailyBriefingExport({ open, onOpenChange }: DailyBriefingExportP
                           </div>
                         );
                       })()}
-                      <p style={{ margin: "12px 0 0 0", color: "#888", fontSize: "20px", fontWeight: "600" }}>Goal: {sesKpi.goal.toFixed(1)}%</p>
+                      <p style={{ margin: `${hasMultipleUpgrades ? "6px" : "12px"} 0 0 0`, color: "#888", fontSize: hasMultipleUpgrades ? "14px" : "20px", fontWeight: "600" }}>Goal: {sesKpi.goal.toFixed(1)}%</p>
                     </div>
                   )}
                 </div>
