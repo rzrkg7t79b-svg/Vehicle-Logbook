@@ -10,13 +10,13 @@ export function DailyStreak({ streak }: DailyStreakProps) {
   const fontSize = digitCount >= 4 ? "9px" : digitCount === 3 ? "12px" : digitCount === 2 ? "15px" : "17px";
 
   return (
-    <div className="flex items-center gap-0.5" data-testid="daily-streak">
+    <div className="flex items-center" style={{ gap: "1px" }} data-testid="daily-streak">
       <span style={{
-        fontSize: "9px",
-        fontWeight: "800",
+        fontSize: "13px",
+        fontWeight: "900",
         color: "#f97316",
         letterSpacing: "0.3px",
-        lineHeight: "1.1",
+        lineHeight: "1.05",
         textAlign: "right" as const,
         whiteSpace: "nowrap" as const,
         textTransform: "uppercase" as const,
@@ -72,14 +72,14 @@ export function DailyStreakExport({ streak, scale = 1 }: { streak: number; scale
     <div style={{
       display: "flex",
       alignItems: "center",
-      gap: `${3 * scale}px`,
+      gap: `${1 * scale}px`,
     }}>
       <div style={{
-        fontSize: `${11 * scale}px`,
-        fontWeight: "800",
+        fontSize: `${14 * scale}px`,
+        fontWeight: "900",
         color: "#f97316",
         letterSpacing: "0.3px",
-        lineHeight: "1.2",
+        lineHeight: "1.05",
         textAlign: "right" as const,
         whiteSpace: "nowrap" as const,
         textTransform: "uppercase" as const,
