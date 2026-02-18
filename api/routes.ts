@@ -513,9 +513,10 @@ export async function registerApiRoutes(app: Express): Promise<void> {
     const todoIsDone = todaysTodos.length > 0 && completed === todaysTodos.length && totalPostponed === 0;
     
     const qualityChecks = await storage.getQualityChecksForDate(date);
+    const totalChecks = qualityChecks.length;
     const passedChecks = qualityChecks.filter(c => c.passed).length;
     const incompleteTasks = await storage.getIncompleteDriverTasks();
-    const qualityIsDone = passedChecks >= 5 && incompleteTasks.length === 0;
+    const qualityIsDone = totalChecks >= 5;
     
     const vehiclesWithoutComment = await storage.getVehiclesWithoutDailyComment(date);
     const allVehicles = await storage.getVehicles();
@@ -548,7 +549,7 @@ export async function registerApiRoutes(app: Express): Promise<void> {
       upgrade: { isDone: upgradeIsDone, hasPending: pendingUpgrades.length > 0, isOverdue, pendingVehicles: pendingUpgrades },
       flow: { isDone: flowIsDone, pending: pendingFlowTasks.length, total: allFlowTasks.length },
       todo: { isDone: todoIsDone, completed, total: todaysTodos.length, postponed: totalPostponed },
-      quality: { isDone: qualityIsDone, passedChecks, incompleteTasks: incompleteTasks.length },
+      quality: { isDone: qualityIsDone, totalChecks, passedChecks, incompleteTasks: incompleteTasks.length },
       bodyshop: { isDone: bodyshopIsDone, vehiclesWithoutComment: vehiclesWithoutComment.length, total: activeVehicles.length },
       future: { isDone: futureIsDone, isLocked: futureIsLocked, data: futurePlanningData },
       overallProgress,

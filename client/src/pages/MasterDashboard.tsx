@@ -31,7 +31,7 @@ type DashboardStatus = {
   upgrade: { isDone: boolean; hasPending: boolean; isOverdue: boolean; pendingVehicles?: PendingUpgradeVehicle[] };
   flow: { isDone: boolean; pending: number; total: number };
   todo: { isDone: boolean; completed: number; total: number; postponed?: number };
-  quality: { isDone: boolean; passedChecks: number; incompleteTasks: number };
+  quality: { isDone: boolean; totalChecks: number; passedChecks: number; incompleteTasks: number };
   bodyshop: { isDone: boolean; vehiclesWithoutComment: number; total: number };
   future: { isDone: boolean; isLocked: boolean; data?: FuturePlanning };
   breaksixt: { isDone: boolean; isOverdue: boolean; doneBy?: string | null; doneAt?: string | null };
@@ -412,7 +412,7 @@ export default function MasterDashboard() {
         const todoText = `${dashboardStatus.todo.completed}/${dashboardStatus.todo.total} tasks`;
         return postponed > 0 ? `${todoText}, ${postponed} postponed` : todoText;
       case "quality": 
-        return `${dashboardStatus.quality.passedChecks}/5 checks, ${dashboardStatus.quality.incompleteTasks} pending`;
+        return `${dashboardStatus.quality.totalChecks}/5 checks`;
       case "bodyshop": 
         if (dashboardStatus.bodyshop.total === 0) return "No vehicles";
         return dashboardStatus.bodyshop.isDone 

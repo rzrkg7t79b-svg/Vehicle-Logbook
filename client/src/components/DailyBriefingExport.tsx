@@ -15,7 +15,7 @@ type DashboardStatus = {
   upgrade: { isDone: boolean; hasPending: boolean; isOverdue: boolean; pendingVehicle?: any };
   flow: { isDone: boolean; pending: number; total: number };
   todo: { isDone: boolean; completed: number; total: number; postponed?: number };
-  quality: { isDone: boolean; passedChecks: number; incompleteTasks: number };
+  quality: { isDone: boolean; totalChecks: number; passedChecks: number; incompleteTasks: number };
   bodyshop: { isDone: boolean; vehiclesWithoutComment: number; total: number };
   future: { isDone: boolean; isLocked: boolean; data?: FuturePlanning };
   breaksixt: { isDone: boolean; isOverdue: boolean; doneBy?: string | null; doneAt?: string | null };
@@ -867,61 +867,61 @@ export function DailyBriefingExport({ open, onOpenChange }: DailyBriefingExportP
                           Quality<span style={{ color: "#22c55e" }}>SIXT</span>
                         </h2>
                         <p style={{ margin: 0, color: "#22c55e", fontSize: "12px", fontWeight: "600" }}>
-                          {qualityChecks.filter(c => c.passed).length} passed / {qualityChecks.filter(c => !c.passed).length} failed
+                          {qualityChecks.length} checks ({qualityChecks.filter(c => c.passed).length} passed / {qualityChecks.filter(c => !c.passed).length} failed)
                         </p>
                       </div>
                     </div>
                     <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                      {qualityChecks.filter(c => !c.passed).map((check) => (
-                        <div key={check.id} style={{ 
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "space-between",
-                          padding: "10px 14px",
-                          background: check.driverTaskCompleted 
-                            ? "linear-gradient(135deg, rgba(34, 197, 94, 0.15) 0%, #262626 100%)"
-                            : "linear-gradient(135deg, rgba(239, 68, 68, 0.15) 0%, #262626 100%)",
-                          borderRadius: "10px",
-                          border: check.driverTaskCompleted 
-                            ? "2px solid rgba(34, 197, 94, 0.5)"
-                            : "2px solid rgba(239, 68, 68, 0.5)",
-                        }}>
-                          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                            <span style={{ 
-                              fontSize: "18px", 
-                              fontWeight: "900", 
-                              fontFamily: "monospace",
-                              color: "#fff",
-                            }}>
-                              {check.licensePlate}
-                            </span>
-                            {check.comment && (
-                              <span style={{ color: "#999", fontSize: "13px", maxWidth: "200px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                                {check.comment}
-                              </span>
-                            )}
-                          </div>
-                          <div style={{ 
-                            display: "inline-block",
-                            padding: "4px 12px",
-                            borderRadius: "16px",
-                            background: check.driverTaskCompleted 
-                              ? "linear-gradient(135deg, #22c55e 0%, #16a34a 100%)"
-                              : "linear-gradient(135deg, #ef4444 0%, #dc2626 100%)",
-                            boxShadow: check.driverTaskCompleted 
-                              ? "0 0 10px rgba(34, 197, 94, 0.5)"
-                              : "0 0 10px rgba(239, 68, 68, 0.5)",
+                      {qualityChecks.map((check) => {
+                        const status = check.passed ? "passed" : (check.driverTaskCompleted ? "solved" : "open");
+                        const statusColors = {
+                          passed: { bg: "rgba(34, 197, 94, 0.15)", border: "rgba(34, 197, 94, 0.5)", badge: "linear-gradient(135deg, #22c55e 0%, #16a34a 100%)", glow: "rgba(34, 197, 94, 0.5)", label: "PASSED" },
+                          solved: { bg: "rgba(234, 179, 8, 0.15)", border: "rgba(234, 179, 8, 0.5)", badge: "linear-gradient(135deg, #eab308 0%, #ca8a04 100%)", glow: "rgba(234, 179, 8, 0.5)", label: "SOLVED" },
+                          open: { bg: "rgba(239, 68, 68, 0.15)", border: "rgba(239, 68, 68, 0.5)", badge: "linear-gradient(135deg, #ef4444 0%, #dc2626 100%)", glow: "rgba(239, 68, 68, 0.5)", label: "OPEN" },
+                        }[status];
+                        return (
+                          <div key={check.id} style={{ 
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "space-between",
+                            padding: "10px 14px",
+                            background: `linear-gradient(135deg, ${statusColors.bg} 0%, #262626 100%)`,
+                            borderRadius: "10px",
+                            border: `2px solid ${statusColors.border}`,
                           }}>
-                            <span style={{ 
-                              color: "#fff", 
-                              fontSize: "13px",
-                              fontWeight: "800",
+                            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                              <span style={{ 
+                                fontSize: "18px", 
+                                fontWeight: "900", 
+                                fontFamily: "monospace",
+                                color: "#fff",
+                              }}>
+                                {check.licensePlate}
+                              </span>
+                              {!check.passed && check.comment && (
+                                <span style={{ color: "#999", fontSize: "13px", maxWidth: "200px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                  {check.comment}
+                                </span>
+                              )}
+                            </div>
+                            <div style={{ 
+                              display: "inline-block",
+                              padding: "4px 12px",
+                              borderRadius: "16px",
+                              background: statusColors.badge,
+                              boxShadow: `0 0 10px ${statusColors.glow}`,
                             }}>
-                              {check.driverTaskCompleted ? "SOLVED" : "OPEN"}
-                            </span>
+                              <span style={{ 
+                                color: "#fff", 
+                                fontSize: "13px",
+                                fontWeight: "800",
+                              }}>
+                                {statusColors.label}
+                              </span>
+                            </div>
                           </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   </div>
                 )}

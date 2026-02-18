@@ -608,11 +608,12 @@ export async function registerRoutes(
     // Todo is only done if all today's tasks are completed AND no postponed tasks exist
     const todoIsDone = todaysTodos.length > 0 && completed === todaysTodos.length && totalPostponed === 0;
     
-    // Quality status - 5 passed checks + all driver tasks done
+    // Quality status - 5 total checks required (pass/fail doesn't matter)
     const qualityChecks = await storage.getQualityChecksForDate(date);
+    const totalChecks = qualityChecks.length;
     const passedChecks = qualityChecks.filter(c => c.passed).length;
     const incompleteTasks = await storage.getIncompleteDriverTasks();
-    const qualityIsDone = passedChecks >= 5 && incompleteTasks.length === 0;
+    const qualityIsDone = totalChecks >= 5;
     
     // Bodyshop status - all vehicles have daily comment (or no vehicles = done)
     const vehiclesWithoutComment = await storage.getVehiclesWithoutDailyComment(date);
@@ -658,7 +659,7 @@ export async function registerRoutes(
       upgrade: { isDone: upgradeIsDone, hasPending: pendingUpgrades.length > 0, isOverdue, pendingVehicles: pendingUpgrades },
       flow: { isDone: flowIsDone, pending: pendingFlowTasks.length, total: allFlowTasks.length },
       todo: { isDone: todoIsDone, completed, total: todaysTodos.length, postponed: totalPostponed },
-      quality: { isDone: qualityIsDone, passedChecks, incompleteTasks: incompleteTasks.length },
+      quality: { isDone: qualityIsDone, totalChecks, passedChecks, incompleteTasks: incompleteTasks.length },
       bodyshop: { isDone: bodyshopIsDone, vehiclesWithoutComment: vehiclesWithoutComment.length, total: activeVehicles.length },
       future: { isDone: futureIsDone, isLocked: futureIsLocked, data: futurePlanning },
       breaksixt: { isDone: breaksixtIsDone, isOverdue: breaksixtIsOverdue, doneBy: breaksixtDoneBy, doneAt: breaksixtDoneAt },

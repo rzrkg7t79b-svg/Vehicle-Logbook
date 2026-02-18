@@ -15,7 +15,7 @@ type DashboardStatus = {
   upgrade: { isDone: boolean; hasPending: boolean; isOverdue: boolean; pendingVehicle?: any };
   flow: { isDone: boolean; pending: number; total: number };
   todo: { isDone: boolean; completed: number; total: number; postponed?: number };
-  quality: { isDone: boolean; passedChecks: number; incompleteTasks: number };
+  quality: { isDone: boolean; totalChecks: number; passedChecks: number; incompleteTasks: number };
   bodyshop: { isDone: boolean; vehiclesWithoutComment: number; total: number };
   future: { isDone: boolean; isLocked: boolean; data?: FuturePlanning };
   breaksixt: { isDone: boolean; isOverdue: boolean; doneBy?: string | null; doneAt?: string | null };
@@ -114,16 +114,20 @@ export function ExportPreview({ open, onOpenChange }: ExportPreviewProps) {
     queryKey: ["/api/driver-tasks"],
   });
 
-  // Filter quality checks for export: show passed OR not-passed with incomplete driver task
-  const exportQualityChecks = qualityChecks.filter(check => {
-    if (check.passed) return true;
-    // For not-passed checks, only show if driver task exists and is NOT completed
+  const exportQualityChecks = qualityChecks;
+
+  const getExportCheckStatus = (check: QualityCheck): "passed" | "solved" | "open" => {
+    if (check.passed) return "passed";
     const relatedTask = driverTasks.find(t => t.qualityCheckId === check.id);
-    // If no related task found, show the check (safety - shouldn't happen normally)
-    if (!relatedTask) return true;
-    // Only show if driver task is not completed
-    return !relatedTask.completed;
-  });
+    if (relatedTask?.completed) return "solved";
+    return "open";
+  };
+
+  const getExportCheckColors = (status: "passed" | "solved" | "open") => {
+    if (status === "passed") return { icon: "#22c55e", text: "#22c55e" };
+    if (status === "solved") return { icon: "#eab308", text: "#eab308" };
+    return { icon: "#ef4444", text: "#ef4444" };
+  };
 
   const { data: timedriverCalc } = useQuery<TimedriverCalculation | null>({
     queryKey: ["/api/timedriver-calculations", todayDate],
@@ -1034,29 +1038,44 @@ export function ExportPreview({ open, onOpenChange }: ExportPreviewProps) {
                 </div>
                 <div style={{ fontSize: "14px", color: "#ccc" }}>
                   <p style={{ margin: "0 0 8px 0", color: dashboardStatus?.quality.isDone ? "#22c55e" : "#f97316" }}>
-                    {dashboardStatus?.quality.passedChecks}/5 checks passed
-                    {dashboardStatus?.quality.incompleteTasks ? `, ${dashboardStatus.quality.incompleteTasks} pending` : ""}
+                    {dashboardStatus?.quality.totalChecks}/5 checks
                   </p>
                   {exportQualityChecks.length === 0 ? (
                     <p style={{ margin: 0, color: "#888" }}>No checks today</p>
                   ) : (
-                    exportQualityChecks.map(check => (
-                      <div key={check.id} style={{ 
-                        padding: "6px 0",
-                        borderBottom: "1px solid #333",
-                      }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                          {check.passed ? <CheckCircle style={{ width: "14px", height: "14px", color: "#22c55e", flexShrink: 0 }} /> : <AlertCircle style={{ width: "14px", height: "14px", color: "#ef4444", flexShrink: 0 }} />}
-                          <span style={{ color: check.passed ? "#22c55e" : "#ef4444", fontSize: "13px", fontWeight: "500" }}>{check.licensePlate}</span>
-                          <span style={{ color: "#888", fontSize: "12px", marginLeft: "auto" }}>by {check.checkedBy}</span>
-                        </div>
-                        {!check.passed && check.comment && (
-                          <div style={{ marginTop: "4px", marginLeft: "22px", fontSize: "12px", color: "#f87171" }}>
-                            Reason: {check.comment && check.comment.length > 60 ? check.comment.substring(0, 60) + "..." : check.comment}
+                    exportQualityChecks.map(check => {
+                      const status = getExportCheckStatus(check);
+                      const colors = getExportCheckColors(status);
+                      const statusLabel = status === "passed" ? "PASSED" : status === "solved" ? "SOLVED" : "OPEN";
+                      return (
+                        <div key={check.id} style={{ 
+                          padding: "6px 0",
+                          borderBottom: "1px solid #333",
+                        }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                            {status === "open" 
+                              ? <AlertCircle style={{ width: "14px", height: "14px", color: colors.icon, flexShrink: 0 }} />
+                              : <CheckCircle style={{ width: "14px", height: "14px", color: colors.icon, flexShrink: 0 }} />
+                            }
+                            <span style={{ color: colors.text, fontSize: "13px", fontWeight: "500" }}>{check.licensePlate}</span>
+                            <span style={{ 
+                              fontSize: "10px", 
+                              fontWeight: "700", 
+                              padding: "1px 6px", 
+                              borderRadius: "8px", 
+                              backgroundColor: colors.icon, 
+                              color: "#fff" 
+                            }}>{statusLabel}</span>
+                            <span style={{ color: "#888", fontSize: "12px", marginLeft: "auto" }}>by {check.checkedBy}</span>
                           </div>
-                        )}
-                      </div>
-                    ))
+                          {!check.passed && check.comment && (
+                            <div style={{ marginTop: "4px", marginLeft: "22px", fontSize: "12px", color: colors.text }}>
+                              Reason: {check.comment && check.comment.length > 60 ? check.comment.substring(0, 60) + "..." : check.comment}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })
                   )}
                 </div>
               </div>

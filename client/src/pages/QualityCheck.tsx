@@ -132,6 +132,19 @@ export default function QualityCheck() {
     return checkDate === todayDate;
   });
 
+  const getCheckStatus = (check: QualityCheckType): "passed" | "solved" | "open" => {
+    if (check.passed) return "passed";
+    const relatedTask = driverTasks.find(t => t.qualityCheckId === check.id);
+    if (relatedTask?.completed) return "solved";
+    return "open";
+  };
+
+  const getCheckStatusColor = (status: "passed" | "solved" | "open") => {
+    if (status === "passed") return { bg: "bg-green-500/10", border: "border-green-500/50", icon: "text-green-500", label: "PASSED", labelBg: "bg-green-500" };
+    if (status === "solved") return { bg: "bg-yellow-500/10", border: "border-yellow-500/50", icon: "text-yellow-500", label: "SOLVED", labelBg: "bg-yellow-500" };
+    return { bg: "bg-red-500/10", border: "border-red-500/50", icon: "text-red-500", label: "OPEN", labelBg: "bg-red-500" };
+  };
+
   return (
     <div className="pb-24">
       <div className="relative overflow-hidden">
@@ -250,32 +263,39 @@ export default function QualityCheck() {
 
         {todayChecks.length > 0 && (
           <Card className="p-4">
-            <h3 className="font-medium text-white mb-3">Today's Checks</h3>
+            <h3 className="font-medium text-white mb-3">Today's Checks ({todayChecks.length}/5)</h3>
             <div className="space-y-2">
               <AnimatePresence>
-                {todayChecks.map((check) => (
-                  <motion.div
-                    key={check.id}
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className={`p-3 rounded-lg ${check.passed ? 'bg-green-500/10' : 'bg-red-500/10'}`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <GermanPlate plate={check.licensePlate} size="sm" />
-                        {check.isEv && <Zap className="w-4 h-4 text-green-500" />}
+                {todayChecks.map((check) => {
+                  const status = getCheckStatus(check);
+                  const colors = getCheckStatusColor(status);
+                  return (
+                    <motion.div
+                      key={check.id}
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className={`p-3 rounded-lg ${colors.bg}`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <GermanPlate plate={check.licensePlate} size="sm" />
+                          {check.isEv && <Zap className="w-4 h-4 text-green-500" />}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className={`text-xs font-bold px-2 py-0.5 rounded-full text-white ${colors.labelBg}`}>
+                            {colors.label}
+                          </span>
+                          {status === "passed" && <CheckCircle className={`w-5 h-5 ${colors.icon}`} />}
+                          {status === "solved" && <CheckCircle className={`w-5 h-5 ${colors.icon}`} />}
+                          {status === "open" && <XCircle className={`w-5 h-5 ${colors.icon}`} />}
+                        </div>
                       </div>
-                      {check.passed ? (
-                        <CheckCircle className="w-5 h-5 text-green-500" />
-                      ) : (
-                        <XCircle className="w-5 h-5 text-red-500" />
+                      {!check.passed && check.comment && (
+                        <p className="text-xs text-muted-foreground mt-2">{check.comment}</p>
                       )}
-                    </div>
-                    {!check.passed && check.comment && (
-                      <p className="text-xs text-muted-foreground mt-2">{check.comment}</p>
-                    )}
-                  </motion.div>
-                ))}
+                    </motion.div>
+                  );
+                })}
               </AnimatePresence>
             </div>
           </Card>
