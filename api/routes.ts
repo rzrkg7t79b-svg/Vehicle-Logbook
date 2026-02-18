@@ -578,8 +578,30 @@ export async function registerApiRoutes(app: Express): Promise<void> {
       future: { isDone: futureIsDone, isLocked: futureIsLocked, data: futurePlanningData },
       overallProgress,
       hasPostponedTasks: totalPostponed > 0,
+      dailyStreak: await calculateDailyStreak(date, overallProgress === 100),
     });
   });
+
+  async function calculateDailyStreak(todayDate: string, todayComplete: boolean): Promise<number> {
+    let streak = 0;
+    if (todayComplete) streak = 1;
+
+    const checkDate = new Date(todayDate + "T12:00:00");
+    for (let i = 1; i <= 365; i++) {
+      checkDate.setDate(checkDate.getDate() - 1);
+      const dateStr = checkDate.toISOString().split("T")[0];
+      const statuses = await storage.getModuleStatus(dateStr);
+      const doneModules = statuses.filter(s => s.isDone);
+      const doneNames = new Set(doneModules.map(s => s.moduleName));
+      const allDone = ["timedriver", "todo", "quality", "future"].every(m => doneNames.has(m));
+      if (allDone) {
+        streak++;
+      } else {
+        break;
+      }
+    }
+    return streak;
+  }
 
   async function requireAdminOrCounter(req: any, res: any): Promise<boolean> {
     const adminPin = req.headers['x-admin-pin'] as string;

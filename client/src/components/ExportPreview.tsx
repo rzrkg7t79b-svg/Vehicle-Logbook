@@ -7,6 +7,7 @@ import { getGermanDateString } from "@/lib/germanTime";
 import { addDays } from "date-fns";
 import { toJpeg } from "html-to-image";
 import type { Todo, FlowTask, Vehicle, TimedriverCalculation, User, Comment, FuturePlanning, KpiMetric, DriverTask } from "@/types";
+import { DailyStreakExport } from "@/components/DailyStreak";
 
 type VehicleWithComments = Vehicle & { comments: Comment[] };
 
@@ -21,6 +22,7 @@ type DashboardStatus = {
   breaksixt: { isDone: boolean; isOverdue: boolean; doneBy?: string | null; doneAt?: string | null };
   overallProgress: number;
   hasPostponedTasks?: boolean;
+  dailyStreak?: number;
 };
 
 type UpgradeVehicle = {
@@ -356,35 +358,39 @@ export function ExportPreview({ open, onOpenChange }: ExportPreviewProps) {
                   Daily Status Report - {formatDate(todayDate)}
                 </p>
               </div>
-              <div style={{ 
-                position: "relative" as const,
-                borderRadius: "20px",
-                overflow: "hidden" as const,
-              }}>
-                {/* Glow background layer for progress */}
-                <div style={{
-                  position: "absolute" as const,
-                  inset: "-30px",
-                  background: progress === 100 
-                    ? "radial-gradient(ellipse at center, rgba(34, 197, 94, 0.5) 0%, rgba(34, 197, 94, 0.2) 40%, transparent 70%)"
-                    : "radial-gradient(ellipse at center, rgba(249, 115, 22, 0.5) 0%, rgba(249, 115, 22, 0.2) 40%, transparent 70%)",
-                  zIndex: 0,
-                }} />
+              <div style={{ display: "flex", alignItems: "center", gap: "24px" }}>
+                {(dashboardStatus?.dailyStreak ?? 0) > 0 && (
+                  <DailyStreakExport streak={dashboardStatus?.dailyStreak ?? 0} scale={1.6} />
+                )}
                 <div style={{ 
                   position: "relative" as const,
-                  zIndex: 1,
-                  display: "flex", 
-                  alignItems: "center", 
-                  gap: "20px",
-                  backgroundColor: progress === 100 ? "rgba(34, 197, 94, 0.15)" : "rgba(249, 115, 22, 0.15)",
-                  padding: "24px 40px",
                   borderRadius: "20px",
-                  border: `2px solid ${progress === 100 ? "rgba(34, 197, 94, 0.6)" : "rgba(249, 115, 22, 0.6)"}`,
+                  overflow: "hidden" as const,
                 }}>
-                  <span style={{ fontSize: "64px", fontWeight: "bold", color: progress === 100 ? "#22c55e" : "#f97316" }}>
-                    {progress}%
-                  </span>
-                  <span style={{ fontSize: "20px", color: "rgba(255,255,255,0.5)" }}>Daily<br/>Progress</span>
+                  <div style={{
+                    position: "absolute" as const,
+                    inset: "-30px",
+                    background: progress === 100 
+                      ? "radial-gradient(ellipse at center, rgba(34, 197, 94, 0.5) 0%, rgba(34, 197, 94, 0.2) 40%, transparent 70%)"
+                      : "radial-gradient(ellipse at center, rgba(249, 115, 22, 0.5) 0%, rgba(249, 115, 22, 0.2) 40%, transparent 70%)",
+                    zIndex: 0,
+                  }} />
+                  <div style={{ 
+                    position: "relative" as const,
+                    zIndex: 1,
+                    display: "flex", 
+                    alignItems: "center", 
+                    gap: "20px",
+                    backgroundColor: progress === 100 ? "rgba(34, 197, 94, 0.15)" : "rgba(249, 115, 22, 0.15)",
+                    padding: "24px 40px",
+                    borderRadius: "20px",
+                    border: `2px solid ${progress === 100 ? "rgba(34, 197, 94, 0.6)" : "rgba(249, 115, 22, 0.6)"}`,
+                  }}>
+                    <span style={{ fontSize: "64px", fontWeight: "bold", color: progress === 100 ? "#22c55e" : "#f97316" }}>
+                      {progress}%
+                    </span>
+                    <span style={{ fontSize: "20px", color: "rgba(255,255,255,0.5)" }}>Daily<br/>Progress</span>
+                  </div>
                 </div>
               </div>
             </div>
