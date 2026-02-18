@@ -9,7 +9,6 @@ import { Input } from "@/components/ui/input";
 import { getGermanDateString } from "@/lib/germanTime";
 import { toJpeg } from "html-to-image";
 import type { TimedriverCalculation, FuturePlanning, KpiMetric } from "@/types";
-import { DailyStreakExport } from "@/components/DailyStreak";
 
 type DashboardStatus = {
   timedriver: { isDone: boolean; details?: string };
@@ -21,7 +20,6 @@ type DashboardStatus = {
   future: { isDone: boolean; isLocked: boolean; data?: FuturePlanning };
   breaksixt: { isDone: boolean; isOverdue: boolean; doneBy?: string | null; doneAt?: string | null };
   overallProgress: number;
-  dailyStreak?: number;
 };
 
 type UpgradeVehicle = {
@@ -334,36 +332,34 @@ export function DailyBriefingExport({ open, onOpenChange }: DailyBriefingExportP
                   {formatWeekdayDate(todayDate)}
                 </p>
               </div>
-              <div style={{ display: "flex", alignItems: "center", gap: "24px" }}>
-                <DailyStreakExport streak={dashboardStatus?.dailyStreak ?? 0} scale={1.8} />
-                <div style={{ 
-                  display: "flex", 
-                  alignItems: "center", 
-                  gap: "16px",
-                  background: "linear-gradient(135deg, rgba(255, 102, 0, 0.3) 0%, rgba(255, 102, 0, 0.1) 100%)",
-                  borderRadius: "16px",
-                  padding: "16px 28px",
-                  border: "2px solid rgba(255, 102, 0, 0.5)",
-                  boxShadow: "0 0 30px rgba(255, 102, 0, 0.3)",
-                }}>
-                  <span style={{ fontSize: "40px" }}>🔥</span>
-                  <div>
-                    <p style={{ 
-                      margin: 0, 
-                      fontSize: "28px", 
-                      fontWeight: "900", 
-                      color: "#fff",
-                      textShadow: "0 0 20px rgba(255, 102, 0, 0.8)",
-                      letterSpacing: "1px",
-                    }}>
-                      LET'S ROCK TODAY!
-                    </p>
-                    <p style={{ margin: "4px 0 0 0", fontSize: "16px", color: "rgba(255,255,255,0.7)", fontWeight: "500" }}>
-                      Team 41137 - We make it happen!
-                    </p>
-                  </div>
-                  <span style={{ fontSize: "40px" }}>🚀</span>
+              {/* Motivational Message */}
+              <div style={{ 
+                display: "flex", 
+                alignItems: "center", 
+                gap: "16px",
+                background: "linear-gradient(135deg, rgba(255, 102, 0, 0.3) 0%, rgba(255, 102, 0, 0.1) 100%)",
+                borderRadius: "16px",
+                padding: "16px 28px",
+                border: "2px solid rgba(255, 102, 0, 0.5)",
+                boxShadow: "0 0 30px rgba(255, 102, 0, 0.3)",
+              }}>
+                <span style={{ fontSize: "40px" }}>🔥</span>
+                <div>
+                  <p style={{ 
+                    margin: 0, 
+                    fontSize: "28px", 
+                    fontWeight: "900", 
+                    color: "#fff",
+                    textShadow: "0 0 20px rgba(255, 102, 0, 0.8)",
+                    letterSpacing: "1px",
+                  }}>
+                    LET'S ROCK TODAY!
+                  </p>
+                  <p style={{ margin: "4px 0 0 0", fontSize: "16px", color: "rgba(255,255,255,0.7)", fontWeight: "500" }}>
+                    Team 41137 - We make it happen!
+                  </p>
                 </div>
+                <span style={{ fontSize: "40px" }}>🚀</span>
               </div>
             </div>
 

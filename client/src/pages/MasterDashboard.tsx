@@ -14,7 +14,6 @@ import { getSecondsUntilGermanTime, formatCountdown, isOverdue, getGermanDateStr
 import { useUser } from "@/contexts/UserContext";
 import { ExportPreview } from "@/components/ExportPreview";
 import { DailyBriefingExport } from "@/components/DailyBriefingExport";
-import { DailyStreak } from "@/components/DailyStreak";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import type { Todo, DriverTask, FlowTask, FuturePlanning, KpiMetric } from "@/types";
@@ -38,7 +37,6 @@ type DashboardStatus = {
   breaksixt: { isDone: boolean; isOverdue: boolean; doneBy?: string | null; doneAt?: string | null };
   overallProgress: number;
   hasPostponedTasks?: boolean;
-  dailyStreak?: number;
 };
 
 const MODULES = [
@@ -487,15 +485,10 @@ export default function MasterDashboard() {
         <div className="absolute inset-0 bg-gradient-to-b from-primary/15 via-primary/5 to-transparent" />
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[300px] h-[200px] bg-primary/20 blur-[100px] rounded-full" />
         <div className="relative p-6 pt-8">
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <h1 className="text-3xl font-bold text-white mb-1">
-                Master<span className="text-primary text-glow">SIXT</span>
-              </h1>
-              <p className="text-sm text-white/50">Daily Task Overview</p>
-            </div>
-            <DailyStreak streak={dashboardStatus?.dailyStreak ?? 0} />
-          </div>
+          <h1 className="text-3xl font-bold text-white mb-1">
+            Master<span className="text-primary text-glow">SIXT</span>
+          </h1>
+          <p className="text-sm text-white/50">Daily Task Overview</p>
         </div>
       </div>
 
