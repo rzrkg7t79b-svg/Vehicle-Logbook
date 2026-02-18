@@ -92,6 +92,7 @@ export interface IStorage {
   updateDriverTask(id: number, data: Partial<DriverTask>): Promise<DriverTask | undefined>;
 
   getModuleStatus(date: string): Promise<ModuleStatus[]>;
+  getModuleStatusRange(startDate: string, endDate: string): Promise<ModuleStatus[]>;
   setModuleStatus(moduleName: string, date: string, isDone: boolean, doneBy?: string): Promise<ModuleStatus>;
 
   getFlowTasks(): Promise<FlowTask[]>;
@@ -317,6 +318,15 @@ export class DatabaseStorage implements IStorage {
 
   async getModuleStatus(date: string): Promise<ModuleStatus[]> {
     return await db.select().from(moduleStatus).where(eq(moduleStatus.date, date));
+  }
+
+  async getModuleStatusRange(startDate: string, endDate: string): Promise<ModuleStatus[]> {
+    return await db.select().from(moduleStatus).where(
+      and(
+        gte(moduleStatus.date, startDate),
+        lte(moduleStatus.date, endDate)
+      )
+    );
   }
 
   async setModuleStatus(moduleName: string, date: string, isDone: boolean, doneBy?: string): Promise<ModuleStatus> {

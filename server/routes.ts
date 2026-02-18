@@ -705,15 +705,27 @@ export async function registerRoutes(
     let streak = 0;
     if (todayComplete) streak = 1;
 
+    const endDate = todayDate;
+    const startDateObj = new Date(todayDate + "T12:00:00");
+    startDateObj.setDate(startDateObj.getDate() - 365);
+    const startDate = startDateObj.toISOString().split("T")[0];
+
+    const allStatuses = await storage.getModuleStatusRange(startDate, endDate);
+
+    const statusByDate = new Map<string, Set<string>>();
+    for (const s of allStatuses) {
+      if (!s.isDone) continue;
+      if (!statusByDate.has(s.date)) statusByDate.set(s.date, new Set());
+      statusByDate.get(s.date)!.add(s.moduleName);
+    }
+
+    const requiredModules = ["timedriver", "todo", "quality", "future"];
     const checkDate = new Date(todayDate + "T12:00:00");
     for (let i = 1; i <= 365; i++) {
       checkDate.setDate(checkDate.getDate() - 1);
       const dateStr = checkDate.toISOString().split("T")[0];
-      const statuses = await storage.getModuleStatus(dateStr);
-      const doneModules = statuses.filter(s => s.isDone);
-      const doneNames = new Set(doneModules.map(s => s.moduleName));
-      const allDone = ["timedriver", "todo", "quality", "future"].every(m => doneNames.has(m));
-      if (allDone) {
+      const doneNames = statusByDate.get(dateStr);
+      if (doneNames && requiredModules.every(m => doneNames.has(m))) {
         streak++;
       } else {
         break;
