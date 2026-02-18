@@ -38,7 +38,7 @@ export function DailyStreak({ streak }: DailyStreakProps) {
         <div style={{
           position: "absolute",
           top: "7px",
-          right: "9px",
+          right: "17px",
           width: "40px",
           height: "28px",
           display: "flex",
@@ -100,7 +100,7 @@ export function DailyStreakExport({ streak, scale = 1 }: { streak: number; scale
         <div style={{
           position: "absolute",
           top: `${13 * scale}px`,
-          right: `${16 * scale}px`,
+          right: `${24 * scale}px`,
           width: `${76 * scale}px`,
           height: `${52 * scale}px`,
           display: "flex",
