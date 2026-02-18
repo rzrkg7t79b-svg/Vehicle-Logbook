@@ -514,35 +514,47 @@ export function DailyBriefingExport({ open, onOpenChange }: DailyBriefingExportP
 
                 {/* TimeDriverSIXT - Compact when many drivers */}
                 {driversData.length > 0 && (() => {
-                  const isCompact = driversData.length > 2 || hasMultipleUpgrades;
-                  const useGrid = driversData.length > 3;
+                  const dCount = driversData.length;
+                  const tier: "large" | "medium" | "compact" | "tiny" = 
+                    (dCount <= 2 && !hasMultipleUpgrades) ? "large" :
+                    (dCount <= 2 && hasMultipleUpgrades) ? "compact" :
+                    (dCount === 3 && !hasMultipleUpgrades) ? "medium" :
+                    (dCount === 3 && hasMultipleUpgrades) ? "compact" : "tiny";
+                  const useGrid = dCount >= 4;
+                  const s = {
+                    large:   { boxPad: "24px", headerGap: "12px", headerMb: "20px", iconSize: "50px", iconFont: "28px", titleFont: "28px", subtitleFont: "14px", driverGap: "14px", driverPad: "14px 16px", initialsFont: "22px", maxFont: "14px", timeFont: "24px", barH: "28px", barR: "14px", barFont: "14px", overflowFont: "13px", showOverflowLine: true },
+                    medium:  { boxPad: "16px", headerGap: "10px", headerMb: "14px", iconSize: "40px", iconFont: "22px", titleFont: "22px", subtitleFont: "12px", driverGap: "10px", driverPad: "10px 14px", initialsFont: "18px", maxFont: "12px", timeFont: "18px", barH: "22px", barR: "11px", barFont: "12px", overflowFont: "11px", showOverflowLine: true },
+                    compact: { boxPad: "12px", headerGap: "8px", headerMb: "10px", iconSize: "32px", iconFont: "18px", titleFont: "18px", subtitleFont: "11px", driverGap: "6px", driverPad: "6px 10px", initialsFont: "15px", maxFont: "10px", timeFont: "15px", barH: "16px", barR: "8px", barFont: "10px", overflowFont: "10px", showOverflowLine: false },
+                    tiny:    { boxPad: "10px", headerGap: "6px", headerMb: "6px", iconSize: "26px", iconFont: "14px", titleFont: "16px", subtitleFont: "10px", driverGap: "4px", driverPad: "5px 8px", initialsFont: "13px", maxFont: "9px", timeFont: "13px", barH: "12px", barR: "6px", barFont: "9px", overflowFont: "9px", showOverflowLine: false },
+                  }[tier];
                   return (
                   <div style={{ 
                     background: "linear-gradient(145deg, #1a1a1a 0%, #1a0d0d 100%)",
                     borderRadius: "16px",
-                    padding: hasMultipleUpgrades ? "12px" : (isCompact ? "16px" : "24px"),
+                    padding: s.boxPad,
                     border: "3px solid rgba(249, 115, 22, 0.5)",
                     boxShadow: "0 0 30px rgba(249, 115, 22, 0.2), inset 0 0 40px rgba(249, 115, 22, 0.05)",
                     flex: 1,
                   }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: hasMultipleUpgrades ? "8px" : "12px", marginBottom: hasMultipleUpgrades ? "8px" : (isCompact ? "12px" : "20px") }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: s.headerGap, marginBottom: s.headerMb }}>
                       <div style={{ 
-                        width: hasMultipleUpgrades ? "30px" : (isCompact ? "36px" : "50px"), 
-                        height: hasMultipleUpgrades ? "30px" : (isCompact ? "36px" : "50px"), 
+                        width: s.iconSize, 
+                        height: s.iconSize, 
                         borderRadius: "12px", 
                         background: "linear-gradient(135deg, rgba(249, 115, 22, 0.4) 0%, rgba(249, 115, 22, 0.15) 100%)",
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
                         boxShadow: "0 0 20px rgba(249, 115, 22, 0.4)",
+                        flexShrink: 0,
                       }}>
-                        <span style={{ fontSize: hasMultipleUpgrades ? "16px" : (isCompact ? "18px" : "28px") }}>👥</span>
+                        <span style={{ fontSize: s.iconFont }}>👥</span>
                       </div>
                       <div>
-                        <h2 style={{ fontSize: hasMultipleUpgrades ? "18px" : (isCompact ? "20px" : "28px"), fontWeight: "bold", color: "white", margin: 0 }}>
+                        <h2 style={{ fontSize: s.titleFont, fontWeight: "bold", color: "white", margin: 0 }}>
                           TimeDriver<span style={{ color: "#f97316" }}>SIXT</span>
                         </h2>
-                        <p style={{ margin: 0, color: "#f97316", fontSize: hasMultipleUpgrades ? "11px" : (isCompact ? "12px" : "14px"), fontWeight: "600" }}>
+                        <p style={{ margin: 0, color: "#f97316", fontSize: s.subtitleFont, fontWeight: "600" }}>
                           {timedriverCalc?.rentals} rentals × €{timedriverCalc?.budgetPerRental.toFixed(2)} = €{timedriverCalc?.totalBudget.toFixed(2)} Budget
                         </p>
                       </div>
@@ -551,42 +563,42 @@ export function DailyBriefingExport({ open, onOpenChange }: DailyBriefingExportP
                       display: useGrid ? "grid" : "flex", 
                       gridTemplateColumns: useGrid ? "1fr 1fr" : undefined,
                       flexDirection: useGrid ? undefined : "column", 
-                      gap: hasMultipleUpgrades ? "6px" : (isCompact ? "8px" : "14px"),
+                      gap: s.driverGap,
                     }}>
                       {driversData.map((driver) => {
                         const barColor = driver.percent >= 100 ? "#ef4444" : driver.percent >= 80 ? "#eab308" : "#22c55e";
                         return (
                           <div key={driver.id} style={{ 
-                            padding: hasMultipleUpgrades ? "6px 10px" : (isCompact ? "8px 12px" : "14px 16px"), 
+                            padding: s.driverPad, 
                             background: "linear-gradient(135deg, #262626 0%, #1a1a1a 100%)", 
-                            borderRadius: isCompact ? "8px" : "12px",
+                            borderRadius: tier === "large" ? "12px" : "8px",
                             border: driver.percent >= 100 ? "2px solid rgba(239, 68, 68, 0.5)" : "1px solid rgba(255,255,255,0.1)",
                             boxShadow: driver.percent >= 100 ? "0 0 20px rgba(239, 68, 68, 0.3)" : "none",
                           }}>
-                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: hasMultipleUpgrades ? "4px" : (isCompact ? "6px" : "10px") }}>
-                              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                                <span style={{ color: "#f97316", fontSize: hasMultipleUpgrades ? "14px" : (isCompact ? "16px" : "22px"), fontWeight: "900" }}>{driver.initials}</span>
-                                <span style={{ color: "#666", fontSize: hasMultipleUpgrades ? "10px" : (isCompact ? "11px" : "14px") }}>(max {driver.maxHours}h)</span>
-                                {(isCompact || hasMultipleUpgrades) && (driver.overflowHours !== undefined && driver.overflowHours > 0) && (
-                                  <span style={{ color: "#f97316", fontSize: hasMultipleUpgrades ? "10px" : "11px", fontWeight: "600" }}>
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: tier === "tiny" ? "3px" : (tier === "compact" ? "4px" : (tier === "medium" ? "6px" : "10px")) }}>
+                              <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                                <span style={{ color: "#f97316", fontSize: s.initialsFont, fontWeight: "900" }}>{driver.initials}</span>
+                                <span style={{ color: "#666", fontSize: s.maxFont }}>(max {driver.maxHours}h)</span>
+                                {!s.showOverflowLine && (driver.overflowHours !== undefined && driver.overflowHours > 0) && (
+                                  <span style={{ color: "#f97316", fontSize: s.overflowFont, fontWeight: "600" }}>
                                     +{driver.overflowHours}h{driver.overflowMinutes}m
                                   </span>
                                 )}
                               </div>
                               <span style={{ 
                                 color: "#22c55e", 
-                                fontSize: hasMultipleUpgrades ? "14px" : (isCompact ? "16px" : "24px"), 
+                                fontSize: s.timeFont, 
                                 fontWeight: "900",
                                 textShadow: "0 0 10px rgba(34, 197, 94, 0.5)",
                               }}>
                                 {driver.assignedHours}h {driver.assignedMinutes}min
                               </span>
                             </div>
-                            {!isCompact && !hasMultipleUpgrades && (driver.overflowHours !== undefined && driver.overflowHours > 0) && (
+                            {s.showOverflowLine && (driver.overflowHours !== undefined && driver.overflowHours > 0) && (
                               <p style={{ 
                                 margin: "0 0 8px 0", 
                                 color: "#f97316", 
-                                fontSize: "13px",
+                                fontSize: s.overflowFont,
                                 fontWeight: "600",
                               }}>
                                 ⚠️ if needed: +{driver.overflowHours}h {driver.overflowMinutes}min
@@ -594,9 +606,9 @@ export function DailyBriefingExport({ open, onOpenChange }: DailyBriefingExportP
                             )}
                             <div style={{ 
                               position: "relative",
-                              height: hasMultipleUpgrades ? "14px" : (isCompact ? "18px" : "28px"), 
+                              height: s.barH, 
                               backgroundColor: "rgba(255,255,255,0.1)", 
-                              borderRadius: hasMultipleUpgrades ? "7px" : (isCompact ? "9px" : "14px"),
+                              borderRadius: s.barR,
                               overflow: "hidden",
                             }}>
                               <div style={{ 
@@ -606,7 +618,7 @@ export function DailyBriefingExport({ open, onOpenChange }: DailyBriefingExportP
                                 width: `${Math.min(driver.percent, 100)}%`, 
                                 height: "100%", 
                                 background: `linear-gradient(90deg, ${barColor} 0%, ${barColor}cc 100%)`,
-                                borderRadius: hasMultipleUpgrades ? "7px" : (isCompact ? "9px" : "14px"),
+                                borderRadius: s.barR,
                                 boxShadow: `0 0 15px ${barColor}88`,
                               }} />
                               <div style={{
@@ -621,7 +633,7 @@ export function DailyBriefingExport({ open, onOpenChange }: DailyBriefingExportP
                               }}>
                                 <span style={{ 
                                   color: "#fff", 
-                                  fontSize: hasMultipleUpgrades ? "10px" : (isCompact ? "11px" : "14px"), 
+                                  fontSize: s.barFont, 
                                   fontWeight: "900",
                                   textShadow: "0 1px 3px rgba(0,0,0,0.8)",
                                 }}>
