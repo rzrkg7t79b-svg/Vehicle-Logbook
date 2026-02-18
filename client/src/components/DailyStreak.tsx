@@ -1,13 +1,13 @@
-import sprinterVanImg from "@assets/3EECF2D5-BA95-41EC-B273-E66A4A30A71D_1771440003631.png";
-
 interface DailyStreakProps {
   streak: number;
 }
 
+const VAN_SRC = "/sprinter-van.webp";
+
 export function DailyStreak({ streak }: DailyStreakProps) {
   const displayStreak = Math.max(0, streak);
   const digitCount = String(displayStreak).length;
-  const fontSize = digitCount >= 4 ? "10px" : digitCount === 3 ? "12px" : "15px";
+  const fontSize = digitCount >= 4 ? "11px" : digitCount === 3 ? "14px" : digitCount === 2 ? "18px" : "20px";
 
   return (
     <div className="flex items-center gap-1.5" data-testid="daily-streak">
@@ -22,10 +22,10 @@ export function DailyStreak({ streak }: DailyStreakProps) {
       }}>
         Daily<br />Streak
       </span>
-      <div style={{ position: "relative", width: "80px", height: "44px" }}>
+      <div style={{ position: "relative", width: "110px", height: "60px" }}>
         <img
-          src={sprinterVanImg}
-          alt="Sprinter Van"
+          src={VAN_SRC}
+          alt=""
           style={{
             width: "100%",
             height: "100%",
@@ -35,10 +35,10 @@ export function DailyStreak({ streak }: DailyStreakProps) {
         />
         <div style={{
           position: "absolute",
-          top: "6px",
-          right: "3px",
-          width: "34px",
-          height: "24px",
+          top: "8px",
+          right: "4px",
+          width: "46px",
+          height: "32px",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
@@ -47,9 +47,10 @@ export function DailyStreak({ streak }: DailyStreakProps) {
             fontSize,
             fontWeight: "900",
             color: "#f97316",
-            textShadow: "0 0 8px rgba(249, 115, 22, 0.8), 0 1px 2px rgba(0,0,0,0.5)",
+            textShadow: "0 0 10px rgba(249, 115, 22, 0.9), 0 0 20px rgba(249, 115, 22, 0.4)",
             fontFamily: "system-ui, -apple-system, sans-serif",
             lineHeight: 1,
+            letterSpacing: "-0.5px",
           }}>
             {displayStreak}
           </span>
@@ -62,18 +63,18 @@ export function DailyStreak({ streak }: DailyStreakProps) {
 export function DailyStreakExport({ streak, scale = 1 }: { streak: number; scale?: number }) {
   const displayStreak = Math.max(0, streak);
   const digitCount = String(displayStreak).length;
-  const numFontSize = digitCount >= 4 ? 18 : digitCount === 3 ? 22 : 28;
-  const imgW = 150 * scale;
-  const imgH = 82 * scale;
+  const numFontSize = digitCount >= 4 ? 20 : digitCount === 3 ? 26 : digitCount === 2 ? 34 : 38;
+  const imgW = 200 * scale;
+  const imgH = 110 * scale;
 
   return (
     <div style={{
       display: "flex",
       alignItems: "center",
-      gap: `${6 * scale}px`,
+      gap: `${8 * scale}px`,
     }}>
       <div style={{
-        fontSize: `${11 * scale}px`,
+        fontSize: `${12 * scale}px`,
         fontWeight: "700",
         color: "rgba(255,255,255,0.4)",
         letterSpacing: "0.5px",
@@ -85,21 +86,21 @@ export function DailyStreakExport({ streak, scale = 1 }: { streak: number; scale
       </div>
       <div style={{ position: "relative", width: `${imgW}px`, height: `${imgH}px` }}>
         <img
-          src={sprinterVanImg}
-          alt="Sprinter Van"
+          src={VAN_SRC}
+          alt=""
           style={{
             width: "100%",
             height: "100%",
             objectFit: "contain",
-            filter: "drop-shadow(0 0 10px rgba(249, 115, 22, 0.4))",
+            filter: "drop-shadow(0 0 12px rgba(249, 115, 22, 0.4))",
           }}
         />
         <div style={{
           position: "absolute",
-          top: `${10 * scale}px`,
-          right: `${5 * scale}px`,
-          width: `${64 * scale}px`,
-          height: `${44 * scale}px`,
+          top: `${14 * scale}px`,
+          right: `${8 * scale}px`,
+          width: `${84 * scale}px`,
+          height: `${56 * scale}px`,
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
@@ -108,9 +109,10 @@ export function DailyStreakExport({ streak, scale = 1 }: { streak: number; scale
             fontSize: `${numFontSize}px`,
             fontWeight: "900",
             color: "#f97316",
-            textShadow: "0 0 12px rgba(249, 115, 22, 0.8), 0 2px 4px rgba(0,0,0,0.6)",
+            textShadow: "0 0 14px rgba(249, 115, 22, 0.9), 0 0 28px rgba(249, 115, 22, 0.4)",
             fontFamily: "system-ui, -apple-system, sans-serif",
             lineHeight: 1,
+            letterSpacing: "-1px",
           }}>
             {displayStreak}
           </span>
