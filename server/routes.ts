@@ -80,6 +80,8 @@ export async function registerRoutes(
           vehicleId: id,
           isSystemGenerated: true,
           completed: false,
+          isRecurring: true,
+          priority: 0,
         });
         // Update input to include the collection todo ID
         (input as any).collectionTodoId = collectionTodo.id;
