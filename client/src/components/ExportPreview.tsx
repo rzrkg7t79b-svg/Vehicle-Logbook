@@ -534,74 +534,134 @@ export function ExportPreview({ open, onOpenChange }: ExportPreviewProps) {
               </div>
             )}
 
-            {/* FutureSIXT Section - At the very top */}
-            {dashboardStatus?.future?.data && (
+            {/* TodaySIXT Section - Colorful & Motivational (same design as DailyBriefing) */}
+            {dashboardStatus?.future?.data && (() => {
+              const fd = dashboardStatus.future.data;
+              return (
               <div style={{ 
-                backgroundColor: "#262626", 
-                borderRadius: "16px", 
-                padding: "24px",
+                background: "linear-gradient(145deg, #1a1a1a 0%, #0d1f0d 100%)",
+                borderRadius: "16px",
+                padding: "20px",
                 marginBottom: "20px",
-                border: "2px solid #22c55e",
+                border: "3px solid rgba(34, 197, 94, 0.5)",
+                boxShadow: "0 0 30px rgba(34, 197, 94, 0.2), inset 0 0 40px rgba(34, 197, 94, 0.05)",
               }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "16px" }}>
                   <div style={{ 
-                    width: "48px", 
-                    height: "48px", 
+                    width: "44px", 
+                    height: "44px", 
                     borderRadius: "12px", 
-                    backgroundColor: "rgba(34, 197, 94, 0.2)",
+                    background: "linear-gradient(135deg, rgba(34, 197, 94, 0.4) 0%, rgba(34, 197, 94, 0.15) 100%)",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
+                    boxShadow: "0 0 20px rgba(34, 197, 94, 0.4)",
+                    flexShrink: 0,
                   }}>
-                    <Clock style={{ width: "24px", height: "24px", color: "#22c55e" }} />
+                    <span style={{ fontSize: "24px" }}>📅</span>
                   </div>
                   <div>
-                    <h3 style={{ fontSize: "24px", fontWeight: "bold", color: "white", margin: 0 }}>
-                      Future<span style={{ color: "#f97316" }}>SIXT</span> - Tomorrow's Planning
+                    <h3 style={{ fontSize: "22px", fontWeight: "bold", color: "white", margin: 0 }}>
+                      Today<span style={{ color: "#f97316" }}>SIXT</span>
                     </h3>
+                    <p style={{ margin: 0, color: "#22c55e", fontSize: "12px", fontWeight: "600" }}>Your day at a glance</p>
                   </div>
-                  <CheckCircle style={{ width: "24px", height: "24px", color: "#22c55e", marginLeft: "auto" }} />
                 </div>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: "16px" }}>
-                  <div style={{ textAlign: "center", padding: "16px", backgroundColor: "#333", borderRadius: "12px" }}>
-                    <p style={{ margin: 0, color: "#888", fontSize: "12px", marginBottom: "4px" }}>TOTAL</p>
-                    <p style={{ margin: 0, color: "#fff", fontSize: "32px", fontWeight: "bold" }}>{dashboardStatus.future.data.reservationsTotal}</p>
-                    <p style={{ margin: 0, color: "#888", fontSize: "10px" }}>Reservations</p>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "12px" }}>
+                  <div style={{ 
+                    textAlign: "center", 
+                    padding: "14px", 
+                    background: "linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)", 
+                    borderRadius: "12px",
+                    boxShadow: "0 0 20px rgba(59, 130, 246, 0.4)",
+                  }}>
+                    <p style={{ margin: 0, color: "rgba(255,255,255,0.9)", fontSize: "12px", marginBottom: "4px", fontWeight: "700", letterSpacing: "1px" }}>TOTAL</p>
+                    <p style={{ margin: 0, color: "#fff", fontSize: "36px", fontWeight: "900", textShadow: "0 0 20px rgba(255,255,255,0.5)" }}>{fd.reservationsTotal}</p>
                   </div>
-                  <div style={{ textAlign: "center", padding: "16px", backgroundColor: "#333", borderRadius: "12px" }}>
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "4px", marginBottom: "4px" }}>
-                      <Car style={{ width: "14px", height: "14px", color: "#888" }} />
-                      <p style={{ margin: 0, color: "#888", fontSize: "12px" }}>Car</p>
-                    </div>
-                    <p style={{ margin: 0, color: "#fff", fontSize: "32px", fontWeight: "bold" }}>{dashboardStatus.future.data.reservationsCar}</p>
+                  <div style={{ 
+                    textAlign: "center", 
+                    padding: "14px", 
+                    background: "linear-gradient(135deg, #262626 0%, #1a1a1a 100%)", 
+                    borderRadius: "12px",
+                    border: "2px solid rgba(34, 197, 94, 0.3)",
+                  }}>
+                    <p style={{ margin: 0, color: "#22c55e", fontSize: "12px", marginBottom: "4px", display: "flex", alignItems: "center", justifyContent: "center", gap: "4px", fontWeight: "700" }}>
+                      <Car style={{ width: "14px", height: "14px" }} /> CAR
+                    </p>
+                    <p style={{ margin: 0, color: "#fff", fontSize: "30px", fontWeight: "bold" }}>{fd.reservationsCar}</p>
+                    {fd.carDayMin !== null && fd.carDayMin !== undefined && (
+                      <p style={{ 
+                        margin: "6px 0 0 0", 
+                        fontSize: "18px", 
+                        fontWeight: "900",
+                        color: fd.carDayMin < 0 ? "#ef4444" : "#22c55e",
+                        textShadow: fd.carDayMin < 0 ? "0 0 12px rgba(239, 68, 68, 0.8)" : "0 0 12px rgba(34, 197, 94, 0.8)",
+                      }}>
+                        {fd.carDayMin >= 0 ? '+' : ''}{fd.carDayMin}
+                      </p>
+                    )}
                   </div>
-                  <div style={{ textAlign: "center", padding: "16px", backgroundColor: "#333", borderRadius: "12px" }}>
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "4px", marginBottom: "4px" }}>
-                      <Truck style={{ width: "14px", height: "14px", color: "#888" }} />
-                      <p style={{ margin: 0, color: "#888", fontSize: "12px" }}>Van</p>
-                    </div>
-                    <p style={{ margin: 0, color: "#fff", fontSize: "32px", fontWeight: "bold" }}>{dashboardStatus.future.data.reservationsVan}</p>
+                  <div style={{ 
+                    textAlign: "center", 
+                    padding: "14px", 
+                    background: "linear-gradient(135deg, #262626 0%, #1a1a1a 100%)", 
+                    borderRadius: "12px",
+                    border: "2px solid rgba(249, 115, 22, 0.3)",
+                  }}>
+                    <p style={{ margin: 0, color: "#f97316", fontSize: "12px", marginBottom: "4px", display: "flex", alignItems: "center", justifyContent: "center", gap: "4px", fontWeight: "700" }}>
+                      <Truck style={{ width: "14px", height: "14px" }} /> VAN
+                    </p>
+                    <p style={{ margin: 0, color: "#fff", fontSize: "30px", fontWeight: "bold" }}>{fd.reservationsVan}</p>
+                    {fd.vanDayMin !== null && fd.vanDayMin !== undefined && (
+                      <p style={{ 
+                        margin: "6px 0 0 0", 
+                        fontSize: "18px", 
+                        fontWeight: "900",
+                        color: fd.vanDayMin < 0 ? "#ef4444" : "#22c55e",
+                        textShadow: fd.vanDayMin < 0 ? "0 0 12px rgba(239, 68, 68, 0.8)" : "0 0 12px rgba(34, 197, 94, 0.8)",
+                      }}>
+                        {fd.vanDayMin >= 0 ? '+' : ''}{fd.vanDayMin}
+                      </p>
+                    )}
                   </div>
-                  <div style={{ textAlign: "center", padding: "16px", backgroundColor: "#333", borderRadius: "12px" }}>
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "4px", marginBottom: "4px" }}>
-                      <Plane style={{ width: "14px", height: "14px", color: "#888" }} />
-                      <p style={{ margin: 0, color: "#888", fontSize: "12px" }}>TAS</p>
-                    </div>
-                    <p style={{ margin: 0, color: "#fff", fontSize: "32px", fontWeight: "bold" }}>{dashboardStatus.future.data.reservationsTas}</p>
+                  <div style={{ 
+                    textAlign: "center", 
+                    padding: "14px", 
+                    background: "linear-gradient(135deg, #262626 0%, #1a1a1a 100%)", 
+                    borderRadius: "12px",
+                    border: "2px solid rgba(168, 85, 247, 0.3)",
+                  }}>
+                    <p style={{ margin: 0, color: "#a855f7", fontSize: "12px", marginBottom: "4px", display: "flex", alignItems: "center", justifyContent: "center", gap: "4px", fontWeight: "700" }}>
+                      <Plane style={{ width: "14px", height: "14px" }} /> TAS
+                    </p>
+                    <p style={{ margin: 0, color: "#fff", fontSize: "30px", fontWeight: "bold" }}>{fd.reservationsTas}</p>
                   </div>
-                  <div style={{ textAlign: "center", padding: "16px", backgroundColor: "#333", borderRadius: "12px" }}>
-                    <p style={{ margin: 0, color: "#888", fontSize: "12px", marginBottom: "4px" }}>Deliveries</p>
-                    <p style={{ margin: 0, color: "#f97316", fontSize: "32px", fontWeight: "bold" }}>{dashboardStatus.future.data.deliveriesTomorrow}</p>
-                    <p style={{ margin: 0, color: "#888", fontSize: "10px" }}>Tomorrow</p>
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginTop: "12px" }}>
+                  <div style={{ 
+                    textAlign: "center", 
+                    padding: "12px", 
+                    background: "linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(59, 130, 246, 0.05) 100%)", 
+                    borderRadius: "12px",
+                    border: "2px solid rgba(59, 130, 246, 0.4)",
+                  }}>
+                    <p style={{ margin: 0, color: "#60a5fa", fontSize: "12px", fontWeight: "700" }}>Deliveries</p>
+                    <p style={{ margin: 0, color: "#fff", fontSize: "28px", fontWeight: "bold", textShadow: "0 0 10px rgba(59, 130, 246, 0.5)" }}>{fd.deliveriesTomorrow}</p>
                   </div>
-                  <div style={{ textAlign: "center", padding: "16px", backgroundColor: "#333", borderRadius: "12px" }}>
-                    <p style={{ margin: 0, color: "#888", fontSize: "12px", marginBottom: "4px" }}>Collections</p>
-                    <p style={{ margin: 0, color: "#f97316", fontSize: "32px", fontWeight: "bold" }}>{dashboardStatus.future.data.collectionsOpen}</p>
-                    <p style={{ margin: 0, color: "#888", fontSize: "10px" }}>Open</p>
+                  <div style={{ 
+                    textAlign: "center", 
+                    padding: "12px", 
+                    background: "linear-gradient(135deg, rgba(236, 72, 153, 0.2) 0%, rgba(236, 72, 153, 0.05) 100%)", 
+                    borderRadius: "12px",
+                    border: "2px solid rgba(236, 72, 153, 0.4)",
+                  }}>
+                    <p style={{ margin: 0, color: "#f472b6", fontSize: "12px", fontWeight: "700" }}>Collections</p>
+                    <p style={{ margin: 0, color: "#fff", fontSize: "28px", fontWeight: "bold", textShadow: "0 0 10px rgba(236, 72, 153, 0.5)" }}>{fd.collectionsOpen}</p>
                   </div>
                 </div>
               </div>
-            )}
+              );
+            })()}
 
             {/* Break?SIXT Status */}
             <div style={{ 
