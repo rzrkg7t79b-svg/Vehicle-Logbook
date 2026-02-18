@@ -807,7 +807,6 @@ export async function registerRoutes(
   registerFuturePlanningRoutes(app);
   registerKpiMetricsRoutes(app);
   
-  await seedDatabase();
   await storage.seedBranchManager();
 
   return httpServer;
@@ -867,55 +866,6 @@ async function registerKpiMetricsRoutes(app: Express) {
       throw err;
     }
   });
-}
-
-async function seedDatabase() {
-    // Only seed if empty
-    const existing = await storage.getVehicles();
-    if (existing.length === 0) {
-        const today = new Date();
-        const twoDaysAgo = new Date(today);
-        twoDaysAgo.setDate(today.getDate() - 2);
-        
-        const eightDaysAgo = new Date(today);
-        eightDaysAgo.setDate(today.getDate() - 8);
-
-        // Vehicle 1: Normal (just created)
-        const v1 = await storage.createVehicle({
-            licensePlate: "M-AB 1234",
-            name: "Golf GTI",
-            notes: "Routine checkup",
-            isEv: false,
-            countdownStart: today
-        });
-        await storage.createComment({ vehicleId: v1.id, content: "Vehicle received." });
-
-        // Vehicle 2: Warning (2 days old -> 5 days left, wait, 7 day timer... )
-        // If created 2 days ago, 5 days left.
-        // Warning is 1-3 days left. So created 5 days ago = 2 days left.
-        const fiveDaysAgo = new Date(today);
-        fiveDaysAgo.setDate(today.getDate() - 5);
-        
-        const v2 = await storage.createVehicle({
-            licensePlate: "B-XY 9999",
-            name: "Customer Waiting",
-            notes: "Urgent repair",
-            isEv: false,
-            countdownStart: fiveDaysAgo
-        });
-        await storage.createComment({ vehicleId: v2.id, content: "Parts ordered." });
-        await storage.createComment({ vehicleId: v2.id, content: "Customer called for update." });
-
-        // Vehicle 3: Expired (8 days ago)
-        const v3 = await storage.createVehicle({
-            licensePlate: "H-EV 2024E",
-            name: "Tesla Model 3",
-            notes: "Battery check",
-            isEv: true,
-            countdownStart: eightDaysAgo
-        });
-        await storage.createComment({ vehicleId: v3.id, content: "Overdue for pickup." });
-    }
 }
 
 // Upgrade vehicle routes
