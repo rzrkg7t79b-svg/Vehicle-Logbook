@@ -335,9 +335,7 @@ export function DailyBriefingExport({ open, onOpenChange }: DailyBriefingExportP
                 </p>
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: "24px" }}>
-                {(dashboardStatus?.dailyStreak ?? 0) > 0 && (
-                  <DailyStreakExport streak={dashboardStatus?.dailyStreak ?? 0} scale={1.8} />
-                )}
+                <DailyStreakExport streak={dashboardStatus?.dailyStreak ?? 0} scale={1.8} />
                 <div style={{ 
                   display: "flex", 
                   alignItems: "center", 
@@ -348,6 +346,7 @@ export function DailyBriefingExport({ open, onOpenChange }: DailyBriefingExportP
                   border: "2px solid rgba(255, 102, 0, 0.5)",
                   boxShadow: "0 0 30px rgba(255, 102, 0, 0.3)",
                 }}>
+                  <span style={{ fontSize: "40px" }}>🔥</span>
                   <div>
                     <p style={{ 
                       margin: 0, 
@@ -363,6 +362,7 @@ export function DailyBriefingExport({ open, onOpenChange }: DailyBriefingExportP
                       Team 41137 - We make it happen!
                     </p>
                   </div>
+                  <span style={{ fontSize: "40px" }}>🚀</span>
                 </div>
               </div>
             </div>

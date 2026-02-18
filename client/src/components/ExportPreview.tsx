@@ -359,9 +359,7 @@ export function ExportPreview({ open, onOpenChange }: ExportPreviewProps) {
                 </p>
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: "24px" }}>
-                {(dashboardStatus?.dailyStreak ?? 0) > 0 && (
-                  <DailyStreakExport streak={dashboardStatus?.dailyStreak ?? 0} scale={1.6} />
-                )}
+                <DailyStreakExport streak={dashboardStatus?.dailyStreak ?? 0} scale={1.6} />
                 <div style={{ 
                   position: "relative" as const,
                   borderRadius: "20px",

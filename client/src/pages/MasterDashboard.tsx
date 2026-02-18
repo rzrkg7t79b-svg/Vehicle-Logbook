@@ -494,9 +494,7 @@ export default function MasterDashboard() {
               </h1>
               <p className="text-sm text-white/50">Daily Task Overview</p>
             </div>
-            {(dashboardStatus?.dailyStreak ?? 0) > 0 && (
-              <DailyStreak streak={dashboardStatus?.dailyStreak ?? 0} />
-            )}
+            <DailyStreak streak={dashboardStatus?.dailyStreak ?? 0} />
           </div>
         </div>
       </div>
