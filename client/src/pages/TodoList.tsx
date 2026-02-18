@@ -365,7 +365,7 @@ export default function TodoList() {
                             <CalendarClock className="w-4 h-4" />
                           </button>
                         )}
-                        {user?.isAdmin && !todo.isSystemGenerated && (
+                        {user?.isAdmin && (
                           <button
                             onClick={() => deleteMutation.mutate(todo.id)}
                             className="text-muted-foreground hover:text-red-500 transition-colors p-1"
