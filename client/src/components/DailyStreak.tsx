@@ -4,14 +4,14 @@ interface DailyStreakProps {
 
 const VAN_SRC = "/sprinter-van.webp";
 
-function StreakVan({ streak, imgW, imgH, labelSize, numSize, glowSize, labelRight }: {
+function StreakVan({ streak, imgW, imgH, labelSize, numSize, glowSize, labelBelow }: {
   streak: number;
   imgW: number;
   imgH: number;
   labelSize: number;
   numSize: number;
   glowSize: number;
-  labelRight?: boolean;
+  labelBelow?: boolean;
 }) {
   const displayStreak = Math.max(0, streak);
   const digitCount = String(displayStreak).length;
@@ -22,13 +22,13 @@ function StreakVan({ streak, imgW, imgH, labelSize, numSize, glowSize, labelRigh
       fontSize: `${labelSize}px`,
       fontWeight: "900",
       color: "#f97316",
-      letterSpacing: "0.3px",
-      lineHeight: "1.05",
-      textAlign: labelRight ? "left" as const : "right" as const,
+      letterSpacing: "1px",
+      lineHeight: "1",
+      textAlign: "center" as const,
       whiteSpace: "nowrap" as const,
       textTransform: "uppercase" as const,
     }}>
-      Daily<br />Streak
+      Daily Streak
     </span>
   );
 
@@ -68,13 +68,28 @@ function StreakVan({ streak, imgW, imgH, labelSize, numSize, glowSize, labelRigh
     </div>
   );
 
+  if (labelBelow) {
+    return (
+      <div style={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        gap: "0px",
+      }}>
+        {van}
+        {label}
+      </div>
+    );
+  }
+
   return (
     <div style={{
       display: "flex",
       alignItems: "center",
       gap: "1px",
     }}>
-      {labelRight ? <>{van}{label}</> : <>{label}{van}</>}
+      {label}
+      {van}
     </div>
   );
 }
@@ -82,7 +97,7 @@ function StreakVan({ streak, imgW, imgH, labelSize, numSize, glowSize, labelRigh
 export function DailyStreak({ streak }: DailyStreakProps) {
   return (
     <div data-testid="daily-streak">
-      <StreakVan streak={streak} imgW={180} imgH={100} labelSize={13} numSize={34} glowSize={6} labelRight />
+      <StreakVan streak={streak} imgW={180} imgH={100} labelSize={11} numSize={34} glowSize={6} labelBelow />
     </div>
   );
 }
