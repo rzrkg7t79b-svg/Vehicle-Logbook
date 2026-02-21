@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { ArrowLeft, CheckCircle, XCircle, AlertTriangle, Zap, RotateCcw } from "lucide-react";
+import { ArrowLeft, CheckCircle, XCircle, AlertTriangle, Zap, RotateCcw, Trash2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -39,11 +39,19 @@ export default function QualityCheck() {
   const isDriver = user?.roles?.includes("Driver");
 
   const { data: qualityChecks = [] } = useQuery<QualityCheckType[]>({
-    queryKey: ["/api/quality-checks"],
+    queryKey: ["/api/quality-checks", todayDate],
+    queryFn: async () => {
+      const res = await fetch(`/api/quality-checks?date=${todayDate}`);
+      return res.json();
+    },
   });
 
   const { data: driverTasks = [] } = useQuery<DriverTask[]>({
-    queryKey: ["/api/driver-tasks"],
+    queryKey: ["/api/driver-tasks", todayDate],
+    queryFn: async () => {
+      const res = await fetch(`/api/driver-tasks?date=${todayDate}`);
+      return res.json();
+    },
   });
 
   const { data: moduleStatuses = [] } = useQuery<ModuleStatus[]>({
@@ -67,8 +75,8 @@ export default function QualityCheck() {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/quality-checks"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/driver-tasks"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/quality-checks", todayDate] });
+      queryClient.invalidateQueries({ queryKey: ["/api/driver-tasks", todayDate] });
       resetForm();
     },
   });
@@ -81,7 +89,7 @@ export default function QualityCheck() {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/driver-tasks"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/driver-tasks", todayDate] });
     },
   });
 
@@ -110,8 +118,25 @@ export default function QualityCheck() {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/quality-checks"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/driver-tasks"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/quality-checks", todayDate] });
+      queryClient.invalidateQueries({ queryKey: ["/api/driver-tasks", todayDate] });
+      queryClient.invalidateQueries({ queryKey: ["/api/module-status", todayDate] });
+    },
+  });
+
+  const deleteCheckMutation = useMutation({
+    mutationFn: async (id: number) => {
+      await fetch(`/api/quality-checks/${id}`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          "x-admin-pin": user?.pin || "",
+        },
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/quality-checks", todayDate] });
+      queryClient.invalidateQueries({ queryKey: ["/api/driver-tasks", todayDate] });
       queryClient.invalidateQueries({ queryKey: ["/api/module-status", todayDate] });
     },
   });
@@ -127,10 +152,7 @@ export default function QualityCheck() {
   };
 
   const pendingTasks = driverTasks.filter(t => !t.completed);
-  const todayChecks = qualityChecks.filter(c => {
-    const checkDate = new Date(c.createdAt!).toLocaleDateString("en-CA", { timeZone: "Europe/Berlin" });
-    return checkDate === todayDate;
-  });
+  const todayChecks = qualityChecks;
 
   const getCheckStatus = (check: QualityCheckType): "passed" | "solved" | "open" => {
     if (check.passed) return "passed";
@@ -288,6 +310,16 @@ export default function QualityCheck() {
                           {status === "passed" && <CheckCircle className={`w-5 h-5 ${colors.icon}`} />}
                           {status === "solved" && <CheckCircle className={`w-5 h-5 ${colors.icon}`} />}
                           {status === "open" && <XCircle className={`w-5 h-5 ${colors.icon}`} />}
+                          {isAdminOrBM && (
+                            <button
+                              onClick={() => deleteCheckMutation.mutate(check.id)}
+                              disabled={deleteCheckMutation.isPending}
+                              className="ml-1 p-1 rounded-md hover:bg-red-500/20 text-white/30 hover:text-red-400 transition-colors"
+                              data-testid={`button-delete-check-${check.id}`}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          )}
                         </div>
                       </div>
                       {!check.passed && check.comment && (

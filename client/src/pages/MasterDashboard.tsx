@@ -135,7 +135,11 @@ export default function MasterDashboard() {
   });
 
   const { data: driverTasks = [] } = useQuery<DriverTask[]>({
-    queryKey: ["/api/driver-tasks"],
+    queryKey: ["/api/driver-tasks", todayDate],
+    queryFn: async () => {
+      const res = await fetch(`/api/driver-tasks?date=${todayDate}`);
+      return res.json();
+    },
   });
 
   const { data: flowTasks = [] } = useQuery<FlowTask[]>({

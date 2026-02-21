@@ -414,8 +414,14 @@ export async function registerRoutes(
 
   // Quality check routes
   app.get(api.qualityChecks.list.path, async (req, res) => {
-    const checks = await storage.getQualityChecks();
-    res.json(checks);
+    const date = req.query.date as string | undefined;
+    if (date) {
+      const checks = await storage.getQualityChecksForDate(date);
+      res.json(checks);
+    } else {
+      const checks = await storage.getQualityChecks();
+      res.json(checks);
+    }
   });
 
   app.post(api.qualityChecks.create.path, async (req, res) => {
@@ -444,7 +450,7 @@ export async function registerRoutes(
     }
   });
 
-  // QualitySIXT manual reset (BM/Admin only)
+  // QualitySIXT manual reset (BM/Admin only) - must be before :id route
   app.delete("/api/quality-checks/reset", async (req, res) => {
     const adminPin = req.headers['x-admin-pin'] as string;
     if (!adminPin) {
@@ -460,6 +466,29 @@ export async function registerRoutes(
     broadcastUpdate("driver-tasks");
     broadcastUpdate("module-status");
     res.json({ success: true, message: "QualitySIXT reset completed" });
+  });
+
+  // Delete individual quality check (Admin/BM only)
+  app.delete("/api/quality-checks/:id", async (req, res) => {
+    const adminPin = req.headers['x-admin-pin'] as string;
+    if (!adminPin) {
+      return res.status(401).json({ message: "Admin PIN required" });
+    }
+    const users = await storage.getUsers();
+    const adminUser = users.find(u => u.pin === adminPin && (u.isAdmin || u.roles?.includes("Branch Manager")));
+    if (!adminUser) {
+      return res.status(403).json({ message: "Not authorized" });
+    }
+    const id = Number(req.params.id);
+    const existing = await storage.getQualityCheck(id);
+    if (!existing) {
+      return res.status(404).json({ message: "Quality check not found" });
+    }
+    await storage.deleteQualityCheck(id);
+    broadcastUpdate("quality-checks");
+    broadcastUpdate("driver-tasks");
+    broadcastUpdate("module-status");
+    res.json({ success: true });
   });
 
   app.get("/api/quality-checks/date/:date", async (req, res) => {
@@ -479,8 +508,14 @@ export async function registerRoutes(
 
   // Driver task routes
   app.get(api.driverTasks.list.path, async (req, res) => {
-    const tasks = await storage.getDriverTasks();
-    res.json(tasks);
+    const date = req.query.date as string | undefined;
+    if (date) {
+      const tasks = await storage.getDriverTasksForDate(date);
+      res.json(tasks);
+    } else {
+      const tasks = await storage.getDriverTasks();
+      res.json(tasks);
+    }
   });
 
   app.patch(api.driverTasks.update.path, async (req, res) => {

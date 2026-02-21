@@ -111,7 +111,11 @@ export function ExportPreview({ open, onOpenChange }: ExportPreviewProps) {
   });
 
   const { data: driverTasks = [] } = useQuery<DriverTask[]>({
-    queryKey: ["/api/driver-tasks"],
+    queryKey: ["/api/driver-tasks", todayDate],
+    queryFn: async () => {
+      const res = await fetch(`/api/driver-tasks?date=${todayDate}`);
+      return res.json();
+    },
   });
 
   const exportQualityChecks = qualityChecks;

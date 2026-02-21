@@ -71,6 +71,7 @@ export interface IStorage {
   getQualityChecks(): Promise<QualityCheck[]>;
   getQualityCheck(id: number): Promise<QualityCheck | undefined>;
   createQualityCheck(check: InsertQualityCheck): Promise<QualityCheck>;
+  deleteQualityCheck(id: number): Promise<void>;
   getQualityChecksForDate(date: string): Promise<QualityCheck[]>;
 
   getDriverTasks(): Promise<DriverTask[]>;
@@ -271,15 +272,14 @@ class DatabaseStorage implements IStorage {
     return newCheck;
   }
 
+  async deleteQualityCheck(id: number): Promise<void> {
+    await db.delete(driverTasks).where(eq(driverTasks.qualityCheckId, id));
+    await db.delete(qualityChecks).where(eq(qualityChecks.id, id));
+  }
+
   async getQualityChecksForDate(date: string): Promise<QualityCheck[]> {
-    const startOfDay = new Date(date + 'T00:00:00.000Z');
-    const endOfDay = new Date(date + 'T23:59:59.999Z');
-    
     return db.select().from(qualityChecks)
-      .where(and(
-        gte(qualityChecks.createdAt, startOfDay),
-        lte(qualityChecks.createdAt, endOfDay)
-      ))
+      .where(sql`DATE(${qualityChecks.createdAt} AT TIME ZONE 'Europe/Berlin') = ${date}`)
       .orderBy(desc(qualityChecks.createdAt));
   }
 

@@ -85,9 +85,13 @@ export interface IStorage {
   getQualityChecks(): Promise<QualityCheck[]>;
   getQualityCheck(id: number): Promise<QualityCheck | undefined>;
   createQualityCheck(check: InsertQualityCheck): Promise<QualityCheck>;
+  deleteQualityCheck(id: number): Promise<void>;
+  getQualityChecksForDate(date: string): Promise<QualityCheck[]>;
 
   getDriverTasks(): Promise<DriverTask[]>;
   getDriverTask(id: number): Promise<DriverTask | undefined>;
+  getDriverTasksForDate(date: string): Promise<DriverTask[]>;
+  getIncompleteDriverTasks(): Promise<DriverTask[]>;
   createDriverTask(task: InsertDriverTask): Promise<DriverTask>;
   updateDriverTask(id: number, data: Partial<DriverTask>): Promise<DriverTask | undefined>;
 
@@ -294,6 +298,11 @@ export class DatabaseStorage implements IStorage {
   async createQualityCheck(check: InsertQualityCheck): Promise<QualityCheck> {
     const [newCheck] = await db.insert(qualityChecks).values(check).returning();
     return newCheck;
+  }
+
+  async deleteQualityCheck(id: number): Promise<void> {
+    await db.delete(driverTasks).where(eq(driverTasks.qualityCheckId, id));
+    await db.delete(qualityChecks).where(eq(qualityChecks.id, id));
   }
 
   async getDriverTasks(): Promise<DriverTask[]> {
